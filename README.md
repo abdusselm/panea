@@ -57,10 +57,26 @@ Edits are picked up the next time you open the palette; no restart needed.
 
 ## Notifications
 
-A background pane earns attention when it rings the bell or finishes a burst of
-output and goes quiet (an AI agent waiting on you). The sidebar bell shows a
-count; `Shift-Cmd-N` (or the bell) opens a panel listing every pending pane.
-Click one to jump straight to it, or **Clear all** to dismiss them.
+Notifications are deliberately selective — plain output that merely stops does
+**not** ring. A background pane earns attention only when:
+
+- **it emits an explicit notification escape** — `OSC 9` (`ESC ] 9 ; msg BEL`)
+  or `OSC 777` (`ESC ] 777 ; notify ; title ; body BEL`). Agents/CLIs that
+  support desktop notifications (e.g. a Claude Code notify hook) light this up
+  with their own message.
+- **it rings the terminal bell** (BEL).
+- **it goes quiet showing a prompt that waits for you** — permission/confirm
+  patterns like `(y/n)`, `Do you want to…`, `Allow…?`, `❯ 1. Yes` →
+  "needs your permission".
+- **a long task finishes** — the pane streamed output for a while, then fell
+  quiet → "finished". A quick command stays silent.
+
+The panel (bell, or `Shift-Cmd-N`) lists every pending pane with its reason;
+click one to jump to it, or **Clear all** to dismiss. Want an agent to notify
+you on completion? Have it emit `printf '\e]9;task done\a'` (or ring the bell).
+
+The heuristics live in `public/js/attention-signals.js` — tune the prompt
+patterns or the long-task threshold there.
 
 ## Sidebar context
 

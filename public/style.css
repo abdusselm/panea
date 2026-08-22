@@ -312,6 +312,11 @@ kbd {
   background: linear-gradient(135deg, var(--notify-a), var(--notify-b));
   box-shadow: 0 0 6px rgba(245, 128, 107, 0.6);
 }
+/* Reason-tinted dots: permission = warm coral (default), done = green,
+   alert (bell) = yellow, notify (explicit) = blue. */
+.notif-item .ni-dot[data-reason="done"]   { background: #b5bd68; box-shadow: 0 0 6px rgba(181, 189, 104, 0.6); }
+.notif-item .ni-dot[data-reason="alert"]  { background: #f0c674; box-shadow: 0 0 6px rgba(240, 198, 116, 0.6); }
+.notif-item .ni-dot[data-reason="notify"] { background: #81a2be; box-shadow: 0 0 6px rgba(129, 162, 190, 0.6); }
 .notif-item .ni-text { min-width: 0; }
 .notif-item .ni-name { font-size: 13.5px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .notif-item:hover .ni-name { color: #fff; }

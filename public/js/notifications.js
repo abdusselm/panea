@@ -7,7 +7,7 @@ import { state } from "./state.js";
 import { eachLeaf } from "./util.js";
 import { activateTab } from "./tabs.js";
 import { focusPane } from "./panes.js";
-import { clearPaneAttention } from "./attention.js";
+import { clearPaneAttention, attentionLabel } from "./attention.js";
 
 let panelEl = null, listEl = null;
 const bellEl = document.getElementById("bell");
@@ -62,9 +62,10 @@ function render() {
   for (const { tab, pane } of items) {
     const row = document.createElement("div");
     row.className = "notif-item";
-    row.innerHTML = '<span class="ni-dot"></span><div class="ni-text"><div class="ni-name"></div><div class="ni-sub"></div></div>';
+    row.innerHTML = '<span class="ni-dot" data-reason="' + (pane.attnReason || "alert") + '"></span>' +
+      '<div class="ni-text"><div class="ni-name"></div><div class="ni-sub"></div></div>';
     row.querySelector(".ni-name").textContent = pane.title || tab.name || "terminal";
-    row.querySelector(".ni-sub").textContent = "in " + (tab.name || "shell");
+    row.querySelector(".ni-sub").textContent = attentionLabel(pane) + " · in " + (tab.name || "shell");
     row.onclick = () => { jumpTo(tab, pane); };
     listEl.appendChild(row);
   }

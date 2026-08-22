@@ -6,7 +6,7 @@ import { TERM_THEME, FONT_FAMILY, FONT_LINE_HEIGHT, MIN_FONT_SIZE, MAX_FONT_SIZE
 import { enc, u8ToB64, uid, firstLeaf, eachLeaf, findLeaf, findParentOf } from "./util.js";
 import { wsSend } from "./ws.js";
 import { setPaneTitle, updateTabName, refreshTabMeta, closeTab } from "./tabs.js";
-import { clearPaneAttention } from "./attention.js";
+import { clearPaneAttention, signalExplicit } from "./attention.js";
 import { handleGlobalKey } from "./keyboard.js";
 import { persist } from "./session.js";
 
@@ -52,6 +52,17 @@ export function createPane(paneId, tabId, cwd) {
   // escape; xterm surfaces it here. We use it to name the pane + tab.
   term.onTitleChange((t) => setPaneTitle(paneId, t));
 
+  // Explicit notification escapes: a program deliberately asking to notify the
+  // user. OSC 9 (iTerm2 style): `ESC ] 9 ; message BEL`. OSC 777 (kitty/urxvt
+  // style): `ESC ] 777 ; notify ; title ; body BEL`. Returning true marks them
+  // handled so xterm doesn't try to render the payload.
+  term.parser.registerOscHandler(9, (data) => { signalExplicit(paneId, (data || "").trim()); return true; });
+  term.parser.registerOscHandler(777, (data) => {
+    const parts = String(data || "").split(";");
+    if (parts[0] === "notify") signalExplicit(paneId, (parts.slice(2).join(";") || parts[1] || "").trim());
+    return true;
+  });
+
   el.querySelector('[data-act="split-h"]').onclick = (e) => { e.stopPropagation(); splitPane(paneId, "h"); };
   el.querySelector('[data-act="split-v"]').onclick = (e) => { e.stopPropagation(); splitPane(paneId, "v"); };
   el.querySelector('[data-act="close"]').onclick = (e) => { e.stopPropagation(); closePane(paneId); };
@@ -67,7 +78,7 @@ export function createPane(paneId, tabId, cwd) {
   const ro = new ResizeObserver(() => refit(paneId));
   ro.observe(termEl);
 
-  const pane = { id: paneId, term, fit, tabId, cwd, exited: false, el, termEl, ro, titleEl, title: titleText, attention: false, idleTimer: null, meta: { cwd: cwd || "", branch: "", ports: [] } };
+  const pane = { id: paneId, term, fit, tabId, cwd, exited: false, el, termEl, ro, titleEl, title: titleText, attention: false, attnReason: "", attnMessage: "", idleTimer: null, burstStart: 0, burstBytes: 0, meta: { cwd: cwd || "", branch: "", ports: [] } };
   state.panes.set(paneId, pane);
 
   requestAnimationFrame(() => {
