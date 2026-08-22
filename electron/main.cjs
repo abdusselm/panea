@@ -77,14 +77,14 @@ function createWindow() {
             // program would, to exercise the auto-title code path.
             const t = JSON.stringify(process.env.PANEA_DEMO_TITLE);
             await win.webContents.executeJavaScript(
-              `state.panes.get(state.focusedPaneId).term.write("\\x1b]2;" + ${t} + "\\x07")`
+              `panea.state.panes.get(panea.state.focusedPaneId).term.write("\\x1b]2;" + ${t} + "\\x07")`
             );
             await new Promise((r) => setTimeout(r, 600));
           }
           if (process.env.PANEA_DEMO_TEXT) {
             const txt = JSON.stringify(process.env.PANEA_DEMO_TEXT);
             await win.webContents.executeJavaScript(
-              `state.panes.get(state.focusedPaneId).term.write(${txt}.replace(/\\n/g, "\\r\\n"))`
+              `panea.state.panes.get(panea.state.focusedPaneId).term.write(${txt}.replace(/\\n/g, "\\r\\n"))`
             );
             await new Promise((r) => setTimeout(r, 400));
           }

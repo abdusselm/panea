@@ -1,0 +1,137 @@
+# Skill: developing a feature in panea
+
+How to add a feature to panea and keep the codebase clean. Read this before
+touching the code; follow the steps in order.
+
+## 0. Search the graph first
+
+This repo has a persistent **code-review-graph** (`.code-review-graph/`).
+Before any `grep`/`find`/`ls`/`Glob`/`Grep`, run the search through the graph
+(`semantic_search_nodes_tool`, `query_graph_tool` with `file_summary` /
+`callers_of` / `callees_of`, `get_impact_radius_tool`). Fall back to raw tools
+only when the graph can't answer. See `CLAUDE.md` for the full rule. After
+edits that add/rename/move symbols, run `build_or_update_graph_tool`.
+
+## 1. Architecture
+
+panea is a **local web app in a native shell**. No bundler, no framework.
+
+- **Backend** — Node ESM. `server.js` is a thin entry; the real code lives in
+  `server/`. One `Pane` = one `python3` PTY bridge child (`pty_bridge.py`).
+  Uses only Apple-signed runtimes (no node-pty) so it runs on a managed Mac.
+- **Frontend** — native **ES modules** in the browser (`public/js/`), loaded via
+  `<script type="module" src="/js/main.js">`. Vendor libs (xterm) are classic
+  scripts that set `window.Terminal` / `window.FitAddon` first.
+- **Desktop shell** — `electron/main.cjs` spawns `server.js`, opens a
+  `BrowserWindow` on `127.0.0.1`, and has a screenshot/demo harness (below).
+- **Transport** — one WebSocket. JSON messages; terminal bytes are base64.
+
+### One responsibility per module
+
+Frontend (`public/js/`):
+
+| module | owns |
+|--------|------|
+| `theme.js` | colors, font stack, SVG icons |
+| `state.js` | `state` (tab/pane model), `runtime` (mutable flags), `focusedPane()` |
+| `dom.js` | long-lived top-level element refs |
+| `util.js` | pure helpers: base64, ids, path, tree traversal, title cleanup |
+| `ws.js` | socket lifecycle + inbound message dispatch (`wsSend`, `connect`) |
+| `session.js` | serialize / persist / restore layout |
+| `tabs.js` | tab lifecycle, sidebar list, metadata rows, ctx menu, titles, rename |
+| `panes.js` | xterm panes, split tree, focus, resize, restart, tree→DOM |
+| `attention.js` | background-pane notifications (bell + idle) |
+| `keyboard.js` | global ⌘ shortcuts |
+| `palette.js` | ⌘K command palette + custom commands |
+| `main.js` | entry: DOM wiring, global listeners, `window.panea` debug bridge, `connect()` |
+
+Backend (`server/`):
+
+| module | owns |
+|--------|------|
+| `paths.js` | all filesystem locations + runtime constants |
+| `static-server.js` | asset serving (vendor whitelist + `public/`) |
+| `session-store.js` | `~/.panea/session.json` |
+| `commands-store.js` | `~/.panea/commands.json` |
+| `meta.js` | sidebar context (cwd / git branch / listening ports) via lsof/git |
+| `pane.js` | the `Pane` class (one PTY) |
+| `connection.js` | per-socket wiring: panes map, I/O relay, meta poll |
+
+### Module rules
+
+- **One feature, one module.** A new feature gets its own file, not another
+  section appended to an existing one. Extend an existing module only when the
+  feature genuinely belongs to that responsibility.
+- **Mutable scalars live in `runtime`** (`state.js`), never as `export let`.
+  ES module bindings can't be reassigned by an importing module, so a shared
+  mutable flag must be a property on an object everyone imports.
+- **Circular imports are fine** as long as cross-module calls happen at
+  runtime (inside functions), never during a module's top-level evaluation.
+  Only `main.js` runs cross-module code at load (`connect()`), and it loads last.
+- Keep `util.js` pure (no DOM, no app state) so anything can import it.
+
+## 2. Where a new feature goes
+
+- **Pure UI / interaction** (frontend only): add a module under `public/js/`,
+  import what it needs, wire its entry from `main.js`. Add styles to
+  `public/style.css`. Expose anything the harness/CLI should reach on the
+  `window.panea` bridge in `main.js`.
+- **Needs host data** (filesystem, process info, git, …): add a backend module
+  under `server/`, surface it through a new WebSocket message in
+  `connection.js`, and handle that message type in the frontend `ws.js`
+  dispatch. Follow the existing `meta` / `commands` messages as the template.
+- **New shortcut**: add it to `keyboard.js` (and, if palette-worthy, to
+  `buildPaletteCommands` in `palette.js`).
+
+## 3. The WebSocket protocol
+
+Client → server: `open`, `input`, `resize`, `close`, `session`, `getCommands`.
+Server → client: `output`, `exit`, `session`, `commands`, `meta`.
+
+Add a feature that needs the host by defining a new message type on both ends;
+keep the payload JSON-serializable (base64 any binary).
+
+## 4. Verify with the capture harness
+
+`electron/main.cjs` supports a one-shot screenshot mode via env vars — use it to
+prove a change renders and behaves, without manual clicking:
+
+```bash
+PANEA_PORT=4821 PANEA_NO_OPEN=1 \
+PANEA_CAPTURE=/path/out.png \
+PANEA_CAPTURE_DELAY=4000 \
+PANEA_DEMO_JS='panea.newTab("/some/repo"); panea.openPalette();' \
+npx electron .
+```
+
+- `PANEA_CAPTURE` — write a PNG of the window, then quit.
+- `PANEA_CAPTURE_DELAY` — ms to wait before capture (raise it if you drive the
+  UI, so async work settles).
+- `PANEA_DEMO_JS` — JS run in the page just before capture. Reach app functions
+  through the **`panea.` debug bridge** (`panea.newTab`, `panea.openPalette`,
+  `panea.state`, …) — ES modules don't expose globals.
+- `PANEA_DEMO_TITLE` / `PANEA_DEMO_TEXT` — emit an OSC title / write text to the
+  focused pane.
+- `PANEA_NO_META_POLL=1` — freeze the sidebar meta poll so an injected
+  `state` stays put for a deterministic screenshot.
+
+Reset `~/.panea/session.json` before a clean run (it persists tabs across runs).
+Always kill a stale port first: `lsof -ti tcp:4821 | xargs kill -9`.
+
+## 5. Checklist before calling it done
+
+- [ ] New feature is its own module (or clearly belongs to the one it extends).
+- [ ] Frontend syntax: `node --check public/js/*.js`; backend: `node --check server.js server/*.js`.
+- [ ] Boots clean in the capture harness (no console errors) and the feature is
+      visible/working in the screenshot.
+- [ ] Styles in `public/style.css`, theme-consistent (cmux palette).
+- [ ] README updated if it adds a shortcut, config file, or user-facing surface.
+- [ ] Graph refreshed: `build_or_update_graph_tool`.
+
+## 6. Run it
+
+```bash
+npm install
+npm run app     # desktop window (Electron)
+npm start       # browser -> http://127.0.0.1:4820
+```

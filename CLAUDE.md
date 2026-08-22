@@ -40,14 +40,24 @@ accurate.
 
 ## Layout
 
-- `server.js` — HTTP static server + WebSocket bridge (127.0.0.1:4820,
-  `PANEA_PORT`). Spawns the PTY, injects `ZDOTDIR` prompt theme.
-- `pty_bridge.py` — PTY via `pty.fork()` execing `zsh -l`; relays
-  fd0/fd1 and fd3 (control JSON resize).
+One responsibility per module — see `skills/developing-a-feature.md` for the
+full table and the rules. **When adding a feature, give it its own module; do
+not append it to an existing file.**
+
+- `server.js` — thin entry: HTTP static server + WebSocket bridge
+  (127.0.0.1:4820, `PANEA_PORT`).
+- `server/` — backend modules: `paths` (config), `static-server`,
+  `session-store`, `commands-store`, `meta` (sidebar cwd/branch/ports via
+  lsof/git), `pane` (one PTY), `connection` (per-socket wiring).
+- `pty_bridge.py` — PTY via `pty.fork()` execing `zsh -l`; relays fd0/fd1 and
+  fd3 (control JSON resize).
 - `electron/main.cjs` — desktop shell; starts `server.js` as a child, opens the
   BrowserWindow, has one-shot screenshot/demo mode gated by `PANEA_*` env.
-- `public/` — frontend: `index.html`, `app.js` (tabs, panes, titles, rename,
-  attention/notify), `style.css` (cmux palette).
+- `public/js/` — frontend ES modules: `theme`, `state`, `dom`, `util`, `ws`,
+  `session`, `tabs`, `panes`, `attention`, `keyboard`, `palette`, `main`.
+  Loaded via `<script type="module" src="/js/main.js">`. `main.js` exposes a
+  `window.panea` debug bridge (ES modules don't leak globals).
+- `public/index.html`, `public/style.css` — markup + cmux palette.
 - `shell/zsh/` — `ZDOTDIR` shim sourcing the user's dotfiles then applying the
   panea prompt (guarded by `PANEA_NO_THEME`). **Do not edit the user's real
   dotfiles.**
