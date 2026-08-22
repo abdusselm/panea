@@ -13,6 +13,17 @@ import { persist } from "./session.js";
 const { Terminal } = window;
 const FitAddon = window.FitAddon;
 
+const SCROLLBACK = 5000;
+
+// Coalesce refit requests: a ResizeObserver can fire many times per frame
+// (window drag, split creation), and each fit() forces a reflow + a resize
+// message. Collapse them to at most one fit per pane per animation frame.
+function scheduleRefit(paneId) {
+  const p = state.panes.get(paneId);
+  if (!p || p.refitRAF) return;
+  p.refitRAF = requestAnimationFrame(() => { p.refitRAF = 0; refit(paneId); });
+}
+
 export function createPane(paneId, tabId, cwd) {
   const term = new Terminal({
     fontFamily: FONT_FAMILY,
@@ -20,7 +31,10 @@ export function createPane(paneId, tabId, cwd) {
     lineHeight: FONT_LINE_HEIGHT,
     letterSpacing: 0,
     cursorBlink: true,
-    scrollback: 10000,
+    // Scrollback is a per-pane memory cost (xterm keeps a typed-array buffer per
+    // line). 5000 lines is generous for a terminal while staying thrifty across
+    // many open splits; raise SCROLLBACK if you need deeper history.
+    scrollback: SCROLLBACK,
     allowProposedApi: true,
     theme: TERM_THEME,
   });
@@ -75,10 +89,10 @@ export function createPane(paneId, tabId, cwd) {
   });
   term.attachCustomKeyEventHandler((e) => handleGlobalKey(e, paneId));
 
-  const ro = new ResizeObserver(() => refit(paneId));
+  const ro = new ResizeObserver(() => scheduleRefit(paneId));
   ro.observe(termEl);
 
-  const pane = { id: paneId, term, fit, tabId, cwd, exited: false, el, termEl, ro, titleEl, title: titleText, attention: false, attnReason: "", attnMessage: "", idleTimer: null, burstStart: 0, burstBytes: 0, meta: { cwd: cwd || "", branch: "", ports: [] } };
+  const pane = { id: paneId, term, fit, tabId, cwd, exited: false, el, termEl, ro, titleEl, title: titleText, attention: false, attnReason: "", attnMessage: "", idleTimer: null, burstStart: 0, burstBytes: 0, refitRAF: 0, meta: { cwd: cwd || "", branch: "", ports: [] } };
   state.panes.set(paneId, pane);
 
   requestAnimationFrame(() => {
@@ -108,7 +122,7 @@ export function refit(paneId) {
     wsSend({ type: "resize", paneId, cols: p.term.cols, rows: p.term.rows });
   } catch (_) {}
 }
-export function refitTab(tab) { eachLeaf(tab.tree, (leaf) => refit(leaf.id)); }
+export function refitTab(tab) { eachLeaf(tab.tree, (leaf) => scheduleRefit(leaf.id)); }
 
 export function focusPane(paneId) {
   if (state.focusedPaneId && state.panes.has(state.focusedPaneId))
@@ -127,6 +141,7 @@ export function destroyPane(paneId) {
   const p = state.panes.get(paneId);
   if (!p) return;
   try { p.ro.disconnect(); } catch (_) {}
+  if (p.refitRAF) cancelAnimationFrame(p.refitRAF);
   clearTimeout(p.idleTimer);
   wsSend({ type: "close", paneId });
   p.term.dispose();

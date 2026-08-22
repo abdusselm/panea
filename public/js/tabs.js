@@ -210,7 +210,19 @@ export function updateTabName(tab) {
   if (runtime.renaming) return;
   const p = namingPane(tab);
   const name = (p && p.title) || "shell";
-  if (name !== tab.name) { tab.name = name; renderTabList(); persist(); }
+  // Titles can change often (the shell sets one on every prompt). Only the name
+  // text changed, so patch that node in place instead of rebuilding the whole
+  // list — avoids re-parsing every row's SVG on each prompt.
+  if (name !== tab.name) { tab.name = name; refreshTabName(tab); persist(); }
+}
+
+// Patch just a tab row's name text (cheap; no list rebuild).
+function refreshTabName(tab) {
+  if (runtime.renaming) return;
+  const row = [...tablistEl.children].find((r) => r.dataset.tabId === tab.id);
+  if (!row) return;
+  const n = row.querySelector(".name");
+  if (n) n.textContent = tab.name;
 }
 
 // ---- inline rename -------------------------------------------------------

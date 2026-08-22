@@ -118,6 +118,43 @@ npx electron .
 Reset `~/.panea/session.json` before a clean run (it persists tabs across runs).
 Always kill a stale port first: `lsof -ti tcp:4821 | xargs kill -9`.
 
+## 4b. Performance / resource discipline
+
+panea can host many terminals at once (splits × tabs). Every feature must be a
+resource miser — fast, but frugal with CPU, memory, and process spawns.
+
+**Rules of thumb**
+
+- **Never spawn child processes per-pane in a loop.** Take one snapshot and
+  derive everything from it. `server/meta.js` is the reference: one `ps` + one
+  `lsof` (cwd) + one `lsof` (ports) per poll cycle for *all* panes, with git
+  cached per-cwd — ~3 spawns total regardless of pane count, not O(panes ×
+  descendants). Diff against `lastMeta` and send only what changed.
+- **Coalesce high-frequency DOM work to an animation frame.** A
+  `ResizeObserver`/scroll/drag can fire many times per frame; each `fit()` forces
+  a reflow. Use the `scheduleRefit` pattern in `panes.js` (one rAF per pane) —
+  never call `fit()` directly from an observer.
+- **Patch the DOM in place for hot updates; don't rebuild.** A full
+  `renderTabList()` re-parses every row's SVG. For frequent changes (titles fire
+  on every shell prompt) update just the changed node — see `refreshTabName` /
+  `refreshTabMeta`. Reserve full rebuilds for structural changes (add/remove tab).
+- **Debounce persistence and network writes.** `persist()` is debounced (200ms)
+  and the server file write again (150ms). Keep any new "save on change" behind a
+  debounce; don't write on every keystroke/event.
+- **Only work on what's visible.** `refit` early-returns for panes whose tab
+  isn't active; background tabs are `display:none` so xterm doesn't render them.
+  Don't add always-on timers/animations that tick for hidden panes.
+- **Bound every cache and cancel every timer/rAF on teardown.** `destroyPane`
+  clears the idle timer and cancels the pending rAF; the branch cache is pruned.
+  A new long-lived Map/interval/observer must have a matching cleanup.
+- **Memory knobs:** xterm `scrollback` (`SCROLLBACK` in `panes.js`, default 5000)
+  is a per-pane typed-array cost — don't raise it without reason. Prefer the DOM
+  renderer we ship; don't add a WebGL context per pane (GPU contexts are limited
+  and costly across many splits).
+
+If a change touches a hot path (per-output, per-resize, per-poll, per-keystroke),
+say so in the handoff and note what keeps it cheap.
+
 ## 5. Checklist before calling it done
 
 - [ ] New feature is its own module (or clearly belongs to the one it extends).
@@ -126,6 +163,8 @@ Always kill a stale port first: `lsof -ti tcp:4821 | xargs kill -9`.
       visible/working in the screenshot.
 - [ ] Styles in `public/style.css`, theme-consistent (cmux palette).
 - [ ] README updated if it adds a shortcut, config file, or user-facing surface.
+- [ ] Resource check (section 4b): no per-pane process storm, hot DOM work
+      coalesced, timers/rAF/caches cleaned up on teardown.
 - [ ] Graph refreshed: `build_or_update_graph_tool`.
 
 ## 6. Run it

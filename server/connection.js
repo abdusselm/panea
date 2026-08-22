@@ -4,7 +4,7 @@
 import { Pane } from "./pane.js";
 import { loadSession, saveSession } from "./session-store.js";
 import { loadCommands } from "./commands-store.js";
-import { computeMeta } from "./meta.js";
+import { computeMetaBatch } from "./meta.js";
 
 const META_POLL_MS = 3500;
 const META_FIRST_POLL_MS = 900;
@@ -17,24 +17,28 @@ export function handleConnection(ws) {
     if (ws.readyState === ws.OPEN) ws.send(JSON.stringify(obj));
   };
 
-  // Poll each pane's live context (cwd / branch / ports) and push updates when
-  // anything changed. Sequential across panes to keep lsof/git pressure low.
+  // Poll every pane's live context (cwd / branch / ports) from a single shared
+  // process snapshot, and push only what changed. One batch keeps spawns at ~3
+  // per cycle regardless of how many panes are open.
   let polling = false;
   const pollMeta = async () => {
     if (polling) return;
+    const entries = [...panes].filter(([, pane]) => pane.child && pane.child.pid);
+    if (!entries.length) return;
     polling = true;
     try {
-      for (const [id, pane] of panes) {
-        const pid = pane.child && pane.child.pid;
-        if (!pid) continue;
-        let meta;
-        try { meta = await computeMeta(pid); } catch { continue; }
+      const byBridge = await computeMetaBatch(entries.map(([, pane]) => pane.child.pid));
+      for (const [id, pane] of entries) {
         if (!panes.has(id)) continue; // pane closed mid-poll
+        const meta = byBridge.get(pane.child.pid);
+        if (!meta) continue;
         const key = JSON.stringify(meta);
         if (lastMeta.get(id) === key) continue;
         lastMeta.set(id, key);
         send({ type: "meta", paneId: id, ...meta });
       }
+    } catch {
+      // transient ps/lsof failure — try again next cycle
     } finally {
       polling = false;
     }

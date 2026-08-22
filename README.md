@@ -94,6 +94,10 @@ seconds; no shell configuration required.
 
 - Open tabs/layout persist in `~/.panea/session.json`.
 - Custom palette commands live in `~/.panea/commands.json`.
+- Resource-thrifty by design: sidebar metadata for all panes comes from one
+  process snapshot per poll (not per-pane spawns), resize work is coalesced to
+  one frame, and terminal scrollback defaults to 5000 lines (`SCROLLBACK` in
+  `public/js/panes.js`).
 - Terminal/UI color: `--term-bg` in `public/style.css` and
   `TERM_THEME.background` in `public/app.js` (currently `#282c34`).
 - Shell prompt theme is injected via `ZDOTDIR` without touching your dotfiles.

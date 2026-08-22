@@ -62,6 +62,15 @@ not append it to an existing file.**
   panea prompt (guarded by `PANEA_NO_THEME`). **Do not edit the user's real
   dotfiles.**
 
+## Performance (standing)
+
+panea hosts many terminals at once — be a resource miser. Key rules (full detail
+in `skills/developing-a-feature.md` §4b): never spawn child processes per-pane
+(snapshot once — see `server/meta.js`); coalesce ResizeObserver/hot DOM work to
+one rAF (`scheduleRefit`); patch DOM nodes in place for frequent updates rather
+than rebuilding (`refreshTabName`/`refreshTabMeta`); debounce saves; cancel every
+timer/rAF and bound every cache on teardown; only render the active tab.
+
 ## Constraints (standing)
 
 - Managed corporate Mac: use only pre-signed/notarized runtimes; never a
