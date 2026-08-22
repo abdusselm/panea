@@ -1,0 +1,23 @@
+{
+  "name": "panea",
+  "version": "0.1.0",
+  "description": "Local multi-pane terminal workspace for AI coding agents. Browser build or native desktop window.",
+  "type": "module",
+  "main": "electron/main.cjs",
+  "bin": {
+    "panea": "server.js"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "web": "node server.js",
+    "app": "electron ."
+  },
+  "dependencies": {
+    "@xterm/addon-fit": "^0.10.0",
+    "@xterm/xterm": "^5.5.0",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "electron": "^43.0.0"
+  }
+}

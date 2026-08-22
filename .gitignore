@@ -1,0 +1,4 @@
+node_modules/
+.panea/
+*.log
+.DS_Store

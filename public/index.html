@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>panea</title>
+  <link rel="stylesheet" href="/vendor/xterm.css" />
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <div id="app">
+    <aside id="sidebar">
+      <div id="sidebar-head">
+        <div id="brand">panea <small>terminals</small></div>
+        <button id="new-tab" title="New tab (⌘T)">+</button>
+      </div>
+      <button id="cmdk" title="Command palette">
+        <span class="cmdk-label">Commands…</span>
+        <span class="cmdk-keys"><kbd>⌘</kbd><kbd>K</kbd></span>
+      </button>
+      <div id="tablist"></div>
+    </aside>
+    <main id="workspace">
+      <div id="empty">
+        <div>no terminals open</div>
+        <button id="empty-new">New terminal</button>
+      </div>
+    </main>
+  </div>
+  <script src="/vendor/xterm.js"></script>
+  <script src="/vendor/addon-fit.js"></script>
+  <script src="/app.js"></script>
+</body>
+</html>

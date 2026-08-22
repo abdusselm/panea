@@ -1,0 +1,7 @@
+[
+  { "name": "Dev server", "run": "npm run dev", "where": "new-tab" },
+  { "name": "Run tests", "run": "npm test", "where": "focused" },
+  { "name": "Git status", "run": "git status", "where": "focused" },
+  { "name": "Claude", "run": "claude", "where": "split" },
+  { "name": "Lazygit", "run": "lazygit", "where": "new-tab" }
+]
