@@ -9,17 +9,19 @@ import { refitTab } from "./panes.js";
 import { clearPaneAttention } from "./attention.js";
 import { handleGlobalKey } from "./keyboard.js";
 import { openPalette, togglePalette } from "./palette.js";
+import { openNotifications, toggleNotifications } from "./notifications.js";
 import { splitPane, closePane } from "./panes.js";
 
 // Debug/automation surface. ES modules don't leak their bindings to the global
 // scope (good), so expose a small curated namespace for the screenshot harness,
 // a future CLI, and console poking. Not a stable public API.
-window.panea = { state, runtime, newTab, openPalette, togglePalette, splitPane, closePane };
+window.panea = { state, runtime, newTab, openPalette, togglePalette, openNotifications, toggleNotifications, splitPane, closePane };
 
 // Sidebar chrome buttons.
 document.getElementById("new-tab").onclick = () => newTab();
 document.getElementById("empty-new").onclick = () => newTab();
 document.getElementById("cmdk").onclick = () => openPalette();
+document.getElementById("bell").onclick = () => toggleNotifications();
 
 // ⌘K toggles the palette from anywhere (capture phase so the terminal textarea
 // never sees the keystroke).
@@ -32,7 +34,7 @@ document.addEventListener("keydown", (e) => {
 // ⌘T / ⌘W / ⌘D also work when focus isn't inside a terminal (e.g. on the
 // sidebar). Inside a terminal, xterm's key handler already routes these.
 document.addEventListener("keydown", (e) => {
-  if (e.metaKey && ["t", "w", "d"].includes(e.key.toLowerCase())) {
+  if (e.metaKey && ["t", "w", "d", "n"].includes(e.key.toLowerCase())) {
     if (!e.target.closest || !e.target.closest(".leaf-term")) handleGlobalKey(e, state.focusedPaneId);
   }
 });

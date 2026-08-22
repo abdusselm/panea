@@ -8,6 +8,7 @@ import { DEFAULT_FONT_SIZE } from "./theme.js";
 import { wsSend } from "./ws.js";
 import { newTab, activateTab, startRename } from "./tabs.js";
 import { splitPane, closePane, restartPane, setFontSize, focusPane } from "./panes.js";
+import { openNotifications } from "./notifications.js";
 
 let customCommands = [];
 let paletteEl = null, paletteInput = null, paletteListEl = null;
@@ -86,6 +87,7 @@ function buildPaletteCommands() {
   add("Next tab", "", () => cycleTab(1));
   add("Previous tab", "", () => cycleTab(-1));
   add("Jump to next notification", "", nextAttentionPane);
+  add("Show notifications", "⇧⌘N", () => openNotifications());
   add("Clear terminal", "", clearFocusedTerminal);
   add("Restart pane", "", () => { const p = focusedPane(); if (p) restartPane(p.id); });
   add("Increase font size", "⌘+", () => setFontSize(runtime.fontSize + 1));

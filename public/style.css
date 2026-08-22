@@ -52,6 +52,24 @@ html, body {
   font-size: 15px; line-height: 1; cursor: pointer;
 }
 #new-tab:hover { border-color: var(--accent); color: var(--accent); }
+#head-actions { display: flex; align-items: center; gap: 6px; -webkit-app-region: no-drag; }
+/* Notification bell: a count badge appears (warm notify color) when any pane
+   needs attention. */
+#bell {
+  position: relative; border: 1px solid var(--border-strong); background: var(--bg-elev);
+  color: var(--text-dim); border-radius: 6px; width: 24px; height: 24px;
+  padding: 0; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
+}
+#bell svg { width: 14px; height: 14px; }
+#bell:hover { border-color: var(--accent); color: var(--text); }
+#bell.has { color: var(--notify-b); border-color: var(--notify-b); }
+#bell .bell-count {
+  display: none; position: absolute; top: -6px; right: -6px; min-width: 15px; height: 15px;
+  padding: 0 4px; border-radius: 8px; font-size: 9px; font-weight: 700; line-height: 15px;
+  color: var(--notify-ink); background: linear-gradient(135deg, var(--notify-a), var(--notify-b));
+  box-shadow: 0 1px 5px rgba(245, 128, 107, 0.5);
+}
+#bell.has .bell-count { display: block; }
 
 /* Command-palette affordance: a search-bar-styled button so users discover the
    ⌘K palette without knowing the shortcut. Click opens it. */
@@ -258,3 +276,45 @@ kbd {
 .palette-item .pi-hint { flex: 0 0 auto; color: var(--text-dim); font-size: 11px; font-variant-numeric: tabular-nums; }
 .palette-item.sel .pi-hint { color: rgba(255, 255, 255, 0.75); }
 .palette-empty { padding: 14px 12px; color: var(--text-dim); font-size: 13px; text-align: center; }
+
+/* ---------------- notification panel (⇧⌘N) ---------------- */
+#notif-panel {
+  position: fixed; inset: 0; z-index: 2000; display: none;
+  background: rgba(0, 0, 0, 0.38);
+  align-items: flex-start; justify-content: center;
+  padding-top: 12vh; -webkit-app-region: no-drag;
+}
+#notif-panel.open { display: flex; }
+.notif-box {
+  width: 460px; max-width: calc(100vw - 40px);
+  background: #2f343d; border: 1px solid var(--border-strong);
+  border-radius: 12px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.55);
+  overflow: hidden; display: flex; flex-direction: column;
+}
+.notif-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 14px; border-bottom: 1px solid var(--border);
+}
+.notif-title { font-size: 14px; font-weight: 600; color: var(--text); }
+.notif-clear {
+  background: transparent; border: 1px solid var(--border-strong); color: var(--text-dim);
+  font-family: inherit; font-size: 11px; padding: 3px 9px; border-radius: 6px; cursor: pointer;
+}
+.notif-clear:hover { color: var(--text); border-color: var(--accent); }
+.notif-list { max-height: 46vh; overflow-y: auto; padding: 6px; }
+.notif-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 11px; border-radius: 7px; cursor: pointer;
+}
+.notif-item:hover { background: var(--accent); }
+.notif-item .ni-dot {
+  flex: 0 0 8px; width: 8px; height: 8px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--notify-a), var(--notify-b));
+  box-shadow: 0 0 6px rgba(245, 128, 107, 0.6);
+}
+.notif-item .ni-text { min-width: 0; }
+.notif-item .ni-name { font-size: 13.5px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.notif-item:hover .ni-name { color: #fff; }
+.notif-item .ni-sub { font-size: 11px; color: var(--text-dim); }
+.notif-item:hover .ni-sub { color: rgba(255, 255, 255, 0.75); }
+.notif-empty { padding: 18px 12px; color: var(--text-dim); font-size: 13px; text-align: center; }

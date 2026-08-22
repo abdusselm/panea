@@ -25,6 +25,7 @@ Change the port: `PANEA_PORT=5000 npm run app`
 | Key | Action |
 |-----|--------|
 | `Cmd-K` | command palette |
+| `Shift-Cmd-N` | notification panel |
 | `Cmd-T` | new tab |
 | `Cmd-W` | close focused pane |
 | `Cmd-D` | split right |
@@ -53,6 +54,13 @@ Define custom commands in `~/.panea/commands.json` (see
 - `where` — `focused` (default), `new-tab`, `split`, or `split-down`.
 
 Edits are picked up the next time you open the palette; no restart needed.
+
+## Notifications
+
+A background pane earns attention when it rings the bell or finishes a burst of
+output and goes quiet (an AI agent waiting on you). The sidebar bell shows a
+count; `Shift-Cmd-N` (or the bell) opens a panel listing every pending pane.
+Click one to jump straight to it, or **Clear all** to dismiss them.
 
 ## Sidebar context
 

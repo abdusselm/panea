@@ -6,6 +6,7 @@ import { state, runtime } from "./state.js";
 import { eachLeaf } from "./util.js";
 import { refreshTabClasses, activateTab } from "./tabs.js";
 import { focusPane } from "./panes.js";
+import { updateNotifyIndicator } from "./notifications.js";
 
 const ATTN_IDLE_MS = 700;
 
@@ -35,6 +36,7 @@ export function setPaneAttention(p) {
   p.el.classList.add("attn");
   const tab = state.tabs.find((t) => t.id === p.tabId);
   if (tab) { tab.attention = true; refreshTabClasses(); }
+  updateNotifyIndicator();
   if (firstTime) notifyAttention(p, tab);
 }
 
@@ -43,6 +45,7 @@ export function clearPaneAttention(p) {
   if (p.attention) { p.attention = false; p.el.classList.remove("attn"); }
   const tab = state.tabs.find((t) => t.id === p.tabId);
   if (tab) { tab.attention = anyPaneAttention(tab); refreshTabClasses(); }
+  updateNotifyIndicator();
 }
 
 // Native desktop notification when panea isn't the pane the user is looking at.

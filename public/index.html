@@ -12,7 +12,13 @@
     <aside id="sidebar">
       <div id="sidebar-head">
         <div id="brand">panea <small>terminals</small></div>
-        <button id="new-tab" title="New tab (⌘T)">+</button>
+        <div id="head-actions">
+          <button id="bell" title="Notifications (⇧⌘N)">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M8 2a3.5 3.5 0 0 0-3.5 3.5c0 3-1.2 4-1.2 4h9.4s-1.2-1-1.2-4A3.5 3.5 0 0 0 8 2z"/><path d="M6.6 13.2a1.6 1.6 0 0 0 2.8 0"/></svg>
+            <span class="bell-count"></span>
+          </button>
+          <button id="new-tab" title="New tab (⌘T)">+</button>
+        </div>
       </div>
       <button id="cmdk" title="Command palette">
         <span class="cmdk-label">Commands…</span>
