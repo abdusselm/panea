@@ -14,7 +14,8 @@ import { reopenClosedTab, hasClosedTabs, saveLayoutInteractive, openLayoutIntera
 let customCommands = [];
 let paletteEl = null, paletteInput = null, paletteListEl = null;
 let paletteCmds = [];   // full command set built when the palette opens
-let paletteItems = [];  // current filtered view
+let paletteItems = [];  // current filtered view (selectable commands only)
+let itemRows = [];      // DOM row element per selectable command
 let paletteIndex = 0;
 
 // Called by the ws layer when the server delivers the command list.
@@ -84,35 +85,47 @@ function clearFocusedTerminal() {
   if (p) p.term.clear();
 }
 
-// Assemble the palette: built-in actions + a switch entry per tab + customs.
+// Group order for the palette; commands render under these section headers.
+const GROUP_ORDER = ["Tabs", "Panes", "Layouts", "View", "Notifications", "Switch tab", "Custom"];
+
+// Assemble the palette: built-in actions grouped by function + a switch entry
+// per tab + custom commands. Each command carries a `group` so the list can
+// render section headers instead of one long undifferentiated list.
 function buildPaletteCommands() {
   const cmds = [];
-  const add = (title, hint, run) => cmds.push({ title, hint, run });
-  add("New terminal", "⌘T", () => newTab());
-  add("Split right", "⌘D", () => { const p = focusedPane(); if (p) splitPane(p.id, "h"); });
-  add("Split down", "⇧⌘D", () => { const p = focusedPane(); if (p) splitPane(p.id, "v"); });
-  add("Close pane", "⌘W", () => { const p = focusedPane(); if (p) closePane(p.id); });
-  add("Rename tab", "", renameActiveTab);
-  if (hasClosedTabs()) add("Reopen closed tab", "⇧⌘T", () => reopenClosedTab());
-  add("Save this tab as layout…", "", () => saveLayoutInteractive());
+  const add = (group, title, hint, run) => cmds.push({ group, title, hint, run });
+
+  add("Tabs", "New terminal", "⌘T", () => newTab());
+  add("Tabs", "Rename tab", "", renameActiveTab);
+  if (hasClosedTabs()) add("Tabs", "Reopen closed tab", "⇧⌘T", () => reopenClosedTab());
+  add("Tabs", "Next tab", "", () => cycleTab(1));
+  add("Tabs", "Previous tab", "", () => cycleTab(-1));
+
+  add("Panes", "Split right", "⌘D", () => { const p = focusedPane(); if (p) splitPane(p.id, "h"); });
+  add("Panes", "Split down", "⇧⌘D", () => { const p = focusedPane(); if (p) splitPane(p.id, "v"); });
+  add("Panes", "Close pane", "⌘W", () => { const p = focusedPane(); if (p) closePane(p.id); });
+  add("Panes", "Restart pane", "", () => { const p = focusedPane(); if (p) restartPane(p.id); });
+  add("Panes", "Clear terminal", "", clearFocusedTerminal);
+
+  add("Layouts", "Save this tab as layout…", "", () => saveLayoutInteractive());
   if (layoutNames().length) {
-    add("Open layout…", "", () => openLayoutInteractive());
-    add("Delete layout…", "", () => deleteLayoutPick());
+    add("Layouts", "Open layout…", "", () => openLayoutInteractive());
+    add("Layouts", "Delete layout…", "", () => deleteLayoutPick());
   }
-  add("Next tab", "", () => cycleTab(1));
-  add("Previous tab", "", () => cycleTab(-1));
-  add("Jump to next notification", "", nextAttentionPane);
-  add("Show notifications", "⇧⌘N", () => openNotifications());
-  add("Clear terminal", "", clearFocusedTerminal);
-  add("Restart pane", "", () => { const p = focusedPane(); if (p) restartPane(p.id); });
-  add("Increase font size", "⌘+", () => setFontSize(runtime.fontSize + 1));
-  add("Decrease font size", "⌘−", () => setFontSize(runtime.fontSize - 1));
-  add("Reset font size", "⌘0", () => setFontSize(DEFAULT_FONT_SIZE));
-  state.tabs.forEach((tab, i) => add(`Switch to: ${tab.name}`, i < 9 ? `⌘${i + 1}` : "", () => activateTab(tab.id)));
+
+  add("View", "Increase font size", "⌘+", () => setFontSize(runtime.fontSize + 1));
+  add("View", "Decrease font size", "⌘−", () => setFontSize(runtime.fontSize - 1));
+  add("View", "Reset font size", "⌘0", () => setFontSize(DEFAULT_FONT_SIZE));
+
+  add("Notifications", "Jump to next notification", "", nextAttentionPane);
+  add("Notifications", "Show notifications", "⇧⌘N", () => openNotifications());
+
+  state.tabs.forEach((tab, i) => add("Switch tab", tab.name, i < 9 ? `⌘${i + 1}` : "", () => activateTab(tab.id)));
+
   for (const c of customCommands) {
     if (!c || !c.run) continue;
     const where = c.where || c.in || "focused";
-    add(c.name || String(c.run), "run · " + where, () => runCommandLine(String(c.run), where));
+    add("Custom", c.name || String(c.run), "run · " + where, () => runCommandLine(String(c.run), where));
   }
   return cmds;
 }
@@ -180,19 +193,43 @@ function renderPalette() {
   const q = paletteInput.value.trim();
   let ranked = paletteCmds.map((cmd) => ({ cmd, s: fuzzyScore(cmd.title + " " + (cmd.hint || ""), q) }));
   if (q) ranked = ranked.filter((r) => r.s > 0).sort((a, b) => b.s - a.s);
-  paletteItems = ranked.slice(0, 60).map((r) => r.cmd);
-  paletteIndex = 0;
+  const items = ranked.slice(0, 80).map((r) => r.cmd);
+
+  // Bucket the (possibly filtered) commands by group, then emit groups in a
+  // fixed order so the palette reads as sections rather than one flat list.
+  const byGroup = new Map();
+  for (const cmd of items) {
+    if (!byGroup.has(cmd.group)) byGroup.set(cmd.group, []);
+    byGroup.get(cmd.group).push(cmd);
+  }
+  const groups = [];
+  for (const g of GROUP_ORDER) if (byGroup.has(g)) groups.push([g, byGroup.get(g)]);
+  for (const [g, arr] of byGroup) if (!GROUP_ORDER.includes(g)) groups.push([g, arr]); // safety
+
   paletteListEl.innerHTML = "";
-  paletteItems.forEach((cmd, i) => {
-    const row = document.createElement("div");
-    row.className = "palette-item" + (i === 0 ? " sel" : "");
-    row.innerHTML = '<span class="pi-title"></span><span class="pi-hint"></span>';
-    row.querySelector(".pi-title").textContent = cmd.title;
-    row.querySelector(".pi-hint").textContent = cmd.hint || "";
-    row.onmousemove = () => setPaletteIndex(i);
-    row.onclick = () => { setPaletteIndex(i); runPaletteSelection(); };
-    paletteListEl.appendChild(row);
-  });
+  paletteItems = [];   // selectable commands, in visual order
+  itemRows = [];        // DOM row per selectable command (headers excluded)
+  for (const [g, arr] of groups) {
+    const head = document.createElement("div");
+    head.className = "palette-group";
+    head.textContent = g;
+    paletteListEl.appendChild(head);
+    for (const cmd of arr) {
+      const i = paletteItems.length;
+      paletteItems.push(cmd);
+      const row = document.createElement("div");
+      row.className = "palette-item";
+      row.innerHTML = '<span class="pi-title"></span><span class="pi-hint"></span>';
+      row.querySelector(".pi-title").textContent = cmd.title;
+      row.querySelector(".pi-hint").textContent = cmd.hint || "";
+      row.onmousemove = () => setPaletteIndex(i);
+      row.onclick = () => { setPaletteIndex(i); runPaletteSelection(); };
+      paletteListEl.appendChild(row);
+      itemRows.push(row);
+    }
+  }
+  paletteIndex = 0;
+  if (itemRows.length) itemRows[0].classList.add("sel");
   if (!paletteItems.length) {
     const empty = document.createElement("div");
     empty.className = "palette-empty";
@@ -203,14 +240,14 @@ function renderPalette() {
 
 function setPaletteIndex(i) {
   paletteIndex = i;
-  [...paletteListEl.children].forEach((el, j) => el.classList.toggle("sel", j === i));
+  itemRows.forEach((el, j) => el.classList.toggle("sel", j === i));
 }
 
 function movePalette(delta) {
   if (!paletteItems.length) return;
   const n = (paletteIndex + delta + paletteItems.length) % paletteItems.length;
   setPaletteIndex(n);
-  const el = paletteListEl.children[n];
+  const el = itemRows[n];
   if (el) el.scrollIntoView({ block: "nearest" });
 }
 

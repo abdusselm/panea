@@ -37,9 +37,10 @@ Change the port: `PANEA_PORT=5000 npm run app`
 
 ## Command palette
 
-`Cmd-K` opens a fuzzy command palette: built-in actions (new tab, split,
-close, font size, jump to next notification, switch tab …) plus your own
-custom commands.
+`Cmd-K` opens a fuzzy command palette. Commands are grouped by function under
+section headers — **Tabs**, **Panes**, **Layouts**, **View**, **Notifications**,
+**Switch tab**, and your own **Custom** commands — so a long list stays
+scannable. Typing filters across every group; empty groups drop out.
 
 Define custom commands in `~/.panea/commands.json` (see
 [`commands.example.json`](commands.example.json)):
