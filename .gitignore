@@ -2,3 +2,7 @@ node_modules/
 .panea/
 *.log
 .DS_Store
+__pycache__/
+
+shell/zsh/.zsh_history
+shell/zsh/.zcompdump*
