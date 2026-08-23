@@ -94,7 +94,7 @@ function buildPaletteCommands() {
   add("Close pane", "⌘W", () => { const p = focusedPane(); if (p) closePane(p.id); });
   add("Rename tab", "", renameActiveTab);
   if (hasClosedTabs()) add("Reopen closed tab", "⇧⌘T", () => reopenClosedTab());
-  add("Save current layout…", "", () => saveLayoutInteractive());
+  add("Save this tab as layout…", "", () => saveLayoutInteractive());
   if (layoutNames().length) {
     add("Open layout…", "", () => openLayoutInteractive());
     add("Delete layout…", "", () => deleteLayoutPick());

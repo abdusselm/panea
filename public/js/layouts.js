@@ -37,8 +37,13 @@ export function layoutNames() {
   return Object.keys(savedLayouts).sort((a, b) => a.localeCompare(b));
 }
 
+// A layout captures the *active* tab (with its split tree), not the whole
+// workspace — a layout is "this terminal setup", so saving one while other
+// tabs are open must not drag those other tabs in. Stored as a one-entry tabs
+// array so openLayout stays uniform (and old multi-tab layouts still restore).
 function serializeWorkspace() {
-  return { tabs: state.tabs.map(serializeTab) };
+  const active = state.tabs.find((t) => t.id === state.activeTabId) || state.tabs[0];
+  return { tabs: active ? [serializeTab(active)] : [] };
 }
 
 export function saveCurrentLayout(name) {
@@ -107,9 +112,9 @@ export function promptName(title, initial, onOk) {
   input.select();
 }
 
-// Convenience used by the palette's "Save current layout…" entry.
+// Convenience used by the palette's "Save this tab as layout…" entry.
 export function saveLayoutInteractive() {
-  promptName("Save layout as", "", (name) => saveCurrentLayout(name));
+  promptName("Save this tab as layout", "", (name) => saveCurrentLayout(name));
 }
 
 // ---- confirm modal (destructive actions) ---------------------------------
