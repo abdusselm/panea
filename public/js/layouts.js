@@ -146,3 +146,67 @@ function confirmAction(title, messageHtml, boldText, okLabel, onOk) {
   confirmEl.tabIndex = -1;
   confirmEl.focus();
 }
+
+// ---- layout picker (choose one saved layout) -----------------------------
+// One palette entry ("Open layout…" / "Delete layout…") opens this list of
+// saved layouts instead of spamming the palette with one row per layout.
+let pickerEl = null, pickerNames = [], pickerIdx = 0, pickerOnPick = null;
+
+function renderPicker() {
+  const list = pickerEl.querySelector(".lp-list");
+  list.innerHTML = "";
+  pickerNames.forEach((name, i) => {
+    const row = document.createElement("div");
+    row.className = "lp-item" + (i === pickerIdx ? " sel" : "");
+    row.textContent = name;
+    row.onmousemove = () => setPickerIdx(i);
+    row.onclick = () => choosePicker(i);
+    list.appendChild(row);
+  });
+}
+function setPickerIdx(i) {
+  pickerIdx = i;
+  [...pickerEl.querySelectorAll(".lp-item")].forEach((el, j) => el.classList.toggle("sel", j === i));
+}
+function movePicker(delta) {
+  if (!pickerNames.length) return;
+  setPickerIdx((pickerIdx + delta + pickerNames.length) % pickerNames.length);
+  const el = pickerEl.querySelectorAll(".lp-item")[pickerIdx];
+  if (el) el.scrollIntoView({ block: "nearest" });
+}
+function closePicker() { if (pickerEl) pickerEl.classList.remove("open"); }
+function choosePicker(i) {
+  const name = pickerNames[i];
+  closePicker();
+  if (name && pickerOnPick) pickerOnPick(name);
+}
+
+function pickLayout(title, onPick) {
+  pickerNames = layoutNames();
+  if (!pickerNames.length) return;
+  if (!pickerEl) {
+    pickerEl = document.createElement("div");
+    pickerEl.id = "layout-picker";
+    pickerEl.innerHTML =
+      '<div class="np-box"><div class="np-title"></div><div class="lp-list"></div></div>';
+    document.body.appendChild(pickerEl);
+    pickerEl.onmousedown = (e) => { if (e.target === pickerEl) closePicker(); };
+    pickerEl.onkeydown = (e) => {
+      e.stopPropagation();
+      if (e.key === "ArrowDown") { e.preventDefault(); movePicker(1); }
+      else if (e.key === "ArrowUp") { e.preventDefault(); movePicker(-1); }
+      else if (e.key === "Enter") { e.preventDefault(); choosePicker(pickerIdx); }
+      else if (e.key === "Escape") { e.preventDefault(); closePicker(); }
+    };
+  }
+  pickerEl.querySelector(".np-title").textContent = title;
+  pickerOnPick = onPick;
+  pickerIdx = 0;
+  renderPicker();
+  pickerEl.classList.add("open");
+  pickerEl.tabIndex = -1;
+  pickerEl.focus();
+}
+
+export function openLayoutInteractive() { pickLayout("Open layout", openLayout); }
+export function deleteLayoutPick() { pickLayout("Delete layout", deleteLayoutInteractive); }

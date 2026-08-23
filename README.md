@@ -85,9 +85,9 @@ patterns or the long-task threshold there.
   recently closed tab with its name, working directory, and split layout. Keeps
   a short history of closes.
 - **Saved layouts** — from the palette, "Save current layout…" names a snapshot
-  of all your tabs; "Open layout: \<name\>" restores it (appended to the current
-  workspace), and "Delete layout: \<name\>" removes it (behind a confirm step).
-  Saved to `~/.panea/layouts.json`.
+  of all your tabs. "Open layout…" and "Delete layout…" each open a list of your
+  saved layouts to pick from (delete asks to confirm). Opening a layout appends
+  its tabs to the current workspace. Saved to `~/.panea/layouts.json`.
 
 ## Sidebar context
 
