@@ -68,6 +68,14 @@ export function deleteLayout(name) {
   wsSend({ type: "deleteLayout", name });
 }
 
+// Delete behind a confirmation step; the palette entry uses this so a stray
+// Enter can't wipe a saved layout.
+export function deleteLayoutInteractive(name) {
+  if (!(name in savedLayouts)) return;
+  confirmAction("Delete layout", "Delete saved layout <b></b>? This can't be undone.",
+    name, "Delete", () => deleteLayout(name));
+}
+
 // ---- name prompt (small modal; window.prompt is unavailable in Electron) --
 let promptEl = null;
 export function promptName(title, initial, onOk) {
@@ -102,4 +110,39 @@ export function promptName(title, initial, onOk) {
 // Convenience used by the palette's "Save current layout…" entry.
 export function saveLayoutInteractive() {
   promptName("Save layout as", "", (name) => saveCurrentLayout(name));
+}
+
+// ---- confirm modal (destructive actions) ---------------------------------
+let confirmEl = null;
+function confirmAction(title, messageHtml, boldText, okLabel, onOk) {
+  if (!confirmEl) {
+    confirmEl = document.createElement("div");
+    confirmEl.id = "confirm-modal";
+    confirmEl.innerHTML =
+      '<div class="np-box"><div class="np-title"></div>' +
+      '<div class="np-msg"></div>' +
+      '<div class="np-actions"><button class="np-cancel">Cancel</button>' +
+      '<button class="np-danger"></button></div></div>';
+    document.body.appendChild(confirmEl);
+  }
+  const msg = confirmEl.querySelector(".np-msg");
+  msg.innerHTML = messageHtml;         // trusted template with a <b></b> slot
+  const slot = msg.querySelector("b");
+  if (slot) slot.textContent = boldText; // name inserted as text, never HTML
+  confirmEl.querySelector(".np-title").textContent = title;
+  const okBtn = confirmEl.querySelector(".np-danger");
+  okBtn.textContent = okLabel || "OK";
+  const close = () => { confirmEl.classList.remove("open"); };
+  const ok = () => { close(); onOk(); };
+  okBtn.onclick = ok;
+  confirmEl.querySelector(".np-cancel").onclick = close;
+  confirmEl.onmousedown = (e) => { if (e.target === confirmEl) close(); };
+  confirmEl.onkeydown = (e) => {
+    e.stopPropagation();
+    if (e.key === "Enter") { e.preventDefault(); ok(); }
+    else if (e.key === "Escape") { e.preventDefault(); close(); }
+  };
+  confirmEl.classList.add("open");
+  confirmEl.tabIndex = -1;
+  confirmEl.focus();
 }

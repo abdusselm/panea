@@ -325,13 +325,14 @@ kbd {
 .notif-empty { padding: 18px 12px; color: var(--text-dim); font-size: 13px; text-align: center; }
 
 /* ---------------- name prompt (save layout) ---------------- */
-#name-prompt {
+#name-prompt, #confirm-modal {
   position: fixed; inset: 0; z-index: 2100; display: none;
   background: rgba(0, 0, 0, 0.38);
   align-items: flex-start; justify-content: center;
   padding-top: 16vh; -webkit-app-region: no-drag;
 }
-#name-prompt.open { display: flex; }
+#confirm-modal { z-index: 2200; }
+#name-prompt.open, #confirm-modal.open { display: flex; }
 .np-box {
   width: 380px; max-width: calc(100vw - 40px);
   background: #2f343d; border: 1px solid var(--border-strong);
@@ -351,3 +352,7 @@ kbd {
 }
 .np-actions .np-ok { background: var(--accent); border-color: var(--accent); color: #fff; }
 .np-actions button:hover { border-color: var(--accent); }
+.np-msg { font-size: 13px; color: var(--text); line-height: 1.4; }
+.np-msg b { color: #fff; }
+.np-actions .np-danger { background: #b5433a; border-color: #b5433a; color: #fff; }
+.np-actions .np-danger:hover { background: #c94d43; border-color: #c94d43; }
