@@ -1,0 +1,58 @@
+/* Small centered dialogs that share one overlay look: the name prompt (save
+   layout), the destructive confirm modal, and the layout picker list. Mirrors
+   the modal helpers in public/js/layouts.js. The .np-* box/title/actions
+   classes are shared; the picker (.lp-*) and picker-specific overrides reuse
+   that box with a roomier, palette-style list. */
+
+#name-prompt, #confirm-modal, #layout-picker {
+  position: fixed; inset: 0; z-index: 2100; display: none;
+  background: rgba(0, 0, 0, 0.38);
+  align-items: flex-start; justify-content: center;
+  padding-top: 16vh; -webkit-app-region: no-drag;
+}
+#confirm-modal { z-index: 2200; }
+#name-prompt.open, #confirm-modal.open, #layout-picker.open { display: flex; }
+
+/* shared dialog box */
+.np-box {
+  width: 380px; max-width: calc(100vw - 40px);
+  background: #2f343d; border: 1px solid var(--border-strong);
+  border-radius: 12px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.55);
+  padding: 16px; display: flex; flex-direction: column; gap: 12px;
+}
+.np-title { font-size: 13px; color: var(--text-dim); }
+.np-input {
+  border: 1px solid var(--accent); outline: none; background: rgba(0, 0, 0, 0.35);
+  color: var(--text); font-size: 14px; font-family: inherit;
+  padding: 8px 10px; border-radius: 7px;
+}
+.np-actions { display: flex; justify-content: flex-end; gap: 8px; }
+.np-actions button {
+  font-family: inherit; font-size: 13px; padding: 6px 14px; border-radius: 7px; cursor: pointer;
+  border: 1px solid var(--border-strong); background: var(--bg-elev); color: var(--text);
+}
+.np-actions .np-ok { background: var(--accent); border-color: var(--accent); color: #fff; }
+.np-actions button:hover { border-color: var(--accent); }
+.np-msg { font-size: 13px; color: var(--text); line-height: 1.4; }
+.np-msg b { color: #fff; }
+.np-actions .np-danger { background: #b5433a; border-color: #b5433a; color: #fff; }
+.np-actions .np-danger:hover { background: #c94d43; border-color: #c94d43; }
+
+/* layout picker: reuse the modal overlay but a roomier, palette-style list */
+#layout-picker .np-box {
+  width: 460px; padding: 0; gap: 0; overflow: hidden;
+}
+#layout-picker .np-title {
+  padding: 14px 16px 12px; font-size: 12px; letter-spacing: 0.04em;
+  text-transform: uppercase; color: var(--text-dim);
+  border-bottom: 1px solid var(--border);
+}
+.lp-list {
+  display: flex; flex-direction: column; gap: 2px;
+  max-height: 48vh; overflow-y: auto; padding: 6px;
+}
+.lp-item {
+  padding: 10px 12px; border-radius: 8px; color: var(--text); font-size: 14px;
+  cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.lp-item.sel { background: var(--accent); color: #fff; }

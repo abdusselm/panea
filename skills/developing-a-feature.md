@@ -61,6 +61,20 @@ Backend (`server/`):
 | `pane.js` | the `Pane` class (one PTY) |
 | `connection.js` | per-socket wiring: panes map, I/O relay, meta poll |
 
+Styles (`public/css/`) — `style.css` is an entry that only `@import`s these
+partials in cascade order; each owns one UI area and mirrors its JS module:
+
+| partial | owns |
+|---------|------|
+| `tokens.css` | `:root` design tokens (color, radius, metrics) |
+| `base.css` | reset, document shell, shared `kbd`, the breathing keyframe |
+| `sidebar.css` | sidebar rail: header, brand, new-tab, bell, ⌘K button, footer |
+| `tabs.css` | tab list rows, badges, port pills, rename, context menu |
+| `panes.css` | workspace, split tree, terminal leaf, empty state |
+| `palette.css` | ⌘K palette overlay, input, grouped list + section headers |
+| `notifications.css` | notification panel + reason-tinted rows |
+| `modals.css` | name prompt, confirm modal, layout picker (shared `.np-*`) |
+
 ### Module rules
 
 - **One feature, one module.** A new feature gets its own file, not another
@@ -73,13 +87,17 @@ Backend (`server/`):
   runtime (inside functions), never during a module's top-level evaluation.
   Only `main.js` runs cross-module code at load (`connect()`), and it loads last.
 - Keep `util.js` pure (no DOM, no app state) so anything can import it.
+- **One CSS partial per UI area.** Styles go in the matching `public/css/`
+  partial; `style.css` stays a pure `@import` barrel. Reference colors/metrics
+  through `tokens.css` variables — never hard-code a palette value twice.
 
 ## 2. Where a new feature goes
 
 - **Pure UI / interaction** (frontend only): add a module under `public/js/`,
-  import what it needs, wire its entry from `main.js`. Add styles to
-  `public/style.css`. Expose anything the harness/CLI should reach on the
-  `window.panea` bridge in `main.js`.
+  import what it needs, wire its entry from `main.js`. Put styles in the
+  matching `public/css/` partial (see below), not in `style.css`. Expose
+  anything the harness/CLI should reach on the `window.panea` bridge in
+  `main.js`.
 - **Needs host data** (filesystem, process info, git, …): add a backend module
   under `server/`, surface it through a new WebSocket message in
   `connection.js`, and handle that message type in the frontend `ws.js`
@@ -166,7 +184,8 @@ say so in the handoff and note what keeps it cheap.
 - [ ] Frontend syntax: `node --check public/js/*.js`; backend: `node --check server.js server/*.js`.
 - [ ] Boots clean in the capture harness (no console errors) and the feature is
       visible/working in the screenshot.
-- [ ] Styles in `public/style.css`, theme-consistent (cmux palette).
+- [ ] Styles in the matching `public/css/` partial (never in `style.css`
+      itself), using `tokens.css` variables, theme-consistent (cmux palette).
 - [ ] README updated if it adds a shortcut, config file, or user-facing surface.
 - [ ] Resource check (section 4b): no per-pane process storm, hot DOM work
       coalesced, timers/rAF/caches cleaned up on teardown.

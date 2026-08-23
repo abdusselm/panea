@@ -58,7 +58,14 @@ not append it to an existing file.**
   `layouts`, `keyboard`, `palette`, `main`.
   Loaded via `<script type="module" src="/js/main.js">`. `main.js` exposes a
   `window.panea` debug bridge (ES modules don't leak globals).
-- `public/index.html`, `public/style.css` — markup + cmux palette.
+- `public/index.html` — markup (single `<link>` to `style.css`).
+- `public/style.css` — entry stylesheet: **only `@import`s** the partials under
+  `public/css/` in cascade order. Add rules to a partial, not here.
+- `public/css/` — one partial per UI area, each mirroring its JS module:
+  `tokens` (`:root` design tokens), `base` (reset + shared motion), `sidebar`,
+  `tabs`, `panes`, `palette`, `notifications`, `modals`. **When adding a
+  feature's styles, put them in the matching partial (or a new one); never let
+  `style.css` grow rules of its own.**
 - `shell/zsh/` — `ZDOTDIR` shim sourcing the user's dotfiles then applying the
   panea prompt (guarded by `PANEA_NO_THEME`). **Do not edit the user's real
   dotfiles.**

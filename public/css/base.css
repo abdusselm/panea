@@ -1,0 +1,28 @@
+/* Global reset, document shell, shared primitives, and the motion policy.
+   Loaded right after tokens.css and before any component partial. */
+
+* { box-sizing: border-box; }
+html, body {
+  margin: 0; height: 100%; overflow: hidden;
+  background: var(--bg); color: var(--text);
+  -webkit-font-smoothing: antialiased;
+}
+
+#app { display: flex; height: 100vh; }
+
+/* Inline key caps used in the sidebar footer and elsewhere. */
+kbd {
+  background: var(--bg-elev); border: 1px solid var(--border-strong);
+  border-radius: 4px; padding: 0 4px; font-size: 10px; color: var(--text);
+}
+
+/* Shared "breathing" attention animation. Defined once here because both the
+   sidebar tab badge (.tab.attention) and the pane header dot (.leaf.attn) use
+   it. Keyframes are global, so component partials just reference the name. */
+@keyframes badge-breathe {
+  0%, 100% { transform: scale(1);    box-shadow: 0 0 0 0 rgba(255, 140, 110, 0.55), 0 1px 7px rgba(245, 128, 107, 0.4); }
+  50%      { transform: scale(1.06); box-shadow: 0 0 0 5px rgba(255, 140, 110, 0), 0 1px 10px rgba(245, 128, 107, 0.5); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tab.attention .attn-count, .leaf.attn .leaf-bar .attn-dot { animation: none; }
+}

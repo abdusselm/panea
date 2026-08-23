@@ -1,0 +1,67 @@
+/* Sidebar chrome: the fixed-width rail — header (brand, new-tab, bell), the ⌘K
+   affordance button, and the footer. The tab rows it contains are styled in
+   tabs.css; the notification panel the bell opens lives in notifications.css. */
+
+#sidebar {
+  width: var(--sidebar-w); flex: 0 0 var(--sidebar-w);
+  background: var(--bg-sidebar);
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column;
+}
+/* Top padding clears the macOS traffic lights (hiddenInset title bar). */
+#sidebar-head {
+  padding: 30px 12px 10px 14px;
+  display: flex; align-items: center; justify-content: space-between;
+  -webkit-app-region: drag; /* drag the window from the sidebar header */
+}
+#sidebar-head #new-tab, #sidebar-head #brand { -webkit-app-region: no-drag; }
+#brand { font-weight: 600; font-size: 13px; letter-spacing: 0.3px; }
+#brand small { color: var(--text-dim); font-weight: 400; margin-left: 6px; }
+#new-tab {
+  border: 1px solid var(--border-strong); background: var(--bg-elev);
+  color: var(--text); border-radius: 6px; width: 24px; height: 24px;
+  font-size: 15px; line-height: 1; cursor: pointer;
+}
+#new-tab:hover { border-color: var(--accent); color: var(--accent); }
+#head-actions { display: flex; align-items: center; gap: 6px; -webkit-app-region: no-drag; }
+
+/* Notification bell: a count badge appears (warm notify color) when any pane
+   needs attention. */
+#bell {
+  position: relative; border: 1px solid var(--border-strong); background: var(--bg-elev);
+  color: var(--text-dim); border-radius: 6px; width: 24px; height: 24px;
+  padding: 0; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
+}
+#bell svg { width: 14px; height: 14px; }
+#bell:hover { border-color: var(--accent); color: var(--text); }
+#bell.has { color: var(--notify-b); border-color: var(--notify-b); }
+#bell .bell-count {
+  display: none; position: absolute; top: -6px; right: -6px; min-width: 15px; height: 15px;
+  padding: 0 4px; border-radius: 8px; font-size: 9px; font-weight: 700; line-height: 15px;
+  color: var(--notify-ink); background: linear-gradient(135deg, var(--notify-a), var(--notify-b));
+  box-shadow: 0 1px 5px rgba(245, 128, 107, 0.5);
+}
+#bell.has .bell-count { display: block; }
+
+/* Command-palette affordance: a search-bar-styled button so users discover the
+   ⌘K palette without knowing the shortcut. Click opens it. */
+#cmdk {
+  -webkit-app-region: no-drag;
+  display: flex; align-items: center; justify-content: space-between;
+  margin: 2px 10px 6px; padding: 6px 8px 6px 10px;
+  background: var(--bg-elev); border: 1px solid var(--border);
+  border-radius: 7px; color: var(--text-dim); cursor: pointer;
+  font-family: inherit; font-size: 12px;
+}
+#cmdk:hover { border-color: var(--border-strong); color: var(--text); }
+#cmdk .cmdk-keys { display: flex; gap: 2px; }
+#cmdk kbd {
+  background: var(--bg); border: 1px solid var(--border-strong);
+  border-radius: 4px; padding: 0 4px; font-size: 10px; color: var(--text-dim);
+  line-height: 15px; min-width: 15px; text-align: center;
+}
+
+#sidebar-foot {
+  padding: 8px 14px; border-top: 1px solid var(--border);
+  font-size: 10px; color: var(--text-dim); line-height: 1.5;
+}
