@@ -39,7 +39,7 @@ Frontend (`public/js/`):
 | `util.js` | pure helpers: base64, ids, path, tree traversal, title cleanup |
 | `ws.js` | socket lifecycle + inbound message dispatch (`wsSend`, `connect`) |
 | `session.js` | serialize / persist / restore layout |
-| `tabs.js` | tab lifecycle, sidebar list, metadata rows, ctx menu, titles, rename |
+| `tabs.js` | tab lifecycle, sidebar list, metadata rows, ctx menu, titles, rename, drag-reorder |
 | `panes.js` | xterm panes, split tree, focus, resize, restart, tree→DOM |
 | `attention.js` | background-pane attention state + desktop notification |
 | `attention-signals.js` | pure heuristics: OSC/prompt/long-task classification |

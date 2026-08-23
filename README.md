@@ -84,6 +84,9 @@ patterns or the long-task threshold there.
 
 ## Tabs & layouts
 
+- **Reorder** — drag a tab up or down the sidebar to reorder it; an accent line
+  shows where it will land. The number badges and `Cmd-1…9` follow the new
+  order, and it persists across restarts.
 - **Reopen closed tab** — `Shift-Cmd-T` (or the palette) brings back the most
   recently closed tab with its name, working directory, and split layout. Keeps
   a short history of closes.

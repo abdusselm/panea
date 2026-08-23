@@ -125,8 +125,61 @@ export function renderTabList() {
     nameEl.ondblclick = (e) => { e.stopPropagation(); startRename(tab, nameEl); };
     row.oncontextmenu = (e) => { e.preventDefault(); e.stopPropagation(); showTabMenu(tab, e.clientX, e.clientY); };
     row.querySelector(".close").onclick = (e) => { e.stopPropagation(); closeTab(tab.id); };
+    wireTabDrag(row, tab);
     tablistEl.appendChild(row);
   });
+}
+
+// ---- drag-to-reorder -----------------------------------------------------
+// HTML5 drag-and-drop on the sidebar rows. state.tabs order is the source of
+// truth for badges, ⌘1..9, and persistence, so a reorder just moves the tab in
+// that array and re-renders; persist() then saves the new order.
+let dragTabId = null;
+
+function clearDropMarks() {
+  for (const r of tablistEl.children) r.classList.remove("drop-before", "drop-after");
+}
+
+// Whether the pointer is past a row's vertical midpoint (drop after vs before).
+function isAfter(row, clientY) {
+  const r = row.getBoundingClientRect();
+  return clientY > r.top + r.height / 2;
+}
+
+function wireTabDrag(row, tab) {
+  row.draggable = true;
+  row.addEventListener("dragstart", (e) => {
+    dragTabId = tab.id;
+    row.classList.add("dragging");
+    e.dataTransfer.effectAllowed = "move";
+    try { e.dataTransfer.setData("text/plain", tab.id); } catch (_) {}
+  });
+  row.addEventListener("dragend", () => { dragTabId = null; row.classList.remove("dragging"); clearDropMarks(); });
+  row.addEventListener("dragover", (e) => {
+    if (dragTabId == null || dragTabId === tab.id) return; // not our drag / self
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    clearDropMarks();
+    row.classList.add(isAfter(row, e.clientY) ? "drop-after" : "drop-before");
+  });
+  row.addEventListener("drop", (e) => {
+    if (dragTabId == null || dragTabId === tab.id) return;
+    e.preventDefault();
+    reorderTabs(dragTabId, tab.id, isAfter(row, e.clientY));
+  });
+}
+
+// Move tab `fromId` to just before/after `toId` in state.tabs, then re-render.
+function reorderTabs(fromId, toId, after) {
+  const from = state.tabs.findIndex((t) => t.id === fromId);
+  if (from < 0) return;
+  const [moved] = state.tabs.splice(from, 1);
+  let to = state.tabs.findIndex((t) => t.id === toId);
+  if (to < 0) { state.tabs.splice(from, 0, moved); return; } // target vanished; undo
+  if (after) to += 1;
+  state.tabs.splice(to, 0, moved);
+  renderTabList();
+  persist();
 }
 
 // Update only active/attention classes on existing rows (avoids rebuilding the
@@ -276,6 +329,9 @@ export function startRename(tab, nameEl) {
   input.className = "rename-input";
   input.value = tab.name;
   nameEl.replaceWith(input);
+  // Suspend row dragging so selecting text in the input doesn't start a drag.
+  const row = input.closest && input.closest(".tab");
+  if (row) row.draggable = false;
   input.focus();
   input.select();
   let done = false;
