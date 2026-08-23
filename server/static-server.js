@@ -23,6 +23,7 @@ const VENDOR = {
   "/vendor/xterm.js": "@xterm/xterm/lib/xterm.js",
   "/vendor/xterm.css": "@xterm/xterm/css/xterm.css",
   "/vendor/addon-fit.js": "@xterm/addon-fit/lib/addon-fit.js",
+  "/vendor/addon-search.js": "@xterm/addon-search/lib/addon-search.js",
 };
 
 function sendFile(res, filePath, mime) {

@@ -21,7 +21,8 @@ panea is a **local web app in a native shell**. No bundler, no framework.
   Uses only Apple-signed runtimes (no node-pty) so it runs on a managed Mac.
 - **Frontend** — native **ES modules** in the browser (`public/js/`), loaded via
   `<script type="module" src="/js/main.js">`. Vendor libs (xterm) are classic
-  scripts that set `window.Terminal` / `window.FitAddon` first.
+  scripts that set `window.Terminal` / `window.FitAddon` / `window.SearchAddon`
+  first; each is whitelisted in `static-server.js`'s `VENDOR` map.
 - **Desktop shell** — `electron/main.cjs` spawns `server.js`, opens a
   `BrowserWindow` on `127.0.0.1`, and has a screenshot/demo harness (below).
 - **Transport** — one WebSocket. JSON messages; terminal bytes are base64.
@@ -45,6 +46,7 @@ Frontend (`public/js/`):
 | `notifications.js` | bell indicator + notification panel |
 | `layouts.js` | reopen-closed-tab history + named saved layouts + name prompt |
 | `git.js` | git diff panel: changed-file list + per-file unified diff |
+| `find.js` | in-terminal find box (⌘F) driving xterm's search addon |
 | `keyboard.js` | global ⌘ shortcuts |
 | `palette.js` | ⌘K command palette + custom commands |
 | `main.js` | entry: DOM wiring, global listeners, `window.panea` debug bridge, `connect()` |
@@ -73,6 +75,7 @@ partials in cascade order; each owns one UI area and mirrors its JS module:
 | `sidebar.css` | sidebar rail: header, brand, new-tab, bell, ⌘K button, footer |
 | `tabs.css` | tab list rows, badges, port pills, rename, context menu |
 | `panes.css` | workspace, split tree, terminal leaf, empty state |
+| `find.css` | in-terminal find box floating over the focused pane |
 | `palette.css` | ⌘K palette overlay, input, grouped list + section headers |
 | `notifications.css` | notification panel + reason-tinted rows |
 | `git.css` | git diff panel: file list + color-coded unified diff |

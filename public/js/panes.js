@@ -9,9 +9,11 @@ import { setPaneTitle, updateTabName, refreshTabMeta, closeTab } from "./tabs.js
 import { clearPaneAttention, signalExplicit } from "./attention.js";
 import { handleGlobalKey } from "./keyboard.js";
 import { persist } from "./session.js";
+import { closeFindFor } from "./find.js";
 
 const { Terminal } = window;
 const FitAddon = window.FitAddon;
+const SearchAddon = window.SearchAddon;
 
 const SCROLLBACK = 5000;
 
@@ -40,6 +42,9 @@ export function createPane(paneId, tabId, cwd) {
   });
   const fit = new FitAddon.FitAddon();
   term.loadAddon(fit);
+  // In-terminal find (⌘F). Disposed with the terminal in destroyPane.
+  const search = SearchAddon ? new SearchAddon.SearchAddon() : null;
+  if (search) term.loadAddon(search);
 
   const el = document.createElement("div");
   el.className = "leaf node";
@@ -92,7 +97,7 @@ export function createPane(paneId, tabId, cwd) {
   const ro = new ResizeObserver(() => scheduleRefit(paneId));
   ro.observe(termEl);
 
-  const pane = { id: paneId, term, fit, tabId, cwd, exited: false, el, termEl, ro, titleEl, title: titleText, attention: false, attnReason: "", attnMessage: "", idleTimer: null, burstStart: 0, burstBytes: 0, refitRAF: 0, meta: { cwd: cwd || "", branch: "", ports: [] } };
+  const pane = { id: paneId, term, fit, search, tabId, cwd, exited: false, el, termEl, ro, titleEl, title: titleText, attention: false, attnReason: "", attnMessage: "", idleTimer: null, burstStart: 0, burstBytes: 0, refitRAF: 0, meta: { cwd: cwd || "", branch: "", ports: [] } };
   state.panes.set(paneId, pane);
 
   requestAnimationFrame(() => {
@@ -140,6 +145,7 @@ export function focusPane(paneId) {
 export function destroyPane(paneId) {
   const p = state.panes.get(paneId);
   if (!p) return;
+  closeFindFor(paneId); // tear down the find box if it targets this pane
   try { p.ro.disconnect(); } catch (_) {}
   if (p.refitRAF) cancelAnimationFrame(p.refitRAF);
   clearTimeout(p.idleTimer);

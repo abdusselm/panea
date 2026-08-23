@@ -9,6 +9,7 @@ import { closePane, splitPane, setFontSize } from "./panes.js";
 import { toggleNotifications } from "./notifications.js";
 import { reopenClosedTab } from "./layouts.js";
 import { toggleGit } from "./git.js";
+import { toggleFind } from "./find.js";
 
 export function handleGlobalKey(e, paneId) {
   if (e.type !== "keydown") return true;
@@ -16,6 +17,7 @@ export function handleGlobalKey(e, paneId) {
   const k = e.key.toLowerCase();
   if (k === "n" && e.shiftKey) { e.preventDefault(); toggleNotifications(); return false; }
   if (k === "g") { e.preventDefault(); toggleGit(); return false; }
+  if (k === "f") { e.preventDefault(); toggleFind(); return false; }
   if (k === "t" && e.shiftKey) { e.preventDefault(); reopenClosedTab(); return false; }
   if (k === "t") { e.preventDefault(); newTab(); return false; }
   if (k === "w") { e.preventDefault(); closePane(state.focusedPaneId || paneId); return false; }

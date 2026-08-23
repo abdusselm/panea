@@ -25,6 +25,7 @@ Change the port: `PANEA_PORT=5000 npm run app`
 | Key | Action |
 |-----|--------|
 | `Cmd-K` | command palette |
+| `Cmd-F` | find in terminal |
 | `Cmd-G` | git diff panel |
 | `Shift-Cmd-N` | notification panel |
 | `Cmd-T` | new tab |
@@ -92,6 +93,15 @@ patterns or the long-task threshold there.
   saved layouts to pick from (delete asks to confirm). Opening a layout adds it
   as a new tab, leaving your current tabs untouched. Saved to
   `~/.panea/layouts.json`.
+
+## Find in terminal
+
+`Cmd-F` opens a find box over the focused pane's terminal. Type to highlight
+every match in the scrollback; the active match is brighter and the box shows
+`current/total`. `Enter` jumps to the next match, `Shift-Enter` the previous,
+`Esc` (or ✕) closes and clears the highlights. The box rides with its pane
+through splits and tears down if that pane closes. Backed by xterm's search
+addon — no extra process, nothing runs until you open it.
 
 ## Git diff
 

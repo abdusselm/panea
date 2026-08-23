@@ -13,11 +13,12 @@ import { openNotifications, toggleNotifications } from "./notifications.js";
 import { reopenClosedTab, saveCurrentLayout, openLayout, saveLayoutInteractive, openLayoutInteractive, deleteLayoutPick } from "./layouts.js";
 import { splitPane, closePane } from "./panes.js";
 import { openGit, toggleGit } from "./git.js";
+import { openFind, toggleFind } from "./find.js";
 
 // Debug/automation surface. ES modules don't leak their bindings to the global
 // scope (good), so expose a small curated namespace for the screenshot harness,
 // a future CLI, and console poking. Not a stable public API.
-window.panea = { state, runtime, newTab, openPalette, togglePalette, openNotifications, toggleNotifications, reopenClosedTab, saveCurrentLayout, openLayout, saveLayoutInteractive, openLayoutInteractive, deleteLayoutPick, openGit, toggleGit, splitPane, closePane, handleActivity };
+window.panea = { state, runtime, newTab, openPalette, togglePalette, openNotifications, toggleNotifications, reopenClosedTab, saveCurrentLayout, openLayout, saveLayoutInteractive, openLayoutInteractive, deleteLayoutPick, openGit, toggleGit, openFind, toggleFind, splitPane, closePane, handleActivity };
 
 // Sidebar chrome buttons.
 document.getElementById("new-tab").onclick = () => newTab();
@@ -36,7 +37,7 @@ document.addEventListener("keydown", (e) => {
 // ⌘T / ⌘W / ⌘D also work when focus isn't inside a terminal (e.g. on the
 // sidebar). Inside a terminal, xterm's key handler already routes these.
 document.addEventListener("keydown", (e) => {
-  if (e.metaKey && ["t", "w", "d", "n", "g"].includes(e.key.toLowerCase())) {
+  if (e.metaKey && ["t", "w", "d", "n", "g", "f"].includes(e.key.toLowerCase())) {
     if (!e.target.closest || !e.target.closest(".leaf-term")) handleGlobalKey(e, state.focusedPaneId);
   }
 });

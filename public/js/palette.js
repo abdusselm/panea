@@ -11,6 +11,7 @@ import { splitPane, closePane, restartPane, setFontSize, focusPane } from "./pan
 import { openNotifications } from "./notifications.js";
 import { reopenClosedTab, hasClosedTabs, saveLayoutInteractive, openLayoutInteractive, deleteLayoutPick, layoutNames } from "./layouts.js";
 import { openGit } from "./git.js";
+import { openFind } from "./find.js";
 
 let customCommands = [];
 let paletteEl = null, paletteInput = null, paletteListEl = null;
@@ -106,6 +107,7 @@ function buildPaletteCommands() {
   add("Panes", "Split down", "⇧⌘D", () => { const p = focusedPane(); if (p) splitPane(p.id, "v"); });
   add("Panes", "Close pane", "⌘W", () => { const p = focusedPane(); if (p) closePane(p.id); });
   add("Panes", "Restart pane", "", () => { const p = focusedPane(); if (p) restartPane(p.id); });
+  add("Panes", "Find in terminal", "⌘F", () => openFind());
   add("Panes", "Clear terminal", "", clearFocusedTerminal);
 
   add("Layouts", "Save this tab as layout…", "", () => saveLayoutInteractive());
