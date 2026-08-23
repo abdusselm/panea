@@ -85,3 +85,9 @@
 .gd-empty {
   padding: 22px 16px; color: var(--text-dim); font-size: var(--fs-md); text-align: center;
 }
+/* shown when a diff exceeds MAX_DIFF_LINES and is rendered truncated */
+.gd-truncated {
+  padding: 10px 14px; color: var(--attention); font-size: var(--fs-sm);
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  border-top: 1px solid var(--border); background: rgba(240, 198, 116, 0.06);
+}

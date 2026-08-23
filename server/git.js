@@ -3,9 +3,10 @@
 // per-file add/delete counts); and, on demand, the unified diff for one file.
 //
 // Resource discipline: git runs ONLY on demand — when the panel opens or a file
-// row is clicked — never on a poll timer. A status call is 3 short git spawns
-// (status + two numstats); a diff call is one. Nothing here runs per-pane or in
-// a loop. Branch/cwd for the sidebar stays in meta.js on its own cached poll.
+// row is clicked — never on a poll timer. A status call is 4 short git spawns
+// (status, which doubles as the repo guard, + branch + two numstats); a diff
+// call is one. Nothing here runs per-pane or in a loop. Branch/cwd for the
+// sidebar stays in meta.js on its own cached poll.
 
 import { execFile } from "node:child_process";
 
@@ -68,15 +69,15 @@ function parseStatus(out) {
 }
 
 // Whole picture for the panel: is it a repo, on what branch, and which files
-// changed with their counts. One status + two numstat spawns.
+// changed with their counts. Status doubles as the repo guard (git exits 128
+// outside a work tree), so no separate rev-parse: 1 status + branch + 2 numstat.
 export async function gitStatus(cwd) {
   if (!cwd) return { repo: false };
-  const inside = await git(["rev-parse", "--is-inside-work-tree"], cwd);
-  if (inside.code !== 0 || inside.out.trim() !== "true") return { repo: false };
+  const statusRes = await git(["status", "--porcelain=v1", "-z", "--untracked-files=all"], cwd);
+  if (statusRes.code !== 0) return { repo: false }; // not a repo / git error
 
-  const [branchRes, statusRes, unstagedRes, stagedRes] = await Promise.all([
+  const [branchRes, unstagedRes, stagedRes] = await Promise.all([
     git(["branch", "--show-current"], cwd),
-    git(["status", "--porcelain=v1", "-z", "--untracked-files=all"], cwd),
     git(["diff", "--numstat"], cwd),
     git(["diff", "--cached", "--numstat"], cwd),
   ]);

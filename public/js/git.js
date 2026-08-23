@@ -149,35 +149,50 @@ function selectFile(path) {
   wsSend({ type: "getGitDiff", cwd: curCwd, path, mode: f.kind });
 }
 
+// Cap on rendered diff lines. One <div> per line means a pathological 10k-line
+// diff would spawn 10k DOM nodes at once; beyond this we render a slice and note
+// the remainder. A diff that large belongs in the terminal, not a glance panel.
+const MAX_DIFF_LINES = 2000;
+
 // Render a unified diff: skip the file-header preamble, keep hunk headers and
 // +/−/context lines, color-coded. textContent per line escapes everything.
+// Only the DOM slice up to MAX_DIFF_LINES is materialized.
 function renderDiff(patch) {
   diffEl.innerHTML = "";
-  const pre = document.createElement("div");
-  pre.className = "gd-diffbody";
-  const lines = patch.split("\n");
+  // Collect renderable lines first (cheap strings): drop the "diff --git /
+  // index / --- / +++ / new file …" preamble before the first hunk. DOM cost is
+  // paid only for the capped slice below.
+  const rows = [];
   let sawHunk = false;
-  let empty = true;
-  for (const line of lines) {
+  for (const line of patch.split("\n")) {
     if (line.startsWith("@@")) sawHunk = true;
-    // Drop the "diff --git / index / --- / +++ / new file …" preamble before
-    // the first hunk; it's noise for a single-file view.
-    if (!sawHunk && !line.startsWith("@@")) continue;
-    empty = false;
-    const row = document.createElement("div");
+    if (!sawHunk) continue;
     let cls = "dl-ctx";
     if (line.startsWith("@@")) cls = "dl-hunk";
     else if (line.startsWith("+")) cls = "dl-add";
     else if (line.startsWith("-")) cls = "dl-del";
-    row.className = "gd-line " + cls;
-    row.textContent = line || " ";
-    pre.appendChild(row);
+    rows.push({ cls, text: line || " " });
   }
-  if (empty) {
+  if (!rows.length) {
     diffEl.innerHTML = '<div class="gd-empty">No textual diff</div>';
     return;
   }
+  const pre = document.createElement("div");
+  pre.className = "gd-diffbody";
+  const shown = Math.min(rows.length, MAX_DIFF_LINES);
+  for (let i = 0; i < shown; i++) {
+    const el = document.createElement("div");
+    el.className = "gd-line " + rows[i].cls;
+    el.textContent = rows[i].text;
+    pre.appendChild(el);
+  }
   diffEl.appendChild(pre);
+  if (rows.length > shown) {
+    const more = document.createElement("div");
+    more.className = "gd-truncated";
+    more.textContent = "… " + (rows.length - shown) + " more lines — open the file to see the full diff";
+    diffEl.appendChild(more);
+  }
   diffEl.scrollTop = 0;
 }
 
