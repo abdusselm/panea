@@ -37,6 +37,9 @@ Change the port: `PANEA_PORT=5000 npm run app`
 | `Cmd +` / `Cmd −` / `Cmd 0` | font size up / down / reset |
 | double-click / right-click tab | rename |
 
+The ⌘-based shortcuts above (except `⌘1–9` and font size, which are fixed) are
+**editable** — see [Settings](#settings).
+
 ## Command palette
 
 `Cmd-K` opens a fuzzy command palette. Commands are grouped by function under
@@ -96,6 +99,19 @@ patterns or the long-task threshold there.
   saved layouts to pick from (delete asks to confirm). Opening a layout adds it
   as a new tab, leaving your current tabs untouched. Saved to
   `~/.panea/layouts.json`.
+
+## Settings
+
+The gear in the sidebar header (or **Keyboard shortcuts…** in the palette) opens
+a settings panel for **rebinding keyboard shortcuts**. Click a shortcut's chip,
+press the new combo (⌘ + a letter, optionally with ⇧/⌥/⌃), and it's saved. A
+combo already in use is rejected with which action holds it; **reset** returns
+one binding to its default, **Reset all** clears every override. `⌘1–9`
+(tab switch) and `⌘ +/−/0` (font size) are fixed and not listed.
+
+Overrides persist to `~/.panea/settings.json` as a sparse diff (only the ones
+you changed); defaults live in `public/js/shortcuts.js`, the single registry
+both the key handler and the palette read, so a rebind updates every surface.
 
 ## Find in terminal
 

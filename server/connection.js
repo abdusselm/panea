@@ -5,6 +5,7 @@ import { Pane } from "./pane.js";
 import { loadSession, saveSession } from "./session-store.js";
 import { loadCommands } from "./commands-store.js";
 import { loadLayouts, saveLayout, deleteLayout } from "./layouts-store.js";
+import { loadSettings, saveSettings } from "./settings-store.js";
 import { computeMetaBatch } from "./meta.js";
 import { gitStatus, gitDiff } from "./git.js";
 
@@ -52,6 +53,7 @@ export function handleConnection(ws) {
   send({ type: "session", layout: loadSession() });
   send({ type: "commands", commands: loadCommands() });
   send({ type: "layouts", layouts: loadLayouts() });
+  send({ type: "settings", settings: loadSettings() });
 
   ws.on("message", (raw) => {
     let msg;
@@ -107,6 +109,14 @@ export function handleConnection(ws) {
       }
       case "deleteLayout": {
         send({ type: "layouts", layouts: deleteLayout(msg.name) });
+        break;
+      }
+      case "getSettings": {
+        send({ type: "settings", settings: loadSettings() });
+        break;
+      }
+      case "saveSettings": {
+        send({ type: "settings", settings: saveSettings(msg.settings) });
         break;
       }
       case "getGitStatus": {

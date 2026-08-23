@@ -10,6 +10,8 @@ import { refreshTabMeta } from "./tabs.js";
 import { setCustomCommands, refreshOpenPalette } from "./palette.js";
 import { setLayouts } from "./layouts.js";
 import { setGitStatus, setGitDiff } from "./git.js";
+import { setShortcutOverrides } from "./shortcuts.js";
+import { refreshOpenSettings } from "./settings.js";
 
 let ws = null;
 let wsReady = false;
@@ -69,6 +71,10 @@ export function connect() {
         break;
       case "gitDiff":
         setGitDiff(msg);
+        break;
+      case "settings":
+        setShortcutOverrides(msg.settings && msg.settings.shortcuts);
+        refreshOpenSettings();
         break;
     }
   };

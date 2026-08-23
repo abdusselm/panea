@@ -47,7 +47,9 @@ Frontend (`public/js/`):
 | `layouts.js` | reopen-closed-tab history + named saved layouts + name prompt |
 | `git.js` | git diff panel: changed-file list + per-file unified diff |
 | `find.js` | in-terminal find box (⌘F) driving xterm's search addon |
-| `keyboard.js` | global ⌘ shortcuts |
+| `shortcuts.js` | shortcut registry: ids, defaults, overrides, chord parse, dispatch |
+| `settings.js` | settings panel: rebind shortcuts (capture, conflict, reset) |
+| `keyboard.js` | global ⌘ shortcuts (dispatches through `shortcuts.js`) |
 | `palette.js` | ⌘K command palette + custom commands |
 | `main.js` | entry: DOM wiring, global listeners, `window.panea` debug bridge, `connect()` |
 
@@ -60,6 +62,7 @@ Backend (`server/`):
 | `session-store.js` | `~/.panea/session.json` |
 | `commands-store.js` | `~/.panea/commands.json` |
 | `layouts-store.js` | `~/.panea/layouts.json` (named saved layouts) |
+| `settings-store.js` | `~/.panea/settings.json` (shortcut overrides, validated) |
 | `meta.js` | sidebar context (cwd / git branch / listening ports) via lsof/git |
 | `git.js` | on-demand git status + per-file diff for the diff panel |
 | `pane.js` | the `Pane` class (one PTY) |
@@ -79,6 +82,7 @@ partials in cascade order; each owns one UI area and mirrors its JS module:
 | `palette.css` | ⌘K palette overlay, input, grouped list + section headers |
 | `notifications.css` | notification panel + reason-tinted rows |
 | `git.css` | git diff panel: file list + color-coded unified diff |
+| `settings.css` | settings panel: grouped shortcut rows + chord chips |
 | `modals.css` | name prompt, confirm modal, layout picker (shared `.np-*`) |
 
 ### Module rules
@@ -112,15 +116,20 @@ partials in cascade order; each owns one UI area and mirrors its JS module:
   under `server/`, surface it through a new WebSocket message in
   `connection.js`, and handle that message type in the frontend `ws.js`
   dispatch. Follow the existing `meta` / `commands` messages as the template.
-- **New shortcut**: add it to `keyboard.js` (and, if palette-worthy, to
-  `buildPaletteCommands` in `palette.js`).
+- **New shortcut**: add one entry to `SHORTCUTS` in `shortcuts.js` (id, label,
+  category, default chord, run fn). keyboard.js, the ⌘K capture handler, the
+  Settings UI, and the palette hint (`hk(id)`) all read from there — don't
+  hard-code the key in `keyboard.js`. Palette-worthy actions still get a
+  `buildPaletteCommands` entry, using `hk("<id>")` for the live hint. `⌘1–9`
+  and font size stay fixed in `keyboard.js` on purpose.
 
 ## 3. The WebSocket protocol
 
 Client → server: `open`, `input`, `resize`, `close`, `session`, `getCommands`,
-`getLayouts`, `saveLayout`, `deleteLayout`, `getGitStatus`, `getGitDiff`.
+`getLayouts`, `saveLayout`, `deleteLayout`, `getGitStatus`, `getGitDiff`,
+`getSettings`, `saveSettings`.
 Server → client: `output`, `exit`, `session`, `commands`, `meta`, `layouts`,
-`gitStatus`, `gitDiff`.
+`gitStatus`, `gitDiff`, `settings`.
 
 Add a feature that needs the host by defining a new message type on both ends;
 keep the payload JSON-serializable (base64 any binary).

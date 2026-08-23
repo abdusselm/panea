@@ -4,24 +4,19 @@
 
 import { state, runtime } from "./state.js";
 import { DEFAULT_FONT_SIZE } from "./theme.js";
-import { newTab, activateTab } from "./tabs.js";
-import { closePane, splitPane, setFontSize } from "./panes.js";
-import { toggleNotifications } from "./notifications.js";
-import { reopenClosedTab } from "./layouts.js";
-import { toggleGit } from "./git.js";
-import { toggleFind } from "./find.js";
+import { activateTab } from "./tabs.js";
+import { setFontSize } from "./panes.js";
+import { runShortcut } from "./shortcuts.js";
 
 export function handleGlobalKey(e, paneId) {
   if (e.type !== "keydown") return true;
   if (!e.metaKey) return true;
+  // Rebindable ⌘+letter actions run through the shortcut registry (user
+  // overrides + defaults). command-palette is capture-only; see main.js.
+  if (runShortcut(e, paneId)) return false;
+  // Fixed, non-rebindable: font size (⌘±0) and tab-switch (⌘1–9). These are
+  // positional/standard, so they stay hard-wired and out of the Settings UI.
   const k = e.key.toLowerCase();
-  if (k === "n" && e.shiftKey) { e.preventDefault(); toggleNotifications(); return false; }
-  if (k === "g") { e.preventDefault(); toggleGit(); return false; }
-  if (k === "f") { e.preventDefault(); toggleFind(); return false; }
-  if (k === "t" && e.shiftKey) { e.preventDefault(); reopenClosedTab(); return false; }
-  if (k === "t") { e.preventDefault(); newTab(); return false; }
-  if (k === "w") { e.preventDefault(); closePane(state.focusedPaneId || paneId); return false; }
-  if (k === "d") { e.preventDefault(); splitPane(state.focusedPaneId || paneId, e.shiftKey ? "v" : "h"); return false; }
   if (k === "=" || k === "+") { e.preventDefault(); setFontSize(runtime.fontSize + 1); return false; }
   if (k === "-" || k === "_") { e.preventDefault(); setFontSize(runtime.fontSize - 1); return false; }
   if (k === "0") { e.preventDefault(); setFontSize(DEFAULT_FONT_SIZE); return false; }

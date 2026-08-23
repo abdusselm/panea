@@ -14,32 +14,40 @@ import { reopenClosedTab, saveCurrentLayout, openLayout, saveLayoutInteractive, 
 import { splitPane, closePane } from "./panes.js";
 import { openGit, toggleGit } from "./git.js";
 import { openFind, toggleFind } from "./find.js";
+import { openSettings } from "./settings.js";
+import { chordFromEvent, chordFor } from "./shortcuts.js";
 
 // Debug/automation surface. ES modules don't leak their bindings to the global
 // scope (good), so expose a small curated namespace for the screenshot harness,
 // a future CLI, and console poking. Not a stable public API.
-window.panea = { state, runtime, newTab, openPalette, togglePalette, openNotifications, toggleNotifications, reopenClosedTab, saveCurrentLayout, openLayout, saveLayoutInteractive, openLayoutInteractive, deleteLayoutPick, openGit, toggleGit, openFind, toggleFind, splitPane, closePane, handleActivity };
+window.panea = { state, runtime, newTab, openPalette, togglePalette, openNotifications, toggleNotifications, reopenClosedTab, saveCurrentLayout, openLayout, saveLayoutInteractive, openLayoutInteractive, deleteLayoutPick, openGit, toggleGit, openFind, toggleFind, openSettings, splitPane, closePane, handleActivity };
 
 // Sidebar chrome buttons.
 document.getElementById("new-tab").onclick = () => newTab();
 document.getElementById("empty-new").onclick = () => newTab();
 document.getElementById("cmdk").onclick = () => openPalette();
 document.getElementById("bell").onclick = () => toggleNotifications();
+document.getElementById("settings-btn").onclick = () => openSettings();
 
-// ⌘K toggles the palette from anywhere (capture phase so the terminal textarea
-// never sees the keystroke).
+// The command-palette chord toggles the palette from anywhere, in the capture
+// phase so the terminal textarea never sees it. It's the one shortcut handled
+// here rather than in keyboard.js (which is why it's marked capture in the
+// registry); rebinding it in Settings changes what this matches.
 document.addEventListener("keydown", (e) => {
-  if (e.metaKey && !e.altKey && !e.ctrlKey && e.key.toLowerCase() === "k") {
+  const chord = chordFromEvent(e);
+  if (chord && chord === chordFor("command-palette")) {
     e.preventDefault(); e.stopPropagation(); togglePalette();
   }
 }, true);
 
-// ⌘T / ⌘W / ⌘D also work when focus isn't inside a terminal (e.g. on the
-// sidebar). Inside a terminal, xterm's key handler already routes these.
+// ⌘ shortcuts also work when focus isn't inside a terminal (sidebar, overlays).
+// Inside a terminal, xterm's own key handler already routes them, so skip to
+// avoid double-firing. The capture listener above already consumed the palette
+// chord, so it never reaches here.
 document.addEventListener("keydown", (e) => {
-  if (e.metaKey && ["t", "w", "d", "n", "g", "f"].includes(e.key.toLowerCase())) {
-    if (!e.target.closest || !e.target.closest(".leaf-term")) handleGlobalKey(e, state.focusedPaneId);
-  }
+  if (!e.metaKey) return;
+  if (e.target.closest && e.target.closest(".leaf-term")) return;
+  handleGlobalKey(e, state.focusedPaneId);
 });
 
 window.addEventListener("resize", () => {

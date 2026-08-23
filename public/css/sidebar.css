@@ -25,6 +25,15 @@
 #new-tab:hover { border-color: var(--accent); color: var(--accent); }
 #head-actions { display: flex; align-items: center; gap: 6px; -webkit-app-region: no-drag; }
 
+/* Settings gear: same 24×24 icon-button chrome as the bell. */
+#settings-btn {
+  border: 1px solid var(--border-strong); background: var(--bg-elev);
+  color: var(--text-dim); border-radius: 6px; width: 24px; height: 24px;
+  padding: 0; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
+}
+#settings-btn svg { width: 14px; height: 14px; }
+#settings-btn:hover { border-color: var(--accent); color: var(--text); }
+
 /* Notification bell: a count badge appears (warm notify color) when any pane
    needs attention. */
 #bell {

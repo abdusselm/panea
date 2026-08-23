@@ -12,6 +12,11 @@ import { openNotifications } from "./notifications.js";
 import { reopenClosedTab, hasClosedTabs, saveLayoutInteractive, openLayoutInteractive, deleteLayoutPick, layoutNames } from "./layouts.js";
 import { openGit } from "./git.js";
 import { openFind } from "./find.js";
+import { openSettings } from "./settings.js";
+import { chordFor, prettyChord } from "./shortcuts.js";
+
+// Live shortcut hint for a registry action, so the palette reflects rebinds.
+const hk = (id) => prettyChord(chordFor(id));
 
 let customCommands = [];
 let paletteEl = null, paletteInput = null, paletteListEl = null;
@@ -97,17 +102,17 @@ function buildPaletteCommands() {
   const cmds = [];
   const add = (group, title, hint, run) => cmds.push({ group, title, hint, run });
 
-  add("Tabs", "New terminal", "⌘T", () => newTab());
+  add("Tabs", "New terminal", hk("new-tab"), () => newTab());
   add("Tabs", "Rename tab", "", renameActiveTab);
-  if (hasClosedTabs()) add("Tabs", "Reopen closed tab", "⇧⌘T", () => reopenClosedTab());
+  if (hasClosedTabs()) add("Tabs", "Reopen closed tab", hk("reopen-tab"), () => reopenClosedTab());
   add("Tabs", "Next tab", "", () => cycleTab(1));
   add("Tabs", "Previous tab", "", () => cycleTab(-1));
 
-  add("Panes", "Split right", "⌘D", () => { const p = focusedPane(); if (p) splitPane(p.id, "h"); });
-  add("Panes", "Split down", "⇧⌘D", () => { const p = focusedPane(); if (p) splitPane(p.id, "v"); });
-  add("Panes", "Close pane", "⌘W", () => { const p = focusedPane(); if (p) closePane(p.id); });
+  add("Panes", "Split right", hk("split-right"), () => { const p = focusedPane(); if (p) splitPane(p.id, "h"); });
+  add("Panes", "Split down", hk("split-down"), () => { const p = focusedPane(); if (p) splitPane(p.id, "v"); });
+  add("Panes", "Close pane", hk("close-pane"), () => { const p = focusedPane(); if (p) closePane(p.id); });
   add("Panes", "Restart pane", "", () => { const p = focusedPane(); if (p) restartPane(p.id); });
-  add("Panes", "Find in terminal", "⌘F", () => openFind());
+  add("Panes", "Find in terminal", hk("find"), () => openFind());
   add("Panes", "Clear terminal", "", clearFocusedTerminal);
 
   add("Layouts", "Save this tab as layout…", "", () => saveLayoutInteractive());
@@ -116,14 +121,15 @@ function buildPaletteCommands() {
     add("Layouts", "Delete layout…", "", () => deleteLayoutPick());
   }
 
-  add("Git", "Git diff…", "⌘G", () => openGit());
+  add("Git", "Git diff…", hk("git-diff"), () => openGit());
 
+  add("View", "Keyboard shortcuts…", "", () => openSettings());
   add("View", "Increase font size", "⌘+", () => setFontSize(runtime.fontSize + 1));
   add("View", "Decrease font size", "⌘−", () => setFontSize(runtime.fontSize - 1));
   add("View", "Reset font size", "⌘0", () => setFontSize(DEFAULT_FONT_SIZE));
 
   add("Notifications", "Jump to next notification", "", nextAttentionPane);
-  add("Notifications", "Show notifications", "⇧⌘N", () => openNotifications());
+  add("Notifications", "Show notifications", hk("notifications"), () => openNotifications());
 
   state.tabs.forEach((tab, i) => add("Switch tab", tab.name, i < 9 ? `⌘${i + 1}` : "", () => activateTab(tab.id)));
 
