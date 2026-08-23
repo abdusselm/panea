@@ -7,7 +7,7 @@ import { b64ToU8 } from "./util.js";
 import { handleActivity } from "./attention.js";
 import { restoreSession } from "./session.js";
 import { refreshTabMeta } from "./tabs.js";
-import { setCustomCommands } from "./palette.js";
+import { setCustomCommands, refreshOpenPalette } from "./palette.js";
 import { setLayouts } from "./layouts.js";
 
 let ws = null;
@@ -52,6 +52,7 @@ export function connect() {
         break;
       case "layouts":
         setLayouts(msg.layouts || {});
+        refreshOpenPalette();
         break;
       case "meta": {
         const p = state.panes.get(msg.paneId);

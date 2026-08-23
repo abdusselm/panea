@@ -20,6 +20,14 @@ let paletteIndex = 0;
 // Called by the ws layer when the server delivers the command list.
 export function setCustomCommands(list) {
   customCommands = Array.isArray(list) ? list : [];
+  refreshOpenPalette();
+}
+
+// Rebuild the command set if the palette is already open. Server data (custom
+// commands, saved layouts) arrives async over the socket, after the palette
+// may have been built; without this the new entries wouldn't show until the
+// next open.
+export function refreshOpenPalette() {
   if (paletteIsOpen()) { paletteCmds = buildPaletteCommands(); renderPalette(); }
 }
 
