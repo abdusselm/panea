@@ -116,3 +116,7 @@ seconds; no shell configuration required.
   `TERM_THEME.background` in `public/app.js` (currently `#282c34`).
 - Shell prompt theme is injected via `ZDOTDIR` without touching your dotfiles.
   Disable with `PANEA_NO_THEME=1`.
+- Scales across displays: the layout is fluid (flex + viewport-relative
+  overlays), and chrome text uses a rem type scale that steps up on large
+  screens (root font-size 16 → 17 ≥2000px → 18 ≥2560px); the palette widens on
+  wide viewports too. Terminal font size is independent (`Cmd +/−/0`).

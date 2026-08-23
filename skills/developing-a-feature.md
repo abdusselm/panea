@@ -90,6 +90,10 @@ partials in cascade order; each owns one UI area and mirrors its JS module:
 - **One CSS partial per UI area.** Styles go in the matching `public/css/`
   partial; `style.css` stays a pure `@import` barrel. Reference colors/metrics
   through `tokens.css` variables — never hard-code a palette value twice.
+- **Chrome text uses the `--fs-*` rem type scale** (in `tokens.css`), not raw
+  px, so a large-display `@media` bump of the root `font-size` (in `base.css`)
+  scales every label from one knob. Numeric chips (badges, port pills, `kbd`)
+  intentionally stay fixed px. Terminal font is separate (`runtime.fontSize`).
 
 ## 2. Where a new feature goes
 

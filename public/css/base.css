@@ -2,6 +2,13 @@
    Loaded right after tokens.css and before any component partial. */
 
 * { box-sizing: border-box; }
+/* Root font-size is the single knob for chrome typography: every UI label uses
+   rem (via the --fs-* scale in tokens.css), so scaling this up on a large
+   display enlarges all chrome text proportionally and keeps the spacious feel.
+   Terminal font size is separate (⌘+/⌘−, runtime.fontSize). */
+html { font-size: 16px; }
+@media (min-width: 2000px) { html { font-size: 17px; } }
+@media (min-width: 2560px) { html { font-size: 18px; } }
 html, body {
   margin: 0; height: 100%; overflow: hidden;
   background: var(--bg); color: var(--text);

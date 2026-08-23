@@ -21,5 +21,17 @@
   --active: #2f6feb;          /* active tab fills with accent, like cmux */
   --radius: 8px;
   --sidebar-w: 216px;
+
+  /* Type scale (rem, relative to the html font-size set in base.css). Chrome
+     text references these instead of hard-coded px, so bumping the root
+     font-size on a large display scales every label from one knob. Numeric
+     chips (badges, port pills, kbd) stay fixed px on purpose. */
+  --fs-2xs: 0.625rem;   /* ~10px */
+  --fs-xs:  0.6875rem;  /* ~11px */
+  --fs-sm:  0.75rem;    /* ~12px */
+  --fs-md:  0.8125rem;  /* ~13px */
+  --fs-base: 0.875rem;  /* ~14px */
+  --fs-lg:  0.9375rem;  /* ~15px */
+
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
 }

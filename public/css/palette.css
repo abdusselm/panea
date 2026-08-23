@@ -14,9 +14,12 @@
   border-radius: 12px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.55);
   overflow: hidden; display: flex; flex-direction: column;
 }
+/* give the palette more room on wide displays so it doesn't feel lost */
+@media (min-width: 1800px) { .palette-box { width: 640px; } }
+@media (min-width: 2400px) { .palette-box { width: 720px; } }
 .palette-input {
   border: none; outline: none; background: transparent;
-  color: var(--text); font-size: 15px; font-family: inherit;
+  color: var(--text); font-size: var(--fs-lg); font-family: inherit;
   padding: 14px 16px; border-bottom: 1px solid var(--border);
 }
 .palette-input::placeholder { color: var(--text-dim); }
@@ -25,7 +28,7 @@
   display: flex; align-items: center; gap: 8px;
   margin: 8px 6px 4px; padding: 12px 5px 6px;
   border-top: 1px solid var(--border);
-  font-size: 11px; letter-spacing: 0.09em; text-transform: uppercase;
+  font-size: var(--fs-xs); letter-spacing: 0.09em; text-transform: uppercase;
   color: #aeb4c0; font-weight: 700; pointer-events: none;
 }
 /* trailing rule so the label reads as a section divider, not just a caption */
@@ -40,8 +43,8 @@
   padding: 9px 11px; border-radius: 7px; cursor: pointer;
 }
 .palette-item.sel { background: var(--accent); }
-.palette-item .pi-title { color: var(--text); font-size: 13.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.palette-item .pi-title { color: var(--text); font-size: var(--fs-md); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .palette-item.sel .pi-title { color: #fff; }
-.palette-item .pi-hint { flex: 0 0 auto; color: var(--text-dim); font-size: 11px; font-variant-numeric: tabular-nums; }
+.palette-item .pi-hint { flex: 0 0 auto; color: var(--text-dim); font-size: var(--fs-xs); font-variant-numeric: tabular-nums; }
 .palette-item.sel .pi-hint { color: rgba(255, 255, 255, 0.75); }
-.palette-empty { padding: 14px 12px; color: var(--text-dim); font-size: 13px; text-align: center; }
+.palette-empty { padding: 14px 12px; color: var(--text-dim); font-size: var(--fs-md); text-align: center; }
