@@ -323,3 +323,31 @@ kbd {
 .notif-item .ni-sub { font-size: 11px; color: var(--text-dim); }
 .notif-item:hover .ni-sub { color: rgba(255, 255, 255, 0.75); }
 .notif-empty { padding: 18px 12px; color: var(--text-dim); font-size: 13px; text-align: center; }
+
+/* ---------------- name prompt (save layout) ---------------- */
+#name-prompt {
+  position: fixed; inset: 0; z-index: 2100; display: none;
+  background: rgba(0, 0, 0, 0.38);
+  align-items: flex-start; justify-content: center;
+  padding-top: 16vh; -webkit-app-region: no-drag;
+}
+#name-prompt.open { display: flex; }
+.np-box {
+  width: 380px; max-width: calc(100vw - 40px);
+  background: #2f343d; border: 1px solid var(--border-strong);
+  border-radius: 12px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.55);
+  padding: 16px; display: flex; flex-direction: column; gap: 12px;
+}
+.np-title { font-size: 13px; color: var(--text-dim); }
+.np-input {
+  border: 1px solid var(--accent); outline: none; background: rgba(0, 0, 0, 0.35);
+  color: var(--text); font-size: 14px; font-family: inherit;
+  padding: 8px 10px; border-radius: 7px;
+}
+.np-actions { display: flex; justify-content: flex-end; gap: 8px; }
+.np-actions button {
+  font-family: inherit; font-size: 13px; padding: 6px 14px; border-radius: 7px; cursor: pointer;
+  border: 1px solid var(--border-strong); background: var(--bg-elev); color: var(--text);
+}
+.np-actions .np-ok { background: var(--accent); border-color: var(--accent); color: #fff; }
+.np-actions button:hover { border-color: var(--accent); }

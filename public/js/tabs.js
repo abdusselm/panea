@@ -7,6 +7,7 @@ import { ICON } from "./theme.js";
 import { uid, countLeaves, firstLeaf, eachLeaf, shortPath, cleanTitle } from "./util.js";
 import { createPane, renderTab, focusPane, destroyPane, refitTab } from "./panes.js";
 import { persist } from "./session.js";
+import { recordClosedTab } from "./layouts.js";
 
 // ---- lifecycle -----------------------------------------------------------
 export function newTab(cwd) {
@@ -48,6 +49,7 @@ export function closeTab(tabId) {
   const idx = state.tabs.findIndex((t) => t.id === tabId);
   if (idx < 0) return;
   const tab = state.tabs[idx];
+  recordClosedTab(serializeTab(tab)); // remember it so ⇧⌘T can bring it back
   eachLeaf(tab.tree, (leaf) => destroyPane(leaf.id));
   tab.el.remove();
   state.tabs.splice(idx, 1);
@@ -58,6 +60,46 @@ export function closeTab(tabId) {
   }
   renderTabList();
   persist();
+}
+
+// ---- tab (de)serialization + restore -------------------------------------
+// A tab "spec" is the plain, id-free-enough data needed to recreate a tab:
+// { name, cwd, tree, customName }. Used by closed-tab history and saved layouts.
+export function serializeTab(tab) {
+  return { name: tab.name, cwd: tab.cwd, tree: structuredClone(tab.tree), customName: !!tab.customName };
+}
+
+// Fresh leaf ids for a restored tree so it never collides with a live pane.
+function remapTreeIds(node) {
+  if (!node || node.kind === "leaf") return { kind: "leaf", id: uid() };
+  return { kind: "split", dir: node.dir, children: [remapTreeIds(node.children[0]), remapTreeIds(node.children[1])] };
+}
+
+// Instantiate the panes for a tab's tree (one PTY per leaf).
+export function instantiateTree(tab, node) {
+  if (!node) return;
+  if (node.kind === "leaf") createPane(node.id, tab.id, tab.cwd);
+  else { instantiateTree(tab, node.children[0]); instantiateTree(tab, node.children[1]); }
+}
+
+// Recreate a tab from a spec (closed-tab history, saved layouts). Gets a new
+// tab id and fresh pane ids.
+export function openTabFromSpec(spec, { activate = true } = {}) {
+  const tab = {
+    id: uid(),
+    name: spec.name || "shell",
+    cwd: spec.cwd || null,
+    tree: remapTreeIds(spec.tree),
+    customName: !!spec.customName,
+  };
+  state.tabs.push(tab);
+  createTabPaneEl(tab);
+  instantiateTree(tab, tab.tree);
+  renderTab(tab);
+  if (activate) activateTab(tab.id);
+  renderTabList();
+  persist();
+  return tab;
 }
 
 // ---- sidebar list --------------------------------------------------------

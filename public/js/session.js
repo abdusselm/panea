@@ -5,8 +5,8 @@ import { state, runtime } from "./state.js";
 import { MIN_FONT_SIZE, MAX_FONT_SIZE } from "./theme.js";
 import { uid } from "./util.js";
 import { wsSend } from "./ws.js";
-import { newTab, createTabPaneEl, activateTab, renderTabList } from "./tabs.js";
-import { createPane, renderTab } from "./panes.js";
+import { newTab, createTabPaneEl, activateTab, renderTabList, instantiateTree } from "./tabs.js";
+import { renderTab } from "./panes.js";
 
 export function serialize() {
   return {
@@ -38,14 +38,4 @@ export function restoreSession(layout) {
   const wanted = layout.activeTabId && state.tabs.find((x) => x.id === layout.activeTabId);
   activateTab(wanted ? layout.activeTabId : state.tabs[0].id);
   renderTabList();
-}
-
-function instantiateTree(tab, node) {
-  if (!node) return;
-  if (node.kind === "leaf") {
-    createPane(node.id, tab.id, tab.cwd);
-  } else {
-    instantiateTree(tab, node.children[0]);
-    instantiateTree(tab, node.children[1]);
-  }
 }

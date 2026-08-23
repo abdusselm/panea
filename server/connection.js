@@ -4,6 +4,7 @@
 import { Pane } from "./pane.js";
 import { loadSession, saveSession } from "./session-store.js";
 import { loadCommands } from "./commands-store.js";
+import { loadLayouts, saveLayout, deleteLayout } from "./layouts-store.js";
 import { computeMetaBatch } from "./meta.js";
 
 const META_POLL_MS = 3500;
@@ -45,9 +46,11 @@ export function handleConnection(ws) {
   };
   const metaTimer = process.env.PANEA_NO_META_POLL ? null : setInterval(pollMeta, META_POLL_MS);
 
-  // Hand the freshly connected browser the last layout and the palette commands.
+  // Hand the freshly connected browser the last session, palette commands, and
+  // saved layouts.
   send({ type: "session", layout: loadSession() });
   send({ type: "commands", commands: loadCommands() });
+  send({ type: "layouts", layouts: loadLayouts() });
 
   ws.on("message", (raw) => {
     let msg;
@@ -91,6 +94,18 @@ export function handleConnection(ws) {
       case "getCommands": {
         // Re-read from disk so palette opens reflect edits without a restart.
         send({ type: "commands", commands: loadCommands() });
+        break;
+      }
+      case "getLayouts": {
+        send({ type: "layouts", layouts: loadLayouts() });
+        break;
+      }
+      case "saveLayout": {
+        send({ type: "layouts", layouts: saveLayout(msg.name, msg.layout) });
+        break;
+      }
+      case "deleteLayout": {
+        send({ type: "layouts", layouts: deleteLayout(msg.name) });
         break;
       }
     }

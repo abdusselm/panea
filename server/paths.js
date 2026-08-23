@@ -19,6 +19,7 @@ export const ZSH_THEME_DIR = path.join(ROOT, "shell", "zsh");
 export const STATE_DIR = path.join(os.homedir(), ".panea");
 export const SESSION_FILE = path.join(STATE_DIR, "session.json");
 export const COMMANDS_FILE = path.join(STATE_DIR, "commands.json");
+export const LAYOUTS_FILE = path.join(STATE_DIR, "layouts.json");
 
 // python3 is Apple-signed and its `pty` module needs no helper binary (unlike
 // node-pty, whose unsigned helper is blocked on managed macOS).

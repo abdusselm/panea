@@ -54,7 +54,8 @@ not append it to an existing file.**
 - `electron/main.cjs` — desktop shell; starts `server.js` as a child, opens the
   BrowserWindow, has one-shot screenshot/demo mode gated by `PANEA_*` env.
 - `public/js/` — frontend ES modules: `theme`, `state`, `dom`, `util`, `ws`,
-  `session`, `tabs`, `panes`, `attention`, `keyboard`, `palette`, `main`.
+  `session`, `tabs`, `panes`, `attention`, `attention-signals`, `notifications`,
+  `layouts`, `keyboard`, `palette`, `main`.
   Loaded via `<script type="module" src="/js/main.js">`. `main.js` exposes a
   `window.panea` debug bridge (ES modules don't leak globals).
 - `public/index.html`, `public/style.css` — markup + cmux palette.

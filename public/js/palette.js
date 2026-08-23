@@ -9,6 +9,7 @@ import { wsSend } from "./ws.js";
 import { newTab, activateTab, startRename } from "./tabs.js";
 import { splitPane, closePane, restartPane, setFontSize, focusPane } from "./panes.js";
 import { openNotifications } from "./notifications.js";
+import { reopenClosedTab, hasClosedTabs, saveLayoutInteractive, openLayout, deleteLayout, layoutNames } from "./layouts.js";
 
 let customCommands = [];
 let paletteEl = null, paletteInput = null, paletteListEl = null;
@@ -84,6 +85,10 @@ function buildPaletteCommands() {
   add("Split down", "⇧⌘D", () => { const p = focusedPane(); if (p) splitPane(p.id, "v"); });
   add("Close pane", "⌘W", () => { const p = focusedPane(); if (p) closePane(p.id); });
   add("Rename tab", "", renameActiveTab);
+  if (hasClosedTabs()) add("Reopen closed tab", "⇧⌘T", () => reopenClosedTab());
+  add("Save current layout…", "", () => saveLayoutInteractive());
+  for (const name of layoutNames()) add("Open layout: " + name, "", () => openLayout(name));
+  for (const name of layoutNames()) add("Delete layout: " + name, "", () => deleteLayout(name));
   add("Next tab", "", () => cycleTab(1));
   add("Previous tab", "", () => cycleTab(-1));
   add("Jump to next notification", "", nextAttentionPane);
@@ -144,6 +149,7 @@ export function paletteIsOpen() { return paletteEl && paletteEl.classList.contai
 export function openPalette() {
   ensurePaletteDom();
   wsSend({ type: "getCommands" }); // refresh customs from disk
+  wsSend({ type: "getLayouts" });  // refresh saved layouts
   paletteCmds = buildPaletteCommands();
   paletteEl.classList.add("open");
   paletteInput.value = "";

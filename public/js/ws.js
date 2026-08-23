@@ -8,6 +8,7 @@ import { handleActivity } from "./attention.js";
 import { restoreSession } from "./session.js";
 import { refreshTabMeta } from "./tabs.js";
 import { setCustomCommands } from "./palette.js";
+import { setLayouts } from "./layouts.js";
 
 let ws = null;
 let wsReady = false;
@@ -48,6 +49,9 @@ export function connect() {
         break;
       case "commands":
         setCustomCommands(Array.isArray(msg.commands) ? msg.commands : []);
+        break;
+      case "layouts":
+        setLayouts(msg.layouts || {});
         break;
       case "meta": {
         const p = state.panes.get(msg.paneId);

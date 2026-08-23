@@ -40,7 +40,10 @@ Frontend (`public/js/`):
 | `session.js` | serialize / persist / restore layout |
 | `tabs.js` | tab lifecycle, sidebar list, metadata rows, ctx menu, titles, rename |
 | `panes.js` | xterm panes, split tree, focus, resize, restart, tree→DOM |
-| `attention.js` | background-pane notifications (bell + idle) |
+| `attention.js` | background-pane attention state + desktop notification |
+| `attention-signals.js` | pure heuristics: OSC/prompt/long-task classification |
+| `notifications.js` | bell indicator + notification panel |
+| `layouts.js` | reopen-closed-tab history + named saved layouts + name prompt |
 | `keyboard.js` | global ⌘ shortcuts |
 | `palette.js` | ⌘K command palette + custom commands |
 | `main.js` | entry: DOM wiring, global listeners, `window.panea` debug bridge, `connect()` |
@@ -53,6 +56,7 @@ Backend (`server/`):
 | `static-server.js` | asset serving (vendor whitelist + `public/`) |
 | `session-store.js` | `~/.panea/session.json` |
 | `commands-store.js` | `~/.panea/commands.json` |
+| `layouts-store.js` | `~/.panea/layouts.json` (named saved layouts) |
 | `meta.js` | sidebar context (cwd / git branch / listening ports) via lsof/git |
 | `pane.js` | the `Pane` class (one PTY) |
 | `connection.js` | per-socket wiring: panes map, I/O relay, meta poll |
@@ -85,8 +89,9 @@ Backend (`server/`):
 
 ## 3. The WebSocket protocol
 
-Client → server: `open`, `input`, `resize`, `close`, `session`, `getCommands`.
-Server → client: `output`, `exit`, `session`, `commands`, `meta`.
+Client → server: `open`, `input`, `resize`, `close`, `session`, `getCommands`,
+`getLayouts`, `saveLayout`, `deleteLayout`.
+Server → client: `output`, `exit`, `session`, `commands`, `meta`, `layouts`.
 
 Add a feature that needs the host by defining a new message type on both ends;
 keep the payload JSON-serializable (base64 any binary).

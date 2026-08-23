@@ -27,6 +27,7 @@ Change the port: `PANEA_PORT=5000 npm run app`
 | `Cmd-K` | command palette |
 | `Shift-Cmd-N` | notification panel |
 | `Cmd-T` | new tab |
+| `Shift-Cmd-T` | reopen last closed tab |
 | `Cmd-W` | close focused pane |
 | `Cmd-D` | split right |
 | `Cmd-Shift-D` | split down |
@@ -77,6 +78,16 @@ you on completion? Have it emit `printf '\e]9;task done\a'` (or ring the bell).
 
 The heuristics live in `public/js/attention-signals.js` — tune the prompt
 patterns or the long-task threshold there.
+
+## Tabs & layouts
+
+- **Reopen closed tab** — `Shift-Cmd-T` (or the palette) brings back the most
+  recently closed tab with its name, working directory, and split layout. Keeps
+  a short history of closes.
+- **Saved layouts** — from the palette, "Save current layout…" names a snapshot
+  of all your tabs; "Open layout: \<name\>" restores it (appended to the current
+  workspace), and "Delete layout: \<name\>" removes it. Saved to
+  `~/.panea/layouts.json`.
 
 ## Sidebar context
 
