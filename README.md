@@ -25,6 +25,7 @@ Change the port: `PANEA_PORT=5000 npm run app`
 | Key | Action |
 |-----|--------|
 | `Cmd-K` | command palette |
+| `Cmd-G` | git diff panel |
 | `Shift-Cmd-N` | notification panel |
 | `Cmd-T` | new tab |
 | `Shift-Cmd-T` | reopen last closed tab |
@@ -38,9 +39,9 @@ Change the port: `PANEA_PORT=5000 npm run app`
 ## Command palette
 
 `Cmd-K` opens a fuzzy command palette. Commands are grouped by function under
-section headers — **Tabs**, **Panes**, **Layouts**, **View**, **Notifications**,
-**Switch tab**, and your own **Custom** commands — so a long list stays
-scannable. Typing filters across every group; empty groups drop out.
+section headers — **Tabs**, **Panes**, **Layouts**, **Git**, **View**,
+**Notifications**, **Switch tab**, and your own **Custom** commands — so a long
+list stays scannable. Typing filters across every group; empty groups drop out.
 
 Define custom commands in `~/.panea/commands.json` (see
 [`commands.example.json`](commands.example.json)):
@@ -91,6 +92,20 @@ patterns or the long-task threshold there.
   saved layouts to pick from (delete asks to confirm). Opening a layout adds it
   as a new tab, leaving your current tabs untouched. Saved to
   `~/.panea/layouts.json`.
+
+## Git diff
+
+`Cmd-G` (or the palette's **Git** group) opens a diff panel scoped to the
+**active tab's repo** — the working directory of its focused pane. The left
+column lists every changed file from `git status` with a state-tinted dot
+(green new, yellow modified, red deleted, blue renamed, purple staged) and its
+`+adds −dels` count; click a file (or ↑/↓) to show its unified diff on the
+right, with added/removed lines color-coded. Untracked files render whole as
+additions. **Refresh** re-reads the tree; `Esc` or **Close** dismisses it.
+
+Read-only by design — panea never stages, commits, or edits the tree; it's a
+fast glance at what changed without leaving the terminal. Git runs only when you
+open or refresh the panel or click a file, never on a timer.
 
 ## Sidebar context
 

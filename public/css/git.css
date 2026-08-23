@@ -1,0 +1,87 @@
+/* Git diff panel (⌘G): a wide overlay for the active tab's repo. Left column is
+   the changed-file list; right column is the selected file's unified diff.
+   Mirrors public/js/git.js. Shares the dimmed-overlay look of the palette /
+   notifications panels but is roomier so a real diff has space to breathe. */
+
+#git-panel {
+  position: fixed; inset: 0; z-index: 2050; display: none;
+  background: rgba(0, 0, 0, 0.42);
+  align-items: flex-start; justify-content: center;
+  padding-top: 8vh; -webkit-app-region: no-drag;
+}
+#git-panel.open { display: flex; }
+
+.git-box {
+  width: 900px; max-width: calc(100vw - 48px);
+  height: 76vh; max-height: 820px;
+  background: #2f343d; border: 1px solid var(--border-strong);
+  border-radius: 12px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.55);
+  overflow: hidden; display: flex; flex-direction: column;
+}
+/* wider still on large displays, matching the palette's scale-up */
+@media (min-width: 1800px) { .git-box { width: 1040px; } }
+@media (min-width: 2400px) { .git-box { width: 1200px; } }
+
+.git-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 14px; border-bottom: 1px solid var(--border); flex: 0 0 auto;
+}
+.git-title { font-size: var(--fs-base); font-weight: 600; color: var(--text); }
+.git-actions { display: flex; gap: 8px; }
+.git-actions button {
+  background: transparent; border: 1px solid var(--border-strong); color: var(--text-dim);
+  font-family: inherit; font-size: var(--fs-xs); padding: 4px 11px; border-radius: 6px; cursor: pointer;
+}
+.git-actions button:hover { color: var(--text); border-color: var(--accent); }
+
+.git-body { flex: 1 1 auto; display: flex; min-height: 0; }
+
+/* left: changed-file list */
+.gd-files {
+  flex: 0 0 320px; min-width: 220px; overflow-y: auto;
+  border-right: 1px solid var(--border); padding: 8px;
+  display: flex; flex-direction: column; gap: 2px;
+}
+@media (min-width: 1800px) { .gd-files { flex-basis: 380px; } }
+
+.gd-file {
+  display: flex; align-items: center; gap: 9px;
+  padding: 8px 10px; border-radius: 7px; cursor: pointer;
+}
+.gd-file:hover { background: var(--bg); }
+.gd-file.sel { background: var(--accent); }
+.gd-dot { flex: 0 0 8px; width: 8px; height: 8px; border-radius: 2px; background: var(--text-dim); }
+/* state tints: added=green, deleted=red, renamed=blue, modified=yellow */
+.gd-dot[data-kind="new"]      { background: #b5bd68; }
+.gd-dot[data-kind="deleted"]  { background: var(--danger); }
+.gd-dot[data-kind="renamed"]  { background: #81a2be; }
+.gd-dot[data-kind="modified"] { background: var(--attention); }
+.gd-dot[data-kind="staged"]   { background: #b294bb; }
+
+.gd-path { min-width: 0; flex: 1 1 auto; font-size: var(--fs-md); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.gd-dir { color: var(--text-dim); }
+.gd-base { color: var(--text); }
+.gd-file.sel .gd-dir, .gd-file.sel .gd-base { color: #fff; }
+
+.gd-count {
+  flex: 0 0 auto; font-size: var(--fs-xs); color: var(--text-dim);
+  font-variant-numeric: tabular-nums; font-family: ui-monospace, "SF Mono", Menlo, monospace;
+}
+.gd-count[data-kind="new"] { color: #b5bd68; }
+.gd-file.sel .gd-count { color: rgba(255, 255, 255, 0.8); }
+
+/* right: unified diff */
+.gd-diff { flex: 1 1 auto; overflow: auto; min-width: 0; background: var(--bg); }
+.gd-diffbody {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: var(--fs-sm); line-height: 1.55; padding: 8px 0; min-width: max-content;
+}
+.gd-line { padding: 0 14px; white-space: pre; }
+.dl-ctx  { color: #c6ccd6; }
+.dl-add  { color: #cde8b5; background: rgba(120, 170, 90, 0.14); }
+.dl-del  { color: #f0b6b1; background: rgba(200, 90, 80, 0.15); }
+.dl-hunk { color: var(--text-dim); background: rgba(129, 162, 190, 0.10); margin: 4px 0; }
+
+.gd-empty {
+  padding: 22px 16px; color: var(--text-dim); font-size: var(--fs-md); text-align: center;
+}

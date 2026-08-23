@@ -44,6 +44,7 @@ Frontend (`public/js/`):
 | `attention-signals.js` | pure heuristics: OSC/prompt/long-task classification |
 | `notifications.js` | bell indicator + notification panel |
 | `layouts.js` | reopen-closed-tab history + named saved layouts + name prompt |
+| `git.js` | git diff panel: changed-file list + per-file unified diff |
 | `keyboard.js` | global ⌘ shortcuts |
 | `palette.js` | ⌘K command palette + custom commands |
 | `main.js` | entry: DOM wiring, global listeners, `window.panea` debug bridge, `connect()` |
@@ -58,6 +59,7 @@ Backend (`server/`):
 | `commands-store.js` | `~/.panea/commands.json` |
 | `layouts-store.js` | `~/.panea/layouts.json` (named saved layouts) |
 | `meta.js` | sidebar context (cwd / git branch / listening ports) via lsof/git |
+| `git.js` | on-demand git status + per-file diff for the diff panel |
 | `pane.js` | the `Pane` class (one PTY) |
 | `connection.js` | per-socket wiring: panes map, I/O relay, meta poll |
 
@@ -73,6 +75,7 @@ partials in cascade order; each owns one UI area and mirrors its JS module:
 | `panes.css` | workspace, split tree, terminal leaf, empty state |
 | `palette.css` | ⌘K palette overlay, input, grouped list + section headers |
 | `notifications.css` | notification panel + reason-tinted rows |
+| `git.css` | git diff panel: file list + color-coded unified diff |
 | `modals.css` | name prompt, confirm modal, layout picker (shared `.np-*`) |
 
 ### Module rules
@@ -112,8 +115,9 @@ partials in cascade order; each owns one UI area and mirrors its JS module:
 ## 3. The WebSocket protocol
 
 Client → server: `open`, `input`, `resize`, `close`, `session`, `getCommands`,
-`getLayouts`, `saveLayout`, `deleteLayout`.
-Server → client: `output`, `exit`, `session`, `commands`, `meta`, `layouts`.
+`getLayouts`, `saveLayout`, `deleteLayout`, `getGitStatus`, `getGitDiff`.
+Server → client: `output`, `exit`, `session`, `commands`, `meta`, `layouts`,
+`gitStatus`, `gitDiff`.
 
 Add a feature that needs the host by defining a new message type on both ends;
 keep the payload JSON-serializable (base64 any binary).

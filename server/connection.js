@@ -6,6 +6,7 @@ import { loadSession, saveSession } from "./session-store.js";
 import { loadCommands } from "./commands-store.js";
 import { loadLayouts, saveLayout, deleteLayout } from "./layouts-store.js";
 import { computeMetaBatch } from "./meta.js";
+import { gitStatus, gitDiff } from "./git.js";
 
 const META_POLL_MS = 3500;
 const META_FIRST_POLL_MS = 900;
@@ -106,6 +107,18 @@ export function handleConnection(ws) {
       }
       case "deleteLayout": {
         send({ type: "layouts", layouts: deleteLayout(msg.name) });
+        break;
+      }
+      case "getGitStatus": {
+        // On-demand only (panel open / refresh); never polled. Echo the cwd so
+        // a late reply for a since-changed repo can be ignored by the client.
+        gitStatus(msg.cwd).then((res) => send({ type: "gitStatus", cwd: msg.cwd, ...res }));
+        break;
+      }
+      case "getGitDiff": {
+        gitDiff(msg.cwd, msg.path, msg.mode).then((res) =>
+          send({ type: "gitDiff", cwd: msg.cwd, path: msg.path, ...res })
+        );
         break;
       }
     }

@@ -10,6 +10,7 @@ import { newTab, activateTab, startRename } from "./tabs.js";
 import { splitPane, closePane, restartPane, setFontSize, focusPane } from "./panes.js";
 import { openNotifications } from "./notifications.js";
 import { reopenClosedTab, hasClosedTabs, saveLayoutInteractive, openLayoutInteractive, deleteLayoutPick, layoutNames } from "./layouts.js";
+import { openGit } from "./git.js";
 
 let customCommands = [];
 let paletteEl = null, paletteInput = null, paletteListEl = null;
@@ -86,7 +87,7 @@ function clearFocusedTerminal() {
 }
 
 // Group order for the palette; commands render under these section headers.
-const GROUP_ORDER = ["Tabs", "Panes", "Layouts", "View", "Notifications", "Switch tab", "Custom"];
+const GROUP_ORDER = ["Tabs", "Panes", "Layouts", "Git", "View", "Notifications", "Switch tab", "Custom"];
 
 // Assemble the palette: built-in actions grouped by function + a switch entry
 // per tab + custom commands. Each command carries a `group` so the list can
@@ -112,6 +113,8 @@ function buildPaletteCommands() {
     add("Layouts", "Open layout…", "", () => openLayoutInteractive());
     add("Layouts", "Delete layout…", "", () => deleteLayoutPick());
   }
+
+  add("Git", "Git diff…", "⌘G", () => openGit());
 
   add("View", "Increase font size", "⌘+", () => setFontSize(runtime.fontSize + 1));
   add("View", "Decrease font size", "⌘−", () => setFontSize(runtime.fontSize - 1));

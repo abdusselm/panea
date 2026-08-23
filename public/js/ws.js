@@ -9,6 +9,7 @@ import { restoreSession } from "./session.js";
 import { refreshTabMeta } from "./tabs.js";
 import { setCustomCommands, refreshOpenPalette } from "./palette.js";
 import { setLayouts } from "./layouts.js";
+import { setGitStatus, setGitDiff } from "./git.js";
 
 let ws = null;
 let wsReady = false;
@@ -63,6 +64,12 @@ export function connect() {
         }
         break;
       }
+      case "gitStatus":
+        setGitStatus(msg);
+        break;
+      case "gitDiff":
+        setGitDiff(msg);
+        break;
     }
   };
 }
