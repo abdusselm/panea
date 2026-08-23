@@ -1,17 +1,34 @@
-/* The workspace: tab panes, the split tree, and each terminal leaf (header bar
-   with folder icon / title / actions, the xterm host, focused + attention +
-   exited states) plus the empty state. Mirrors public/js/panes.js. The
-   badge-breathe animation the attention dot uses lives in base.css. */
+
 
 #workspace { flex: 1; position: relative; background: var(--bg); }
 .tabpane { position: absolute; inset: 0; display: none; padding: 6px; }
 .tabpane.active { display: block; }
 
-/* pane tree */
-.split { display: flex; width: 100%; height: 100%; gap: 6px; }
+.split { display: flex; width: 100%; height: 100%; }
 .split.h { flex-direction: row; }
 .split.v { flex-direction: column; }
 .split > .node { flex: 1 1 0; min-width: 0; min-height: 0; }
+
+.split-gutter { flex: 0 0 6px; position: relative; z-index: 5; }
+.split.h > .split-gutter { cursor: col-resize; }
+.split.v > .split-gutter { cursor: row-resize; }
+
+.split-gutter::before {
+  content: ""; position: absolute; z-index: 1;
+}
+.split.h > .split-gutter::before { inset: 0 -3px; }
+.split.v > .split-gutter::before { inset: -3px 0; }
+
+.split-gutter::after {
+  content: ""; position: absolute; background: transparent; border-radius: 2px;
+  transition: background 0.12s;
+}
+.split.h > .split-gutter::after { inset: 0 2px; }
+.split.v > .split-gutter::after { inset: 2px 0; }
+.split-gutter:hover::after, .split-gutter.dragging::after { background: var(--accent); }
+
+body.resizing-split { user-select: none; }
+body.resizing-split .leaf-term { pointer-events: none; }
 
 .leaf {
   position: relative; width: 100%; height: 100%;
@@ -20,7 +37,7 @@
   display: flex; flex-direction: column;
 }
 .leaf.focused { border-color: var(--focus-border); }
-/* cmux-style pane header: folder icon + title on the left, icon cluster right. */
+
 .leaf-bar {
   height: 30px; flex: 0 0 30px; display: flex; align-items: center;
   gap: 8px; padding: 0 6px 0 10px; background: var(--bg-elev);
@@ -46,6 +63,26 @@
 .leaf-bar .actions button:hover { color: var(--text); background: var(--bg); }
 .leaf-bar .actions button svg { width: 15px; height: 15px; }
 .leaf-bar .actions button.close:hover { color: var(--danger); }
+
+.resume-bar {
+  flex: 0 0 auto; display: flex; align-items: center; gap: 8px;
+  padding: 5px 8px 5px 10px; background: rgba(47, 111, 235, 0.12);
+  border-bottom: 1px solid var(--accent); font-size: var(--fs-sm); color: var(--text);
+}
+.resume-bar .rb-label { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.resume-bar .rb-label strong { color: var(--accent); font-weight: 600; }
+.resume-bar .rb-go {
+  flex: 0 0 auto; background: var(--accent); border: 1px solid var(--accent); color: #fff;
+  font-family: inherit; font-size: var(--fs-xs); font-weight: 600;
+  padding: 3px 10px; border-radius: 6px; cursor: pointer;
+}
+.resume-bar .rb-go:hover { filter: brightness(1.1); }
+.resume-bar .rb-x {
+  flex: 0 0 auto; background: transparent; border: none; color: var(--text-dim);
+  font-family: inherit; font-size: var(--fs-sm); cursor: pointer; padding: 2px 4px;
+}
+.resume-bar .rb-x:hover { color: var(--text); }
+
 .leaf-term { flex: 1; min-height: 0; padding: 6px 8px; }
 .leaf.exited .leaf-term::after {
   content: "process exited — press ⏎ to restart";

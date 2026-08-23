@@ -1,5 +1,4 @@
-// Named workspace layouts, persisted to ~/.panea/layouts.json as
-// { "<name>": { tabs: [ { name, cwd, tree, customName }, ... ] } }.
+
 
 import fs from "node:fs";
 import { LAYOUTS_FILE } from "./paths.js";

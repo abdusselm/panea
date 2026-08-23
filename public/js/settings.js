@@ -1,8 +1,4 @@
-// Settings panel: an overlay for editing keyboard shortcuts. Lists every
-// rebindable action (from the shortcuts registry) grouped by category with its
-// current chord; click a chord to capture a new key combo, with conflict and
-// hint feedback. Reset one binding or all. Changes persist through the registry
-// (which saves to the server). Follows the notifications/git panel pattern.
+
 
 import {
   shortcutList, prettyChord, chordFromEvent,
@@ -12,8 +8,8 @@ import {
 const CATEGORY_ORDER = ["General", "Tabs", "Panes", "View"];
 
 let panelEl = null, listEl = null;
-let capturingId = null;   // action id currently awaiting a keypress
-let flash = null;         // { id, msg } transient inline message
+let capturingId = null;
+let flash = null;
 let captureHandler = null;
 
 function ensureDom() {
@@ -74,15 +70,13 @@ function renderRow(r) {
   return row;
 }
 
-// Begin listening for the next key combo to bind to `id`. A capture-phase
-// keydown grabs the combo before it can trigger any existing shortcut.
 function startCapture(id) {
   if (capturingId) stopCapture();
   capturingId = id;
   flash = null;
   render();
   captureHandler = (e) => {
-    // Ignore lone modifier presses — wait for the actual key.
+
     if (["Meta", "Shift", "Alt", "Control"].includes(e.key)) return;
     e.preventDefault();
     e.stopPropagation();
@@ -104,11 +98,8 @@ function stopCapture() {
   capturingId = null;
 }
 
-// ---- open / close ---------------------------------------------------------
-
 export function isSettingsOpen() { return panelEl && panelEl.classList.contains("open"); }
 
-// Re-render if open when settings arrive/change over the socket.
 export function refreshOpenSettings() { if (isSettingsOpen()) render(); }
 
 export function openSettings() {

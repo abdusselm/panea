@@ -1,5 +1,4 @@
-// Panes: create/destroy xterm terminals, the split-tree layout, focus, resize,
-// restart, and tree-to-DOM rendering.
+
 
 import { state, runtime } from "./state.js";
 import { TERM_THEME, FONT_FAMILY, FONT_LINE_HEIGHT, MIN_FONT_SIZE, MAX_FONT_SIZE, ICON } from "./theme.js";
@@ -10,41 +9,43 @@ import { clearPaneAttention, signalExplicit } from "./attention.js";
 import { handleGlobalKey } from "./keyboard.js";
 import { persist } from "./session.js";
 import { closeFindFor } from "./find.js";
+import { mountResumeBar } from "./agents.js";
 
 const { Terminal } = window;
 const FitAddon = window.FitAddon;
 const SearchAddon = window.SearchAddon;
+const SerializeAddon = window.SerializeAddon;
 
 const SCROLLBACK = 5000;
 
-// Coalesce refit requests: a ResizeObserver can fire many times per frame
-// (window drag, split creation), and each fit() forces a reflow + a resize
-// message. Collapse them to at most one fit per pane per animation frame.
+const RESTORE_MARKER = "──── restored session ────";
+
 function scheduleRefit(paneId) {
   const p = state.panes.get(paneId);
   if (!p || p.refitRAF) return;
   p.refitRAF = requestAnimationFrame(() => { p.refitRAF = 0; refit(paneId); });
 }
 
-export function createPane(paneId, tabId, cwd) {
+export function createPane(paneId, tabId, cwd, restore) {
   const term = new Terminal({
     fontFamily: FONT_FAMILY,
     fontSize: runtime.fontSize,
     lineHeight: FONT_LINE_HEIGHT,
     letterSpacing: 0,
     cursorBlink: true,
-    // Scrollback is a per-pane memory cost (xterm keeps a typed-array buffer per
-    // line). 5000 lines is generous for a terminal while staying thrifty across
-    // many open splits; raise SCROLLBACK if you need deeper history.
+
     scrollback: SCROLLBACK,
     allowProposedApi: true,
     theme: TERM_THEME,
   });
   const fit = new FitAddon.FitAddon();
   term.loadAddon(fit);
-  // In-terminal find (⌘F). Disposed with the terminal in destroyPane.
+
   const search = SearchAddon ? new SearchAddon.SearchAddon() : null;
   if (search) term.loadAddon(search);
+
+  const serialize = SerializeAddon ? new SerializeAddon.SerializeAddon() : null;
+  if (serialize) term.loadAddon(serialize);
 
   const el = document.createElement("div");
   el.className = "leaf node";
@@ -67,14 +68,8 @@ export function createPane(paneId, tabId, cwd) {
   const termEl = el.querySelector(".leaf-term");
   term.open(termEl);
 
-  // Auto-title: programs (and the shell) set the terminal title with an OSC
-  // escape; xterm surfaces it here. We use it to name the pane + tab.
   term.onTitleChange((t) => setPaneTitle(paneId, t));
 
-  // Explicit notification escapes: a program deliberately asking to notify the
-  // user. OSC 9 (iTerm2 style): `ESC ] 9 ; message BEL`. OSC 777 (kitty/urxvt
-  // style): `ESC ] 777 ; notify ; title ; body BEL`. Returning true marks them
-  // handled so xterm doesn't try to render the payload.
   term.parser.registerOscHandler(9, (data) => { signalExplicit(paneId, (data || "").trim()); return true; });
   term.parser.registerOscHandler(777, (data) => {
     const parts = String(data || "").split(";");
@@ -91,14 +86,28 @@ export function createPane(paneId, tabId, cwd) {
     const p = state.panes.get(paneId);
     if (p && p.exited) { if (d === "\r") restartPane(paneId); return; }
     wsSend({ type: "input", paneId, data: u8ToB64(enc.encode(d)) });
+    trackAgentPrompt(p, d);
   });
   term.attachCustomKeyEventHandler((e) => handleGlobalKey(e, paneId));
 
   const ro = new ResizeObserver(() => scheduleRefit(paneId));
   ro.observe(termEl);
 
-  const pane = { id: paneId, term, fit, search, tabId, cwd, exited: false, el, termEl, ro, titleEl, title: titleText, attention: false, attnReason: "", attnMessage: "", idleTimer: null, burstStart: 0, burstBytes: 0, refitRAF: 0, meta: { cwd: cwd || "", branch: "", ports: [] } };
+  const pane = { id: paneId, term, fit, search, serialize, tabId, cwd, exited: false, el, termEl, ro, titleEl, title: titleText, attention: false, attnReason: "", attnMessage: "", idleTimer: null, burstStart: 0, burstBytes: 0, refitRAF: 0, restoreAgent: (restore && restore.agent) || "", promptBuf: "", lastPrompt: "", meta: { cwd: cwd || "", branch: "", ports: [], agent: "" } };
   state.panes.set(paneId, pane);
+
+  if (restore) {
+    if (restore.scroll) {
+      const hist = restore.scroll
+
+        .replace(/\x1b\[\?[0-9;]*[hl]/g, "")
+
+        .split(/\r?\n/).filter((l) => !l.includes(RESTORE_MARKER)).join("\r\n");
+      term.write(hist);
+      term.write(`\r\n\x1b[90m${RESTORE_MARKER}\x1b[0m\r\n`);
+    }
+    if (restore.agent) mountResumeBar(pane, restore.agent);
+  }
 
   requestAnimationFrame(() => {
     refit(paneId);
@@ -108,7 +117,6 @@ export function createPane(paneId, tabId, cwd) {
   return pane;
 }
 
-// Live font-size control, applied to every pane and persisted.
 export function setFontSize(n) {
   runtime.fontSize = Math.max(MIN_FONT_SIZE, Math.min(MAX_FONT_SIZE, n));
   for (const p of state.panes.values()) p.term.options.fontSize = runtime.fontSize;
@@ -145,7 +153,7 @@ export function focusPane(paneId) {
 export function destroyPane(paneId) {
   const p = state.panes.get(paneId);
   if (!p) return;
-  closeFindFor(paneId); // tear down the find box if it targets this pane
+  closeFindFor(paneId);
   try { p.ro.disconnect(); } catch (_) {}
   if (p.refitRAF) cancelAnimationFrame(p.refitRAF);
   clearTimeout(p.idleTimer);
@@ -163,7 +171,28 @@ export function restartPane(paneId) {
   wsSend({ type: "open", paneId, cwd: p.cwd || undefined, cols: dims ? dims.cols : 80, rows: dims ? dims.rows : 24 });
 }
 
-// ---- splitting -----------------------------------------------------------
+const PROMPT_MAX = 200;
+function trackAgentPrompt(p, d) {
+  if (!p || !(p.meta.agent || p.restoreAgent)) return;
+  d = d.replace(/\x1b\[20[01]~/g, "");
+  for (const ch of d) {
+    const code = ch.codePointAt(0);
+    if (ch === "\r" || ch === "\n") finalizePrompt(p);
+    else if (code === 0x7f || code === 0x08) p.promptBuf = p.promptBuf.slice(0, -1);
+    else if (code === 0x15 || code === 0x03) p.promptBuf = "";
+    else if (code === 0x1b) break;
+    else if (code >= 0x20) p.promptBuf += ch;
+  }
+}
+function finalizePrompt(p) {
+  const text = p.promptBuf.trim().slice(0, PROMPT_MAX);
+  p.promptBuf = "";
+  if (!text) return;
+  p.lastPrompt = text;
+  const tab = state.tabs.find((t) => t.id === p.tabId);
+  if (tab) refreshTabMeta(tab);
+}
+
 export function splitPane(paneId, dir) {
   const src = state.panes.get(paneId);
   if (!src) return;
@@ -172,7 +201,7 @@ export function splitPane(paneId, dir) {
   const found = findLeaf(tab.tree, paneId, null);
   if (!found) return;
   const newId = uid();
-  const split = { kind: "split", dir, children: [{ kind: "leaf", id: paneId }, { kind: "leaf", id: newId }] };
+  const split = { kind: "split", dir, ratio: 0.5, children: [{ kind: "leaf", id: paneId }, { kind: "leaf", id: newId }] };
   if (found.parent) {
     const i = found.parent.children.indexOf(found.node);
     found.parent.children[i] = split;
@@ -209,11 +238,15 @@ export function closePane(paneId) {
   persist();
 }
 
-// ---- tree -> DOM ---------------------------------------------------------
 export function renderTab(tab) {
   tab.el.innerHTML = "";
   tab.el.appendChild(renderNode(tab.tree));
 }
+
+const MIN_RATIO = 0.08;
+function clampRatio(r) { return Math.max(MIN_RATIO, Math.min(1 - MIN_RATIO, r)); }
+function applyRatio(a, b, r) { a.style.flexGrow = String(r); b.style.flexGrow = String(1 - r); }
+
 function renderNode(node) {
   if (node.kind === "leaf") {
     const p = state.panes.get(node.id);
@@ -221,7 +254,44 @@ function renderNode(node) {
   }
   const split = document.createElement("div");
   split.className = "split node " + node.dir;
-  split.appendChild(renderNode(node.children[0]));
-  split.appendChild(renderNode(node.children[1]));
+  const a = renderNode(node.children[0]);
+  const b = renderNode(node.children[1]);
+
+  const gutter = document.createElement("div");
+  gutter.className = "split-gutter";
+  split.append(a, gutter, b);
+  const r = clampRatio(typeof node.ratio === "number" ? node.ratio : 0.5);
+  node.ratio = r;
+  applyRatio(a, b, r);
+  wireGutter(split, gutter, node, a, b);
   return split;
+}
+
+function wireGutter(split, gutter, node, a, b) {
+  gutter.addEventListener("mousedown", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const horiz = node.dir === "h";
+    gutter.classList.add("dragging");
+    document.body.classList.add("resizing-split");
+    document.body.style.cursor = horiz ? "col-resize" : "row-resize";
+    const onMove = (ev) => {
+      const rect = split.getBoundingClientRect();
+      const r = clampRatio(horiz
+        ? (ev.clientX - rect.left) / rect.width
+        : (ev.clientY - rect.top) / rect.height);
+      node.ratio = r;
+      applyRatio(a, b, r);
+    };
+    const onUp = () => {
+      gutter.classList.remove("dragging");
+      document.body.classList.remove("resizing-split");
+      document.body.style.cursor = "";
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+      persist();
+    };
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+  });
 }

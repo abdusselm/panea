@@ -1,6 +1,4 @@
-/* Sidebar chrome: the fixed-width rail — header (brand, new-tab, bell), the ⌘K
-   affordance button, and the footer. The tab rows it contains are styled in
-   tabs.css; the notification panel the bell opens lives in notifications.css. */
+
 
 #sidebar {
   width: var(--sidebar-w); flex: 0 0 var(--sidebar-w);
@@ -8,11 +6,11 @@
   border-right: 1px solid var(--border);
   display: flex; flex-direction: column;
 }
-/* Top padding clears the macOS traffic lights (hiddenInset title bar). */
+
 #sidebar-head {
   padding: 30px 12px 10px 14px;
   display: flex; align-items: center; justify-content: space-between;
-  -webkit-app-region: drag; /* drag the window from the sidebar header */
+  -webkit-app-region: drag;
 }
 #sidebar-head #new-tab, #sidebar-head #brand { -webkit-app-region: no-drag; }
 #brand { font-weight: 600; font-size: var(--fs-md); letter-spacing: 0.3px; }
@@ -25,7 +23,6 @@
 #new-tab:hover { border-color: var(--accent); color: var(--accent); }
 #head-actions { display: flex; align-items: center; gap: 6px; -webkit-app-region: no-drag; }
 
-/* Settings gear: same 24×24 icon-button chrome as the bell. */
 #settings-btn {
   border: 1px solid var(--border-strong); background: var(--bg-elev);
   color: var(--text-dim); border-radius: 6px; width: 24px; height: 24px;
@@ -34,8 +31,6 @@
 #settings-btn svg { width: 14px; height: 14px; }
 #settings-btn:hover { border-color: var(--accent); color: var(--text); }
 
-/* Notification bell: a count badge appears (warm notify color) when any pane
-   needs attention. */
 #bell {
   position: relative; border: 1px solid var(--border-strong); background: var(--bg-elev);
   color: var(--text-dim); border-radius: 6px; width: 24px; height: 24px;
@@ -52,8 +47,6 @@
 }
 #bell.has .bell-count { display: block; }
 
-/* Command-palette affordance: a search-bar-styled button so users discover the
-   ⌘K palette without knowing the shortcut. Click opens it. */
 #cmdk {
   -webkit-app-region: no-drag;
   display: flex; align-items: center; justify-content: space-between;
@@ -74,3 +67,17 @@
   padding: 8px 14px; border-top: 1px solid var(--border);
   font-size: 10px; color: var(--text-dim); line-height: 1.5;
 }
+
+#sidebar-resizer {
+  flex: 0 0 5px; position: relative; z-index: 20; cursor: col-resize;
+  background: transparent; -webkit-app-region: no-drag;
+}
+
+#sidebar-resizer::after {
+  content: ""; position: absolute; inset: 0 2px; border-radius: 2px;
+  background: transparent; transition: background 0.12s;
+}
+#sidebar-resizer:hover::after, #sidebar-resizer.dragging::after { background: var(--accent); }
+
+body.resizing-sidebar { user-select: none; }
+body.resizing-sidebar .leaf-term { pointer-events: none; }

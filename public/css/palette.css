@@ -1,5 +1,4 @@
-/* Command palette (⌘K): the dimmed overlay, the search box, and the grouped
-   result list with section-divider headers. Mirrors public/js/palette.js. */
+
 
 #palette {
   position: fixed; inset: 0; z-index: 2000; display: none;
@@ -14,7 +13,7 @@
   border-radius: 12px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.55);
   overflow: hidden; display: flex; flex-direction: column;
 }
-/* give the palette more room on wide displays so it doesn't feel lost */
+
 @media (min-width: 1800px) { .palette-box { width: 640px; } }
 @media (min-width: 2400px) { .palette-box { width: 720px; } }
 .palette-input {
@@ -31,7 +30,7 @@
   font-size: var(--fs-xs); letter-spacing: 0.09em; text-transform: uppercase;
   color: #aeb4c0; font-weight: 700; pointer-events: none;
 }
-/* trailing rule so the label reads as a section divider, not just a caption */
+
 .palette-group::after {
   content: ""; flex: 1 1 auto; height: 1px; background: var(--border);
 }

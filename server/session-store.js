@@ -1,4 +1,4 @@
-// Persist and restore the tab/pane layout to ~/.panea/session.json.
+
 
 import fs from "node:fs";
 import { SESSION_FILE } from "./paths.js";

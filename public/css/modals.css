@@ -1,8 +1,4 @@
-/* Small centered dialogs that share one overlay look: the name prompt (save
-   layout), the destructive confirm modal, and the layout picker list. Mirrors
-   the modal helpers in public/js/layouts.js. The .np-* box/title/actions
-   classes are shared; the picker (.lp-*) and picker-specific overrides reuse
-   that box with a roomier, palette-style list. */
+
 
 #name-prompt, #confirm-modal, #layout-picker {
   position: fixed; inset: 0; z-index: 2100; display: none;
@@ -13,7 +9,6 @@
 #confirm-modal { z-index: 2200; }
 #name-prompt.open, #confirm-modal.open, #layout-picker.open { display: flex; }
 
-/* shared dialog box */
 .np-box {
   width: 380px; max-width: calc(100vw - 40px);
   background: #2f343d; border: 1px solid var(--border-strong);
@@ -38,7 +33,6 @@
 .np-actions .np-danger { background: #b5433a; border-color: #b5433a; color: #fff; }
 .np-actions .np-danger:hover { background: #c94d43; border-color: #c94d43; }
 
-/* layout picker: reuse the modal overlay but a roomier, palette-style list */
 #layout-picker .np-box {
   width: 460px; padding: 0; gap: 0; overflow: hidden;
 }

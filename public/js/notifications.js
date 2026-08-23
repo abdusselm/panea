@@ -1,7 +1,4 @@
-// Notification panel: one place listing every pane currently asking for
-// attention (an AI agent that finished its turn or is waiting on you). Click a
-// row to jump straight to that pane; clear them all at once. Reads the same
-// per-pane attention flag the sidebar badges use.
+
 
 import { state } from "./state.js";
 import { eachLeaf } from "./util.js";
@@ -13,7 +10,6 @@ let panelEl = null, listEl = null;
 const bellEl = document.getElementById("bell");
 const bellCountEl = bellEl ? bellEl.querySelector(".bell-count") : null;
 
-// Every pane in attention, paired with its tab, in sidebar order.
 function collect() {
   const items = [];
   for (const tab of state.tabs) {
@@ -25,7 +21,6 @@ function collect() {
   return items;
 }
 
-// Sidebar bell: show a count badge whenever anything needs attention.
 export function updateNotifyIndicator() {
   if (!bellEl) return;
   const n = collect().length;
@@ -73,7 +68,7 @@ function render() {
 
 function jumpTo(tab, pane) {
   activateTab(tab.id);
-  focusPane(pane.id); // clears this pane's attention
+  focusPane(pane.id);
   updateNotifyIndicator();
   if (!collect().length) close();
 }

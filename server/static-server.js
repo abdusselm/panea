@@ -1,5 +1,4 @@
-// Static file serving for the web UI: whitelisted vendor libs from
-// node_modules plus everything under public/, with path-traversal guarding.
+
 
 import fs from "node:fs";
 import path from "node:path";
@@ -17,13 +16,12 @@ const MIME = {
   ".woff2": "font/woff2",
 };
 
-// Vendor files pulled straight from node_modules so the UI has no external CDN
-// dependency (works offline, nothing leaves the machine).
 const VENDOR = {
   "/vendor/xterm.js": "@xterm/xterm/lib/xterm.js",
   "/vendor/xterm.css": "@xterm/xterm/css/xterm.css",
   "/vendor/addon-fit.js": "@xterm/addon-fit/lib/addon-fit.js",
   "/vendor/addon-search.js": "@xterm/addon-search/lib/addon-search.js",
+  "/vendor/addon-serialize.js": "@xterm/addon-serialize/lib/addon-serialize.js",
 };
 
 function sendFile(res, filePath, mime) {
@@ -33,8 +31,7 @@ function sendFile(res, filePath, mime) {
       res.end("not found");
       return;
     }
-    // no-store: local dev app, always serve the current file (never a stale
-    // cached asset after an edit).
+
     res.writeHead(200, { "content-type": mime || "application/octet-stream", "cache-control": "no-store" });
     res.end(buf);
   });

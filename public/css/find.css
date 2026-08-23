@@ -1,6 +1,4 @@
-/* In-terminal find box (⌘F): floats over the top-right of the focused pane,
-   below the leaf header bar. Re-parented into the active pane leaf by
-   public/js/find.js. The leaf is position:relative, so this anchors to it. */
+
 
 .find-box {
   position: absolute; top: 36px; right: 12px; z-index: 40;

@@ -1,19 +1,4 @@
 #!/usr/bin/env python3
-"""PTY bridge for panea.
-
-Node spawns one of these per terminal pane. We allocate a real PTY with the
-standard library `pty` module (backed by libutil openpty) so there is NO
-separate unsigned helper binary to exec -- the only executable involved is the
-Apple-signed system python3. That keeps us clear of managed-device code-signing
-enforcement (Gatekeeper / EDR), which blocks unsigned native binaries.
-
-Wiring (all fds inherited from the Node parent):
-  fd 0  stdin   raw keystrokes from the browser  -> write to pty master
-  fd 1  stdout  raw pty output                    -> forwarded to the browser
-  fd 3  control newline-delimited JSON commands   -> {"t":"resize","cols","rows"}
-
-Args: pty_bridge.py <shell> [--cwd DIR] [--cols N] [--rows N] [-- arg ...]
-"""
 import fcntl
 import json
 import os
@@ -24,14 +9,12 @@ import struct
 import sys
 import termios
 
-
 def set_winsize(fd, rows, cols):
     try:
         winsize = struct.pack("HHHH", rows, cols, 0, 0)
         fcntl.ioctl(fd, termios.TIOCSWINSZ, winsize)
     except OSError:
         pass
-
 
 def parse_args(argv):
     shell = argv[0] if argv else os.environ.get("SHELL", "/bin/zsh")
@@ -53,13 +36,11 @@ def parse_args(argv):
             i += 1
     return shell, cwd, cols, rows, extra
 
-
 def main():
     shell, cwd, cols, rows, extra = parse_args(sys.argv[1:])
 
     pid, master_fd = pty.fork()
     if pid == 0:
-        # Child: become the shell.
         if cwd and os.path.isdir(cwd):
             try:
                 os.chdir(cwd)
@@ -67,7 +48,6 @@ def main():
                 pass
         os.environ["TERM"] = "xterm-256color"
         os.environ["PANEA"] = "1"
-        # Login + interactive shell so profiles load and TUIs (vim, agents) work.
         args = [shell, "-l"] + extra if not extra else [shell] + extra
         try:
             os.execvp(shell, args)
@@ -75,7 +55,6 @@ def main():
             os.execvp("/bin/sh", ["/bin/sh"])
         os._exit(127)
 
-    # Parent: relay loop.
     set_winsize(master_fd, rows, cols)
 
     stdin_fd = 0
@@ -83,7 +62,6 @@ def main():
     control_fd = 3
     control_buf = b""
 
-    # Non-blocking master reads.
     fl = fcntl.fcntl(master_fd, fcntl.F_GETFL)
     fcntl.fcntl(master_fd, fcntl.F_SETFL, fl | os.O_NONBLOCK)
 
@@ -126,7 +104,6 @@ def main():
             except OSError:
                 data = b""
             if not data:
-                # Browser side closed. Send EOF to the child then keep draining.
                 watch = [fd for fd in watch if fd != stdin_fd]
             else:
                 try:
@@ -156,15 +133,12 @@ def main():
                     if msg.get("t") == "resize":
                         set_winsize(master_fd, int(msg.get("rows", rows)), int(msg.get("cols", cols)))
 
-    # Reap child.
     try:
         _, status = os.waitpid(pid, 0)
         code = os.waitstatus_to_exitcode(status)
     except (ChildProcessError, OSError):
         code = 0
-    # Emit exit code on the control fd is not reliable; Node detects process exit.
     sys.exit(code if isinstance(code, int) and code >= 0 else 0)
-
 
 if __name__ == "__main__":
     main()

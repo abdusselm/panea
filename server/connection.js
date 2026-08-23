@@ -1,11 +1,11 @@
-// Per-WebSocket-connection wiring: owns that client's panes, relays terminal
-// I/O, persists layout, serves palette commands, and polls sidebar metadata.
+
 
 import { Pane } from "./pane.js";
 import { loadSession, saveSession } from "./session-store.js";
 import { loadCommands } from "./commands-store.js";
 import { loadLayouts, saveLayout, deleteLayout } from "./layouts-store.js";
 import { loadSettings, saveSettings } from "./settings-store.js";
+import { loadAgents } from "./agents-store.js";
 import { computeMetaBatch } from "./meta.js";
 import { gitStatus, gitDiff } from "./git.js";
 
@@ -14,15 +14,14 @@ const META_FIRST_POLL_MS = 900;
 
 export function handleConnection(ws) {
   const panes = new Map();
-  const lastMeta = new Map(); // paneId -> serialized meta
+  const lastMeta = new Map();
+
+  const agents = loadAgents();
 
   const send = (obj) => {
     if (ws.readyState === ws.OPEN) ws.send(JSON.stringify(obj));
   };
 
-  // Poll every pane's live context (cwd / branch / ports) from a single shared
-  // process snapshot, and push only what changed. One batch keeps spawns at ~3
-  // per cycle regardless of how many panes are open.
   let polling = false;
   const pollMeta = async () => {
     if (polling) return;
@@ -30,9 +29,9 @@ export function handleConnection(ws) {
     if (!entries.length) return;
     polling = true;
     try {
-      const byBridge = await computeMetaBatch(entries.map(([, pane]) => pane.child.pid));
+      const byBridge = await computeMetaBatch(entries.map(([, pane]) => pane.child.pid), agents);
       for (const [id, pane] of entries) {
-        if (!panes.has(id)) continue; // pane closed mid-poll
+        if (!panes.has(id)) continue;
         const meta = byBridge.get(pane.child.pid);
         if (!meta) continue;
         const key = JSON.stringify(meta);
@@ -41,19 +40,18 @@ export function handleConnection(ws) {
         send({ type: "meta", paneId: id, ...meta });
       }
     } catch {
-      // transient ps/lsof failure — try again next cycle
+
     } finally {
       polling = false;
     }
   };
   const metaTimer = process.env.PANEA_NO_META_POLL ? null : setInterval(pollMeta, META_POLL_MS);
 
-  // Hand the freshly connected browser the last session, palette commands, and
-  // saved layouts.
   send({ type: "session", layout: loadSession() });
   send({ type: "commands", commands: loadCommands() });
   send({ type: "layouts", layouts: loadLayouts() });
   send({ type: "settings", settings: loadSettings() });
+  send({ type: "agents", agents });
 
   ws.on("message", (raw) => {
     let msg;
@@ -95,7 +93,7 @@ export function handleConnection(ws) {
         break;
       }
       case "getCommands": {
-        // Re-read from disk so palette opens reflect edits without a restart.
+
         send({ type: "commands", commands: loadCommands() });
         break;
       }
@@ -120,8 +118,7 @@ export function handleConnection(ws) {
         break;
       }
       case "getGitStatus": {
-        // On-demand only (panel open / refresh); never polled. Echo the cwd so
-        // a late reply for a since-changed repo can be ignored by the client.
+
         gitStatus(msg.cwd).then((res) => send({ type: "gitStatus", cwd: msg.cwd, ...res }));
         break;
       }

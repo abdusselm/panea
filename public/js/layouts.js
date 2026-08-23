@@ -1,17 +1,11 @@
-// Reopen-closed-tab history and named saved layouts.
-//
-// Closed-tab history is an in-memory stack of recently closed tab specs; ⇧⌘T
-// (or the palette) pops the most recent one back. Saved layouts are named
-// snapshots of the whole workspace, persisted server-side in
-// ~/.panea/layouts.json and restorable from the palette.
+
 
 import { state } from "./state.js";
 import { openTabFromSpec, serializeTab } from "./tabs.js";
 import { wsSend } from "./ws.js";
 
-// ---- closed-tab history --------------------------------------------------
 const CLOSED_CAP = 15;
-const closedStack = []; // tab specs, most-recent last
+const closedStack = [];
 
 export function recordClosedTab(spec) {
   closedStack.push(spec);
@@ -25,10 +19,8 @@ export function reopenClosedTab() {
   if (spec) openTabFromSpec(spec);
 }
 
-// ---- saved layouts -------------------------------------------------------
-let savedLayouts = {}; // name -> { tabs: [spec, ...] }
+let savedLayouts = {};
 
-// Called by the ws layer when the server delivers the layout catalog.
 export function setLayouts(map) {
   savedLayouts = map && typeof map === "object" ? map : {};
 }
@@ -37,10 +29,6 @@ export function layoutNames() {
   return Object.keys(savedLayouts).sort((a, b) => a.localeCompare(b));
 }
 
-// A layout captures the *active* tab (with its split tree), not the whole
-// workspace — a layout is "this terminal setup", so saving one while other
-// tabs are open must not drag those other tabs in. Stored as a one-entry tabs
-// array so openLayout stays uniform (and old multi-tab layouts still restore).
 function serializeWorkspace() {
   const active = state.tabs.find((t) => t.id === state.activeTabId) || state.tabs[0];
   return { tabs: active ? [serializeTab(active)] : [] };
@@ -50,12 +38,10 @@ export function saveCurrentLayout(name) {
   const clean = (name || "").trim();
   if (!clean || !state.tabs.length) return;
   const layout = serializeWorkspace();
-  savedLayouts[clean] = layout;             // optimistic; server echoes back
+  savedLayouts[clean] = layout;
   wsSend({ type: "saveLayout", name: clean, layout });
 }
 
-// Restore a saved layout by appending its tabs (non-destructive), then focusing
-// the first restored one.
 export function openLayout(name) {
   const layout = savedLayouts[name];
   if (!layout || !Array.isArray(layout.tabs) || !layout.tabs.length) return;
@@ -73,15 +59,12 @@ export function deleteLayout(name) {
   wsSend({ type: "deleteLayout", name });
 }
 
-// Delete behind a confirmation step; the palette entry uses this so a stray
-// Enter can't wipe a saved layout.
 export function deleteLayoutInteractive(name) {
   if (!(name in savedLayouts)) return;
   confirmAction("Delete layout", "Delete saved layout <b></b>? This can't be undone.",
     name, "Delete", () => deleteLayout(name));
 }
 
-// ---- name prompt (small modal; window.prompt is unavailable in Electron) --
 let promptEl = null;
 export function promptName(title, initial, onOk) {
   if (!promptEl) {
@@ -112,12 +95,10 @@ export function promptName(title, initial, onOk) {
   input.select();
 }
 
-// Convenience used by the palette's "Save this tab as layout…" entry.
 export function saveLayoutInteractive() {
   promptName("Save this tab as layout", "", (name) => saveCurrentLayout(name));
 }
 
-// ---- confirm modal (destructive actions) ---------------------------------
 let confirmEl = null;
 function confirmAction(title, messageHtml, boldText, okLabel, onOk) {
   if (!confirmEl) {
@@ -131,9 +112,9 @@ function confirmAction(title, messageHtml, boldText, okLabel, onOk) {
     document.body.appendChild(confirmEl);
   }
   const msg = confirmEl.querySelector(".np-msg");
-  msg.innerHTML = messageHtml;         // trusted template with a <b></b> slot
+  msg.innerHTML = messageHtml;
   const slot = msg.querySelector("b");
-  if (slot) slot.textContent = boldText; // name inserted as text, never HTML
+  if (slot) slot.textContent = boldText;
   confirmEl.querySelector(".np-title").textContent = title;
   const okBtn = confirmEl.querySelector(".np-danger");
   okBtn.textContent = okLabel || "OK";
@@ -152,9 +133,6 @@ function confirmAction(title, messageHtml, boldText, okLabel, onOk) {
   confirmEl.focus();
 }
 
-// ---- layout picker (choose one saved layout) -----------------------------
-// One palette entry ("Open layout…" / "Delete layout…") opens this list of
-// saved layouts instead of spamming the palette with one row per layout.
 let pickerEl = null, pickerNames = [], pickerIdx = 0, pickerOnPick = null;
 
 function renderPicker() {

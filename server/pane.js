@@ -1,5 +1,4 @@
-// One terminal pane = one python3 PTY bridge child (see pty_bridge.py). stdio:
-// 0 in, 1 out, 2 err (inherited), 3 a control channel for resize.
+
 
 import { spawn } from "node:child_process";
 import { PY, BRIDGE, ZSH_THEME_DIR } from "./paths.js";
@@ -13,9 +12,6 @@ export class Pane {
     if (opts.cols) args.push("--cols", String(opts.cols));
     if (opts.rows) args.push("--rows", String(opts.rows));
 
-    // Inject panea's zsh theme without touching the user's dotfiles: point
-    // ZDOTDIR at our shim dir, which sources the user's real config and then
-    // layers the cmux-style prompt on top. Only for zsh, and only when enabled.
     const env = { ...process.env };
     const themeOn = process.env.PANEA_NO_THEME !== "1";
     if (themeOn && /zsh$/.test(shell)) {

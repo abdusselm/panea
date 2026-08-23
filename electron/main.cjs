@@ -1,9 +1,4 @@
-// panea desktop shell.
-//
-// Wraps the local web UI in a native window using the Electron runtime that
-// ships pre-signed and notarized, so it launches on a managed Mac without any
-// self-built native binary. The window loads the same 127.0.0.1 server the
-// browser build uses; the server is started here as a child process.
+
 
 const { app, BrowserWindow, shell } = require("electron");
 const { spawn } = require("node:child_process");
@@ -30,7 +25,6 @@ function startServer() {
   });
 }
 
-// Resolve once the server is accepting TCP connections.
 function waitForPort(retries = 100) {
   return new Promise((resolve, reject) => {
     const tryOnce = (n) => {
@@ -53,7 +47,7 @@ function createWindow() {
     minWidth: 720,
     minHeight: 480,
     backgroundColor: "#0a0a0a",
-    titleBarStyle: "hiddenInset", // native traffic lights over our chrome, like cmux
+    titleBarStyle: "hiddenInset",
     trafficLightPosition: { x: 14, y: 18 },
     title: "panea",
     webPreferences: { contextIsolation: true, nodeIntegration: false },
@@ -61,20 +55,17 @@ function createWindow() {
   win.webContents.session.clearCache().catch(() => {});
   win.loadURL(`http://${HOST}:${PORT}`);
 
-  // Open any external links in the real browser, not inside the app window.
   win.webContents.setWindowOpenHandler(({ url }) => {
     if (url.startsWith("http")) shell.openExternal(url);
     return { action: "deny" };
   });
 
-  // One-shot screenshot mode (dev aid): capture the window then quit.
   if (process.env.PANEA_CAPTURE) {
     win.webContents.once("did-finish-load", () => {
       setTimeout(async () => {
         try {
           if (process.env.PANEA_DEMO_TITLE) {
-            // Emit an OSC title on the focused pane exactly like a running
-            // program would, to exercise the auto-title code path.
+
             const t = JSON.stringify(process.env.PANEA_DEMO_TITLE);
             await win.webContents.executeJavaScript(
               `panea.state.panes.get(panea.state.focusedPaneId).term.write("\\x1b]2;" + ${t} + "\\x07")`

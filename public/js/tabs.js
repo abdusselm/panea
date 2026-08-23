@@ -1,5 +1,4 @@
-// Tabs: lifecycle (create / activate / close), sidebar list rendering with live
-// git/cwd/port metadata, the right-click menu, auto-titling, and inline rename.
+
 
 import { state, runtime } from "./state.js";
 import { workspace, tablistEl, emptyEl } from "./dom.js";
@@ -9,7 +8,6 @@ import { createPane, renderTab, focusPane, destroyPane, refitTab } from "./panes
 import { persist } from "./session.js";
 import { recordClosedTab } from "./layouts.js";
 
-// ---- lifecycle -----------------------------------------------------------
 export function newTab(cwd) {
   const paneId = uid();
   const tab = { id: uid(), name: "shell", cwd: cwd || null, tree: { kind: "leaf", id: paneId } };
@@ -49,7 +47,7 @@ export function closeTab(tabId) {
   const idx = state.tabs.findIndex((t) => t.id === tabId);
   if (idx < 0) return;
   const tab = state.tabs[idx];
-  recordClosedTab(serializeTab(tab)); // remember it so ⇧⌘T can bring it back
+  recordClosedTab(serializeTab(tab));
   eachLeaf(tab.tree, (leaf) => destroyPane(leaf.id));
   tab.el.remove();
   state.tabs.splice(idx, 1);
@@ -62,28 +60,26 @@ export function closeTab(tabId) {
   persist();
 }
 
-// ---- tab (de)serialization + restore -------------------------------------
-// A tab "spec" is the plain, id-free-enough data needed to recreate a tab:
-// { name, cwd, tree, customName }. Used by closed-tab history and saved layouts.
 export function serializeTab(tab) {
   return { name: tab.name, cwd: tab.cwd, tree: structuredClone(tab.tree), customName: !!tab.customName };
 }
 
-// Fresh leaf ids for a restored tree so it never collides with a live pane.
 function remapTreeIds(node) {
   if (!node || node.kind === "leaf") return { kind: "leaf", id: uid() };
-  return { kind: "split", dir: node.dir, children: [remapTreeIds(node.children[0]), remapTreeIds(node.children[1])] };
+  return { kind: "split", dir: node.dir, ratio: node.ratio, children: [remapTreeIds(node.children[0]), remapTreeIds(node.children[1])] };
 }
 
-// Instantiate the panes for a tab's tree (one PTY per leaf).
 export function instantiateTree(tab, node) {
   if (!node) return;
-  if (node.kind === "leaf") createPane(node.id, tab.id, tab.cwd);
-  else { instantiateTree(tab, node.children[0]); instantiateTree(tab, node.children[1]); }
+  if (node.kind === "leaf") {
+    const restore = (node.agent || node.scroll) ? { agent: node.agent || "", scroll: node.scroll || "" } : undefined;
+    createPane(node.id, tab.id, node.cwd || tab.cwd, restore);
+  } else {
+    instantiateTree(tab, node.children[0]);
+    instantiateTree(tab, node.children[1]);
+  }
 }
 
-// Recreate a tab from a spec (closed-tab history, saved layouts). Gets a new
-// tab id and fresh pane ids.
 export function openTabFromSpec(spec, { activate = true } = {}) {
   const tab = {
     id: uid(),
@@ -102,7 +98,6 @@ export function openTabFromSpec(spec, { activate = true } = {}) {
   return tab;
 }
 
-// ---- sidebar list --------------------------------------------------------
 export function renderTabList() {
   tablistEl.innerHTML = "";
   state.tabs.forEach((tab, i) => {
@@ -112,15 +107,14 @@ export function renderTabList() {
     row.className = "tab" + (tab.id === state.activeTabId ? " active" : "") + (attn > 0 ? " attention" : "");
     row.innerHTML = `
       <span class="badge">${i + 1}</span>
-      <div class="tabtext"><div class="name"></div><div class="sub"></div><div class="ports"></div></div>
+      <div class="tabtext"><div class="name"></div><div class="prompt"></div><div class="sub"></div><div class="ports"></div></div>
       <span class="attn-count">${attn > 0 ? attn : ""}</span>
       <span class="close">${ICON.close}</span>`;
     const nameEl = row.querySelector(".name");
     nameEl.textContent = tab.name;
     nameEl.title = "Double-click to rename";
     fillTabMeta(row, tab);
-    // Single click activates via class update only (no full rebuild), so the
-    // dblclick that follows still lands on this same node.
+
     row.onclick = (e) => { if (!e.target.closest(".close")) activateTab(tab.id); };
     nameEl.ondblclick = (e) => { e.stopPropagation(); startRename(tab, nameEl); };
     row.oncontextmenu = (e) => { e.preventDefault(); e.stopPropagation(); showTabMenu(tab, e.clientX, e.clientY); };
@@ -130,17 +124,12 @@ export function renderTabList() {
   });
 }
 
-// ---- drag-to-reorder -----------------------------------------------------
-// HTML5 drag-and-drop on the sidebar rows. state.tabs order is the source of
-// truth for badges, ⌘1..9, and persistence, so a reorder just moves the tab in
-// that array and re-renders; persist() then saves the new order.
 let dragTabId = null;
 
 function clearDropMarks() {
   for (const r of tablistEl.children) r.classList.remove("drop-before", "drop-after");
 }
 
-// Whether the pointer is past a row's vertical midpoint (drop after vs before).
 function isAfter(row, clientY) {
   const r = row.getBoundingClientRect();
   return clientY > r.top + r.height / 2;
@@ -156,7 +145,7 @@ function wireTabDrag(row, tab) {
   });
   row.addEventListener("dragend", () => { dragTabId = null; row.classList.remove("dragging"); clearDropMarks(); });
   row.addEventListener("dragover", (e) => {
-    if (dragTabId == null || dragTabId === tab.id) return; // not our drag / self
+    if (dragTabId == null || dragTabId === tab.id) return;
     e.preventDefault();
     e.dataTransfer.dropEffect = "move";
     clearDropMarks();
@@ -169,21 +158,18 @@ function wireTabDrag(row, tab) {
   });
 }
 
-// Move tab `fromId` to just before/after `toId` in state.tabs, then re-render.
 function reorderTabs(fromId, toId, after) {
   const from = state.tabs.findIndex((t) => t.id === fromId);
   if (from < 0) return;
   const [moved] = state.tabs.splice(from, 1);
   let to = state.tabs.findIndex((t) => t.id === toId);
-  if (to < 0) { state.tabs.splice(from, 0, moved); return; } // target vanished; undo
+  if (to < 0) { state.tabs.splice(from, 0, moved); return; }
   if (after) to += 1;
   state.tabs.splice(to, 0, moved);
   renderTabList();
   persist();
 }
 
-// Update only active/attention classes on existing rows (avoids rebuilding the
-// list on every click, which would break dblclick-to-rename).
 export function refreshTabClasses() {
   [...tablistEl.children].forEach((row) => {
     const t = state.tabs.find((x) => x.id === row.dataset.tabId);
@@ -202,16 +188,11 @@ export function countPaneAttention(tab) {
   return n;
 }
 
-// ---- per-tab metadata rows (git branch / cwd / listening ports) ----------
-// The metadata shown for a tab comes from its naming pane: the focused pane if
-// it's in this tab, else the first pane.
 function tabMeta(tab) {
   const p = namingPane(tab);
   return (p && p.meta) || { cwd: tab.cwd || "", branch: "", ports: [] };
 }
 
-// Aggregate listening ports across every pane in the tab (a dev server may run
-// in a different split than the naming pane).
 function tabPorts(tab) {
   const set = new Set();
   eachLeaf(tab.tree, (l) => {
@@ -221,8 +202,24 @@ function tabPorts(tab) {
   return [...set].sort((a, b) => a - b);
 }
 
+function tabPrompt(tab) {
+  let out = "";
+  eachLeaf(tab.tree, (l) => {
+    if (out) return;
+    const q = state.panes.get(l.id);
+    if (q && q.lastPrompt) out = q.lastPrompt;
+  });
+  return out;
+}
+
 function fillTabMeta(row, tab) {
   const meta = tabMeta(tab);
+  const promptEl = row.querySelector(".prompt");
+  if (promptEl) {
+    const pr = tabPrompt(tab);
+    promptEl.textContent = pr;
+    promptEl.style.display = pr ? "block" : "none";
+  }
   const subEl = row.querySelector(".sub");
   const portsEl = row.querySelector(".ports");
   if (!subEl || !portsEl) return;
@@ -249,15 +246,12 @@ function fillTabMeta(row, tab) {
   portsEl.style.display = ports.length ? "flex" : "none";
 }
 
-// Update just the meta of an already-rendered row (no full rebuild, so an open
-// rename input survives).
 export function refreshTabMeta(tab) {
   if (runtime.renaming) return;
   const row = [...tablistEl.children].find((r) => r.dataset.tabId === tab.id);
   if (row) fillTabMeta(row, tab);
 }
 
-// ---- right-click menu ----------------------------------------------------
 let ctxMenuEl = null;
 function closeTabMenu() {
   if (ctxMenuEl) { ctxMenuEl.remove(); ctxMenuEl = null; document.removeEventListener("mousedown", onCtxDocDown, true); }
@@ -281,7 +275,6 @@ function showTabMenu(tab, x, y) {
   setTimeout(() => document.addEventListener("mousedown", onCtxDocDown, true), 0);
 }
 
-// ---- auto-titling --------------------------------------------------------
 export function setPaneTitle(paneId, raw) {
   const p = state.panes.get(paneId);
   if (!p) return;
@@ -291,8 +284,6 @@ export function setPaneTitle(paneId, raw) {
   if (tab) updateTabName(tab);
 }
 
-// The pane whose title names the tab: the focused pane if it is in this tab,
-// otherwise the tab's first pane.
 function namingPane(tab) {
   const f = state.focusedPaneId && state.panes.get(state.focusedPaneId);
   if (f && f.tabId === tab.id) return f;
@@ -301,17 +292,14 @@ function namingPane(tab) {
 }
 
 export function updateTabName(tab) {
-  if (tab.customName) return; // user renamed it; leave it alone
+  if (tab.customName) return;
   if (runtime.renaming) return;
   const p = namingPane(tab);
   const name = (p && p.title) || "shell";
-  // Titles can change often (the shell sets one on every prompt). Only the name
-  // text changed, so patch that node in place instead of rebuilding the whole
-  // list — avoids re-parsing every row's SVG on each prompt.
+
   if (name !== tab.name) { tab.name = name; refreshTabName(tab); persist(); }
 }
 
-// Patch just a tab row's name text (cheap; no list rebuild).
 function refreshTabName(tab) {
   if (runtime.renaming) return;
   const row = [...tablistEl.children].find((r) => r.dataset.tabId === tab.id);
@@ -320,16 +308,13 @@ function refreshTabName(tab) {
   if (n) n.textContent = tab.name;
 }
 
-// ---- inline rename -------------------------------------------------------
-// Swap the name label for an input. Empty value re-enables the automatic
-// (title-driven) name.
 export function startRename(tab, nameEl) {
   runtime.renaming = true;
   const input = document.createElement("input");
   input.className = "rename-input";
   input.value = tab.name;
   nameEl.replaceWith(input);
-  // Suspend row dragging so selecting text in the input doesn't start a drag.
+
   const row = input.closest && input.closest(".tab");
   if (row) row.draggable = false;
   input.focus();

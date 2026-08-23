@@ -1,7 +1,4 @@
-// Load user-defined ⌘K palette commands from ~/.panea/commands.json.
-// Accepts either a bare JSON array or an object with a "commands" array. Each
-// entry: { name, run, where? } where ∈ { "focused" (default), "new-tab",
-// "split", "split-down" }.
+
 
 import fs from "node:fs";
 import { COMMANDS_FILE } from "./paths.js";

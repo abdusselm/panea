@@ -1,7 +1,4 @@
-/* Settings panel (gear / "Keyboard shortcuts…"): a centered overlay listing
-   rebindable shortcuts grouped by category, each with a clickable chord chip.
-   Mirrors public/js/settings.js. Shares the dimmed-overlay look of the other
-   panels. */
+
 
 #settings-panel {
   position: fixed; inset: 0; z-index: 2100; display: none;
@@ -55,7 +52,6 @@
 }
 .sr-reset:hover { color: var(--text); text-decoration: underline; }
 
-/* the chord chip: monospace keycap look; highlights while capturing */
 .sr-chord {
   flex: 0 0 auto; min-width: 64px; text-align: center;
   background: var(--bg); border: 1px solid var(--border-strong); color: var(--text);

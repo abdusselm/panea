@@ -1,13 +1,7 @@
-/* The vertical tab list and everything inside a tab row: number badge, name +
-   sub-line (git branch, cwd), listening-port pills, the attention count badge,
-   close button, inline rename field, and the right-click context menu.
-   Mirrors public/js/tabs.js. The badge-breathe animation lives in base.css. */
 
-/* min-height:0 lets this flex child actually shrink and scroll when there are
-   more tabs than fit on screen. */
+
 #tablist { flex: 1; min-height: 0; overflow-y: auto; padding: 4px 8px; }
 
-/* cmux-style rows: number badge + two-line text, solid-blue when active. */
 .tab {
   display: flex; align-items: flex-start; gap: 9px;
   padding: 9px 10px; margin: 3px 0; border-radius: 8px;
@@ -15,8 +9,7 @@
 }
 .tab:hover { background: var(--bg-elev); }
 .tab.active { background: var(--accent); border-color: var(--accent); }
-/* drag-to-reorder: dim the row being dragged, draw an accent insertion line on
-   the row the pointer is over (top edge for before, bottom edge for after). */
+
 .tab.dragging { opacity: 0.45; }
 .tab.drop-before { box-shadow: inset 0 2px 0 0 var(--accent); }
 .tab.drop-after { box-shadow: inset 0 -2px 0 0 var(--accent); }
@@ -32,14 +25,22 @@
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .tab.active .name { color: #ffffff; }
+
+.tab .prompt {
+  display: none; font-size: var(--fs-xs); color: #aeb4c0; margin-top: 2px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.tab .prompt::before { content: "\203a\00a0"; color: var(--accent); }
+.tab.active .prompt { color: rgba(255, 255, 255, 0.85); }
+.tab.active .prompt::before { color: rgba(255, 255, 255, 0.7); }
 .tab .sub {
   font-size: var(--fs-xs); color: var(--text-dim); margin-top: 1px;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .tab.active .sub { color: rgba(255, 255, 255, 0.72); }
-.tab .sub .branch { color: #b5bd68; font-weight: 500; }   /* git branch, cmux green */
+.tab .sub .branch { color: #b5bd68; font-weight: 500; }
 .tab.active .sub .branch { color: #d7f0a8; }
-/* Listening-port pills: small, monospace, unobtrusive until you need them. */
+
 .tab .ports { display: none; flex-wrap: wrap; gap: 4px; margin-top: 3px; }
 .tab .port {
   font-size: 10px; line-height: 15px; padding: 0 5px; border-radius: 4px;
@@ -48,8 +49,7 @@
   font-variant-numeric: tabular-nums;
 }
 .tab.active .port { color: #d6f2ee; background: rgba(255, 255, 255, 0.16); border-color: rgba(255, 255, 255, 0.28); }
-/* Notification badge: a warm, softly glowing pill with a white count. The gentle
-   breathing draws the eye against the cool grey UI without feeling harsh. */
+
 .tab .attn-count {
   display: none; flex: 0 0 auto; min-width: 20px; height: 20px; padding: 0 6px;
   border-radius: 10px; color: var(--notify-ink);

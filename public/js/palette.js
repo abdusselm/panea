@@ -1,5 +1,4 @@
-// Command palette (⌘K): built-in actions, per-tab switches, and user-defined
-// custom commands from ~/.panea/commands.json. Fuzzy filter, arrow/enter nav.
+
 
 import { state, runtime, focusedPane } from "./state.js";
 import { tablistEl } from "./dom.js";
@@ -15,26 +14,20 @@ import { openFind } from "./find.js";
 import { openSettings } from "./settings.js";
 import { chordFor, prettyChord } from "./shortcuts.js";
 
-// Live shortcut hint for a registry action, so the palette reflects rebinds.
 const hk = (id) => prettyChord(chordFor(id));
 
 let customCommands = [];
 let paletteEl = null, paletteInput = null, paletteListEl = null;
-let paletteCmds = [];   // full command set built when the palette opens
-let paletteItems = [];  // current filtered view (selectable commands only)
-let itemRows = [];      // DOM row element per selectable command
+let paletteCmds = [];
+let paletteItems = [];
+let itemRows = [];
 let paletteIndex = 0;
 
-// Called by the ws layer when the server delivers the command list.
 export function setCustomCommands(list) {
   customCommands = Array.isArray(list) ? list : [];
   refreshOpenPalette();
 }
 
-// Rebuild the command set if the palette is already open. Server data (custom
-// commands, saved layouts) arrives async over the socket, after the palette
-// may have been built; without this the new entries wouldn't show until the
-// next open.
 export function refreshOpenPalette() {
   if (paletteIsOpen()) { paletteCmds = buildPaletteCommands(); renderPalette(); }
 }
@@ -43,8 +36,6 @@ function runInPane(paneId, text) {
   wsSend({ type: "input", paneId, data: u8ToB64(enc.encode(text)) });
 }
 
-// Send a shell command line to a target pane, honoring the entry's "where":
-// the focused pane (default), a fresh tab, or a split of the focused pane.
 function runCommandLine(run, where) {
   const line = /[\r\n]$/.test(run) ? run : run + "\r";
   if (where === "new-tab" || where === "tab") {
@@ -92,12 +83,8 @@ function clearFocusedTerminal() {
   if (p) p.term.clear();
 }
 
-// Group order for the palette; commands render under these section headers.
 const GROUP_ORDER = ["Tabs", "Panes", "Layouts", "Git", "View", "Notifications", "Switch tab", "Custom"];
 
-// Assemble the palette: built-in actions grouped by function + a switch entry
-// per tab + custom commands. Each command carries a `group` so the list can
-// render section headers instead of one long undifferentiated list.
 function buildPaletteCommands() {
   const cmds = [];
   const add = (group, title, hint, run) => cmds.push({ group, title, hint, run });
@@ -141,7 +128,6 @@ function buildPaletteCommands() {
   return cmds;
 }
 
-// Subsequence fuzzy score; contiguous runs score higher. 0 = no match.
 function fuzzyScore(hay, needle) {
   hay = hay.toLowerCase(); needle = needle.toLowerCase();
   if (!needle) return 1;
@@ -182,8 +168,8 @@ export function paletteIsOpen() { return paletteEl && paletteEl.classList.contai
 
 export function openPalette() {
   ensurePaletteDom();
-  wsSend({ type: "getCommands" }); // refresh customs from disk
-  wsSend({ type: "getLayouts" });  // refresh saved layouts
+  wsSend({ type: "getCommands" });
+  wsSend({ type: "getLayouts" });
   paletteCmds = buildPaletteCommands();
   paletteEl.classList.add("open");
   paletteInput.value = "";
@@ -206,8 +192,6 @@ function renderPalette() {
   if (q) ranked = ranked.filter((r) => r.s > 0).sort((a, b) => b.s - a.s);
   const items = ranked.slice(0, 80).map((r) => r.cmd);
 
-  // Bucket the (possibly filtered) commands by group, then emit groups in a
-  // fixed order so the palette reads as sections rather than one flat list.
   const byGroup = new Map();
   for (const cmd of items) {
     if (!byGroup.has(cmd.group)) byGroup.set(cmd.group, []);
@@ -215,11 +199,11 @@ function renderPalette() {
   }
   const groups = [];
   for (const g of GROUP_ORDER) if (byGroup.has(g)) groups.push([g, byGroup.get(g)]);
-  for (const [g, arr] of byGroup) if (!GROUP_ORDER.includes(g)) groups.push([g, arr]); // safety
+  for (const [g, arr] of byGroup) if (!GROUP_ORDER.includes(g)) groups.push([g, arr]);
 
   paletteListEl.innerHTML = "";
-  paletteItems = [];   // selectable commands, in visual order
-  itemRows = [];        // DOM row per selectable command (headers excluded)
+  paletteItems = [];
+  itemRows = [];
   for (const [g, arr] of groups) {
     const head = document.createElement("div");
     head.className = "palette-group";

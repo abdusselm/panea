@@ -40,6 +40,17 @@ Change the port: `PANEA_PORT=5000 npm run app`
 The ⌘-based shortcuts above (except `⌘1–9` and font size, which are fixed) are
 **editable** — see [Settings](#settings).
 
+## Splitting panes
+
+`Cmd-D` splits the focused pane right, `Cmd-Shift-D` splits it down (also on each
+pane's header buttons). A new split starts 50/50; **drag the divider** between
+two panes with the mouse to resize them — the cursor turns into a resize handle
+and the divider highlights. The size ratio is per-split and **persists across
+restarts**. Neither pane can be dragged to nothing (min ~8%).
+
+The **sidebar** itself is resizable the same way: drag its right edge to set the
+rail width (160–520px), which also persists across restarts.
+
 ## Command palette
 
 `Cmd-K` opens a fuzzy command palette. Commands are grouped by function under
@@ -136,22 +147,66 @@ Read-only by design — panea never stages, commits, or edits the tree; it's a
 fast glance at what changed without leaving the terminal. Git runs only when you
 open or refresh the panel or click a file, never on a timer.
 
+## Session restore
+
+Close panea and reopen it: your tabs and split layout come back, and each pane
+reopens **in the directory it was in** (following `cd`, not just where the tab
+started) with its recent **scrollback replayed** as read-only history above a
+`──── restored session ────` divider. Nothing is re-run automatically and no
+process is revived — a killed process is gone; the replayed text is just there
+so you can see where you left off.
+
+**Resuming an AI agent.** If a pane was running an agent CLI (claude, codex, or
+a company tool) when you quit, the restored pane shows a **Resume _agent_
+session** bar. Click **Resume** and panea types that agent's own resume command
+(e.g. `claude --continue`) into the fresh shell — the conversation genuinely
+continues because the CLI persists it on disk, not because panea restored a
+process. The offer sticks across restarts until you resume or dismiss it (✕).
+
+Which programs count as agents, and the exact resume command for each, live in
+`~/.panea/agents.json` (seeded on first run — edit it to fix a flag or add a
+tool):
+
+```json
+[
+  { "name": "claude", "match": ["claude"], "resume": "claude --continue" },
+  { "name": "codex",  "match": ["codex"],  "resume": "codex resume" }
+]
+```
+
+- `name` — display name + what's stored in the session.
+- `match` — program basenames that count as this agent (an interpreter like
+  `node`/`python` is unwrapped to the script it runs). Defaults to `[name]`.
+- `resume` — the shell line the Resume button runs. Detection is whitelist-only:
+  a pane running anything not listed here is never flagged or auto-run.
+
+Saved per pane in `~/.panea/session.json`; scrollback is bounded (≈800 lines)
+so the file stays small. Detection is on-demand off the existing sidebar poll —
+no extra process churn.
+
 ## Sidebar context
 
 Each tab row shows live context for its terminal, cmux-style:
 
+- **last agent prompt** (`› …`) — when a pane is running an agent CLI (claude,
+  codex, or a company tool), the row shows the most recent prompt you sent it,
+  as a description line under the name. Captured from your own keystrokes only
+  while an agent is active; ordinary shell typing never appears here.
 - **git branch** (green `⑂ branch`) — the repo the shell is currently in.
 - **working directory** — follows `cd`, not just where the tab started.
 - **listening ports** — pills like `:3000` for any dev server the pane (or its
   children) is serving, aggregated across the tab's splits.
 
 Derived from the pane's process tree with `lsof`/`git`, polled every few
-seconds; no shell configuration required.
+seconds; no shell configuration required. The rail width is draggable (see
+[Splitting panes](#splitting-panes)); it defaults to a comfortable 280px.
 
 ## Notes
 
-- Open tabs/layout persist in `~/.panea/session.json`.
+- Open tabs/layout (plus per-pane cwd, agent, and scrollback) persist in
+  `~/.panea/session.json`.
 - Custom palette commands live in `~/.panea/commands.json`.
+- AI-agent detect + resume-command registry lives in `~/.panea/agents.json`.
 - Resource-thrifty by design: sidebar metadata for all panes comes from one
   process snapshot per poll (not per-pane spawns), resize work is coalesced to
   one frame, and terminal scrollback defaults to 5000 lines (`SCROLLBACK` in

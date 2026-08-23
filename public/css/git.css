@@ -1,7 +1,4 @@
-/* Git diff panel (⌘G): a wide overlay for the active tab's repo. Left column is
-   the changed-file list; right column is the selected file's unified diff.
-   Mirrors public/js/git.js. Shares the dimmed-overlay look of the palette /
-   notifications panels but is roomier so a real diff has space to breathe. */
+
 
 #git-panel {
   position: fixed; inset: 0; z-index: 2050; display: none;
@@ -18,7 +15,7 @@
   border-radius: 12px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.55);
   overflow: hidden; display: flex; flex-direction: column;
 }
-/* wider still on large displays, matching the palette's scale-up */
+
 @media (min-width: 1800px) { .git-box { width: 1040px; } }
 @media (min-width: 2400px) { .git-box { width: 1200px; } }
 
@@ -36,7 +33,6 @@
 
 .git-body { flex: 1 1 auto; display: flex; min-height: 0; }
 
-/* left: changed-file list */
 .gd-files {
   flex: 0 0 320px; min-width: 220px; overflow-y: auto;
   border-right: 1px solid var(--border); padding: 8px;
@@ -51,7 +47,7 @@
 .gd-file:hover { background: var(--bg); }
 .gd-file.sel { background: var(--accent); }
 .gd-dot { flex: 0 0 8px; width: 8px; height: 8px; border-radius: 2px; background: var(--text-dim); }
-/* state tints: added=green, deleted=red, renamed=blue, modified=yellow */
+
 .gd-dot[data-kind="new"]      { background: #b5bd68; }
 .gd-dot[data-kind="deleted"]  { background: var(--danger); }
 .gd-dot[data-kind="renamed"]  { background: #81a2be; }
@@ -70,7 +66,6 @@
 .gd-count[data-kind="new"] { color: #b5bd68; }
 .gd-file.sel .gd-count { color: rgba(255, 255, 255, 0.8); }
 
-/* right: unified diff */
 .gd-diff { flex: 1 1 auto; overflow: auto; min-width: 0; background: var(--bg); }
 .gd-diffbody {
   font-family: ui-monospace, "SF Mono", Menlo, monospace;
@@ -85,7 +80,7 @@
 .gd-empty {
   padding: 22px 16px; color: var(--text-dim); font-size: var(--fs-md); text-align: center;
 }
-/* shown when a diff exceeds MAX_DIFF_LINES and is rendered truncated */
+
 .gd-truncated {
   padding: 10px 14px; color: var(--attention); font-size: var(--fs-sm);
   font-family: ui-monospace, "SF Mono", Menlo, monospace;

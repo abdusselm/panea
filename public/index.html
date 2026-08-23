@@ -29,6 +29,7 @@
       </button>
       <div id="tablist"></div>
     </aside>
+    <div id="sidebar-resizer" title="Drag to resize sidebar"></div>
     <main id="workspace">
       <div id="empty">
         <div>no terminals open</div>
@@ -36,11 +37,11 @@
       </div>
     </main>
   </div>
-  <!-- Vendor libs are classic scripts (set window.Terminal / window.FitAddon)
-       and run before the deferred ES-module app below. -->
+
   <script src="/vendor/xterm.js"></script>
   <script src="/vendor/addon-fit.js"></script>
   <script src="/vendor/addon-search.js"></script>
+  <script src="/vendor/addon-serialize.js"></script>
   <script type="module" src="/js/main.js"></script>
 </body>
 </html>

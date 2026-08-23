@@ -38,7 +38,7 @@ Frontend (`public/js/`):
 | `dom.js` | long-lived top-level element refs |
 | `util.js` | pure helpers: base64, ids, path, tree traversal, title cleanup |
 | `ws.js` | socket lifecycle + inbound message dispatch (`wsSend`, `connect`) |
-| `session.js` | serialize / persist / restore layout |
+| `session.js` | serialize / persist / restore layout (per-leaf cwd + agent + scrollback) |
 | `tabs.js` | tab lifecycle, sidebar list, metadata rows, ctx menu, titles, rename, drag-reorder |
 | `panes.js` | xterm panes, split tree, focus, resize, restart, tree→DOM |
 | `attention.js` | background-pane attention state + desktop notification |
@@ -47,6 +47,8 @@ Frontend (`public/js/`):
 | `layouts.js` | reopen-closed-tab history + named saved layouts + name prompt |
 | `git.js` | git diff panel: changed-file list + per-file unified diff |
 | `find.js` | in-terminal find box (⌘F) driving xterm's search addon |
+| `agents.js` | AI-agent resume registry + the restored-pane "Resume" bar |
+| `sidebar.js` | draggable sidebar rail width (`--sidebar-w`), persisted |
 | `shortcuts.js` | shortcut registry: ids, defaults, overrides, chord parse, dispatch |
 | `settings.js` | settings panel: rebind shortcuts (capture, conflict, reset) |
 | `keyboard.js` | global ⌘ shortcuts (dispatches through `shortcuts.js`) |
@@ -63,7 +65,8 @@ Backend (`server/`):
 | `commands-store.js` | `~/.panea/commands.json` |
 | `layouts-store.js` | `~/.panea/layouts.json` (named saved layouts) |
 | `settings-store.js` | `~/.panea/settings.json` (shortcut overrides, validated) |
-| `meta.js` | sidebar context (cwd / git branch / listening ports) via lsof/git |
+| `agents-store.js` | `~/.panea/agents.json` (agent detect + resume-command registry) |
+| `meta.js` | sidebar context (cwd / git branch / ports) + AI-agent detection via ps/lsof/git |
 | `git.js` | on-demand git status + per-file diff for the diff panel |
 | `pane.js` | the `Pane` class (one PTY) |
 | `connection.js` | per-socket wiring: panes map, I/O relay, meta poll |
@@ -129,7 +132,8 @@ Client → server: `open`, `input`, `resize`, `close`, `session`, `getCommands`,
 `getLayouts`, `saveLayout`, `deleteLayout`, `getGitStatus`, `getGitDiff`,
 `getSettings`, `saveSettings`.
 Server → client: `output`, `exit`, `session`, `commands`, `meta`, `layouts`,
-`gitStatus`, `gitDiff`, `settings`.
+`gitStatus`, `gitDiff`, `settings`, `agents`. (`meta` now also carries a
+detected `agent` name per pane.)
 
 Add a feature that needs the host by defining a new message type on both ends;
 keep the payload JSON-serializable (base64 any binary).

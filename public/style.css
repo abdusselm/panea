@@ -1,18 +1,4 @@
-/* panea stylesheet entry point.
- *
- * This file holds no rules of its own — it only pulls in the component
- * partials under css/ in cascade order, the same way main.js is the single
- * entry that imports the JS feature modules. Each partial owns one area of the
- * UI and mirrors its JS module; edit the partial, not this list.
- *
- * Order matters: tokens (custom properties) must load first, then the global
- * base/reset, then the components. Components are class/id-scoped so their
- * order among themselves is not significant, but we keep it logical.
- *
- * @import serializes an extra request per file, which is irrelevant here: the
- * app is served from 127.0.0.1 with no-store, so there is no CDN round-trip and
- * no bundler in the stack. Clarity wins over shaving a few localhost requests.
- */
+
 
 @import url("/css/tokens.css");
 @import url("/css/base.css");

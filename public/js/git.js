@@ -1,9 +1,4 @@
-// Git diff panel: an overlay scoped to the active tab's repo. Left column lists
-// changed files (git status) with per-file +/− counts; clicking one shows its
-// unified diff on the right, color-coded. Read-only — panea never mutates the
-// tree. Follows the notifications.js panel pattern (overlay + ensureDom +
-// open/close/toggle). Data comes over the socket on demand: getGitStatus on
-// open/refresh, getGitDiff per file click (see server/git.js). Nothing polls.
+
 
 import { state, focusedPane } from "./state.js";
 import { firstLeaf } from "./util.js";
@@ -11,16 +6,11 @@ import { wsSend } from "./ws.js";
 
 let panelEl = null, headEl = null, filesEl = null, diffEl = null;
 
-// Panel state for the repo currently shown. `cwd` doubles as the request token:
-// a late gitStatus/gitDiff reply for a different cwd is ignored, so switching
-// tabs and reopening can't paint stale files.
 let curCwd = "";
 let curBranch = "";
 let files = [];
-let selected = null; // path of the row whose diff is shown
+let selected = null;
 
-// The repo the panel should target: the focused pane's cwd if it's in the
-// active tab, otherwise the active tab's first pane. Empty when there's no tab.
 function activeCwd() {
   const tab = state.tabs.find((t) => t.id === state.activeTabId);
   if (!tab) return "";
@@ -53,7 +43,6 @@ function ensureDom() {
   panelEl.tabIndex = -1;
 }
 
-// Ask the server for status of the current repo. Also used by Refresh.
 function request() {
   if (!curCwd) return;
   filesEl.innerHTML = '<div class="gd-empty">Loading…</div>';
@@ -62,15 +51,13 @@ function request() {
   wsSend({ type: "getGitStatus", cwd: curCwd });
 }
 
-// ---- inbound (from ws.js dispatch) ----------------------------------------
-
 export function setGitStatus(msg) {
-  if (!panelEl || msg.cwd !== curCwd) return; // stale / different repo
+  if (!panelEl || msg.cwd !== curCwd) return;
   curBranch = msg.branch || "";
-  files = msg.repo ? (msg.files || []) : null; // null marks "not a repo"
+  files = msg.repo ? (msg.files || []) : null;
   renderHead();
   renderFiles();
-  // Auto-open the first file's diff so the panel isn't blank on arrival.
+
   if (files && files.length) selectFile(files[0].path);
   else diffEl.innerHTML = "";
 }
@@ -80,8 +67,6 @@ export function setGitDiff(msg) {
   renderDiff(msg.patch || "");
 }
 
-// ---- rendering ------------------------------------------------------------
-
 function renderHead() {
   headEl.textContent = "Git";
   if (files === null) return;
@@ -90,7 +75,6 @@ function renderHead() {
   headEl.textContent = "Git" + b + (n ? "  ·  " + n + (n === 1 ? " change" : " changes") : "");
 }
 
-// A short status word + tint for a file's state.
 function kindLabel(f) {
   if (f.kind === "untracked") return "new";
   if (f.x === "D" || f.y === "D") return "deleted";
@@ -149,19 +133,11 @@ function selectFile(path) {
   wsSend({ type: "getGitDiff", cwd: curCwd, path, mode: f.kind });
 }
 
-// Cap on rendered diff lines. One <div> per line means a pathological 10k-line
-// diff would spawn 10k DOM nodes at once; beyond this we render a slice and note
-// the remainder. A diff that large belongs in the terminal, not a glance panel.
 const MAX_DIFF_LINES = 2000;
 
-// Render a unified diff: skip the file-header preamble, keep hunk headers and
-// +/−/context lines, color-coded. textContent per line escapes everything.
-// Only the DOM slice up to MAX_DIFF_LINES is materialized.
 function renderDiff(patch) {
   diffEl.innerHTML = "";
-  // Collect renderable lines first (cheap strings): drop the "diff --git /
-  // index / --- / +++ / new file …" preamble before the first hunk. DOM cost is
-  // paid only for the capped slice below.
+
   const rows = [];
   let sawHunk = false;
   for (const line of patch.split("\n")) {
@@ -196,8 +172,6 @@ function renderDiff(patch) {
   diffEl.scrollTop = 0;
 }
 
-// ---- keyboard: ↑/↓ move file selection, Esc closes -----------------------
-
 function onKey(e) {
   if (e.key === "Escape") { e.preventDefault(); close(); return; }
   if (!files || !files.length) return;
@@ -209,8 +183,6 @@ function onKey(e) {
     : Math.max(0, idx - 1);
   if (files[next]) selectFile(files[next].path);
 }
-
-// ---- open / close ---------------------------------------------------------
 
 export function isOpen() { return panelEl && panelEl.classList.contains("open"); }
 

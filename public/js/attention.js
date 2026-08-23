@@ -1,13 +1,4 @@
-// Attention: decide when a *background* pane deserves the user's notice, and
-// carry the reason so the panel and desktop notification can explain it.
-//
-// The mechanism is deliberately conservative — plain output that merely stops
-// does NOT ring. A pane earns attention only when:
-//   * a program emits an explicit notification escape (OSC 9 / OSC 777),
-//   * it rings the terminal bell (BEL),
-//   * it goes quiet showing a prompt that waits for the user (permission), or
-//   * a long-running task finishes and the pane falls quiet (done).
-// See attention-signals.js for the heuristics.
+
 
 import { state, runtime } from "./state.js";
 import { eachLeaf } from "./util.js";
@@ -23,17 +14,14 @@ export function paneIsForeground(p) {
 export function handleActivity(paneId, bytes) {
   const p = state.panes.get(paneId);
   if (!p) return;
-  if (paneIsForeground(p)) { clearPaneAttention(p); return; } // user is watching
+  if (paneIsForeground(p)) { clearPaneAttention(p); return; }
 
-  // Track the current output burst so we can tell a long task from a quick
-  // command when it finally goes quiet.
   const now = Date.now();
   if (!p.burstStart) p.burstStart = now;
   p.burstBytes = (p.burstBytes || 0) + bytes.length;
 
-  if (bytes.includes(7)) { ringAttention(p, "alert"); return; } // bell: immediate
+  if (bytes.includes(7)) { ringAttention(p, "alert"); return; }
 
-  // Wait for output to settle, then judge *why* (or stay silent).
   clearTimeout(p.idleTimer);
   p.idleTimer = setTimeout(() => {
     if (paneIsForeground(p)) { resetBurst(p); return; }
@@ -46,8 +34,6 @@ export function handleActivity(paneId, bytes) {
 
 function resetBurst(p) { p.burstStart = 0; p.burstBytes = 0; }
 
-// Explicit notification escape from a program (OSC 9 / OSC 777). Registered per
-// terminal in panes.js. Always notable; carries the program's own message.
 export function signalExplicit(paneId, message) {
   const p = state.panes.get(paneId);
   if (!p || paneIsForeground(p)) return;
@@ -60,8 +46,6 @@ function anyPaneAttention(tab) {
   return any;
 }
 
-// Mark a pane as needing attention with a reason (and optional message). Only
-// the first ring, or a stronger reason, fires a desktop notification.
 export function ringAttention(p, reason, message = "") {
   const escalated = p.attention && reason !== p.attnReason && reason === "permission";
   const firstTime = !p.attention;
@@ -84,13 +68,11 @@ export function clearPaneAttention(p) {
   updateNotifyIndicator();
 }
 
-// The short reason text shown in the panel and desktop notification.
 export function attentionLabel(p) {
   if (p.attnReason === "notify" && p.attnMessage) return p.attnMessage;
   return REASON_LABEL[p.attnReason] || "wants attention";
 }
 
-// Native desktop notification when panea isn't the pane the user is looking at.
 function notifyAttention(p, tab) {
   if (paneIsForeground(p)) return;
   if (typeof Notification === "undefined" || Notification.permission !== "granted") return;

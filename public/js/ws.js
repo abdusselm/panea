@@ -1,6 +1,4 @@
-// WebSocket transport to the panea server. Owns the socket lifecycle and
-// dispatches inbound messages to the feature modules. Outbound messages go
-// through wsSend, which queues pane "open" messages until the socket is ready.
+
 
 import { state } from "./state.js";
 import { b64ToU8 } from "./util.js";
@@ -12,6 +10,7 @@ import { setLayouts } from "./layouts.js";
 import { setGitStatus, setGitDiff } from "./git.js";
 import { setShortcutOverrides } from "./shortcuts.js";
 import { refreshOpenSettings } from "./settings.js";
+import { setAgents } from "./agents.js";
 
 let ws = null;
 let wsReady = false;
@@ -60,7 +59,7 @@ export function connect() {
       case "meta": {
         const p = state.panes.get(msg.paneId);
         if (p) {
-          p.meta = { cwd: msg.cwd || "", branch: msg.branch || "", ports: msg.ports || [] };
+          p.meta = { cwd: msg.cwd || "", branch: msg.branch || "", ports: msg.ports || [], agent: msg.agent || "" };
           const tab = state.tabs.find((t) => t.id === p.tabId);
           if (tab) refreshTabMeta(tab);
         }
@@ -75,6 +74,9 @@ export function connect() {
       case "settings":
         setShortcutOverrides(msg.settings && msg.settings.shortcuts);
         refreshOpenSettings();
+        break;
+      case "agents":
+        setAgents(msg.agents);
         break;
     }
   };

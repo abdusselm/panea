@@ -1,18 +1,7 @@
-// Live per-pane sidebar context (cwd / git branch / listening ports), derived
-// from the process tree with ps/lsof/git. No shell cooperation needed.
-//
-// Resource discipline: metadata for ALL panes is computed from a single
-// snapshot per poll cycle — one `ps`, one `lsof` for cwd, one `lsof` for ports,
-// plus git only for cwds not already cached. This keeps process spawns at ~3
-// per cycle no matter how many panes/splits are open, instead of the O(panes ×
-// descendants) storm a per-pane approach would create.
+
 
 import { execFile } from "node:child_process";
 
-// Always resolve with stdout, even on a non-zero exit. lsof in particular exits
-// 1 whenever it emits any warning (e.g. a pid it can't fully stat) yet still
-// prints the matching rows we want; discarding stdout on error would drop every
-// listening port. Callers tolerate empty output.
 function run(cmd, args, timeoutMs = 2000) {
   return new Promise((resolve) => {
     execFile(cmd, args, { timeout: timeoutMs, maxBuffer: 4 << 20 }, (_err, stdout) => {
@@ -21,11 +10,8 @@ function run(cmd, args, timeoutMs = 2000) {
   });
 }
 
-// lsof lives in /usr/sbin on some macOS installs; resolve via PATH.
 const LSOF = "lsof";
 
-// One `ps` snapshot -> children map (ppid -> [pid]). Single spawn for the whole
-// process tree of every pane.
 async function processChildren() {
   const out = await run("ps", ["-Ao", "pid=,ppid="]);
   const children = new Map();
@@ -39,7 +25,6 @@ async function processChildren() {
   return children;
 }
 
-// All descendant pids of a root, walked in-memory from the snapshot (no spawns).
 function descendants(children, root, cap = 128) {
   const seen = new Set();
   const stack = [String(root)];
@@ -52,8 +37,6 @@ function descendants(children, root, cap = 128) {
   return [...seen];
 }
 
-// Parse an `lsof -Fpn` stream (process sets: `p<pid>` then `n<name>` lines) into
-// pid -> handler(name). One spawn covers every pid passed.
 async function lsofByPid(args, pids, onName) {
   if (!pids.length) return;
   const out = await run(LSOF, [...args, "-a", "-p", pids.join(",")]);
@@ -81,35 +64,80 @@ async function portsByPid(pids) {
   return map;
 }
 
-// git branch is the one unavoidable per-cwd spawn; cache it briefly so a stable
-// checkout doesn't re-run git every cycle. Detached HEAD / non-repo -> "".
-const branchCache = new Map(); // cwd -> { branch, at }
+const INTERPRETERS = new Set([
+  "node", "node.js", "nodejs", "bun", "deno", "python", "python2", "python3",
+  "ruby", "perl", "sh", "bash", "zsh", "env",
+]);
+const SCRIPT_EXT = /\.(js|mjs|cjs|ts|py|rb)$/;
+
+function norm(tok) {
+  let b = String(tok || "").split("/").filter(Boolean).pop() || "";
+  b = b.toLowerCase();
+  if (b[0] === "-") b = b.slice(1);
+  return b.replace(SCRIPT_EXT, "");
+}
+
+export function programOf(args) {
+  const tokens = String(args || "").trim().split(/\s+/).filter(Boolean);
+  if (!tokens.length) return "";
+  let prog = norm(tokens[0]);
+  let i = 1;
+  while (INTERPRETERS.has(prog) && i < tokens.length) {
+    while (i < tokens.length && (tokens[i][0] === "-" || tokens[i].includes("="))) i++;
+    if (i >= tokens.length) break;
+    prog = norm(tokens[i]);
+    i++;
+  }
+  return prog;
+}
+
+async function commandsByPid(pids) {
+  const map = new Map();
+  if (!pids.length) return map;
+  const out = await run("ps", ["-o", "pid=,args=", "-p", pids.join(",")]);
+  for (const line of out.split("\n")) {
+    const m = line.trim().match(/^(\d+)\s+(.*)$/);
+    if (m) map.set(m[1], m[2]);
+  }
+  return map;
+}
+
+function detectAgent(treePids, cmds, matchers) {
+  if (!matchers.length) return "";
+  for (const pid of treePids) {
+    const prog = programOf(cmds.get(pid));
+    if (!prog) continue;
+    for (const m of matchers) if (m.set.has(prog)) return m.name;
+  }
+  return "";
+}
+
+const branchCache = new Map();
 const BRANCH_TTL_MS = 8000;
 async function gitBranch(cwd) {
   if (!cwd) return "";
   const now = Date.now();
   const hit = branchCache.get(cwd);
   if (hit && now - hit.at < BRANCH_TTL_MS) return hit.branch;
-  // --show-current works even in a fresh repo with no commits (unlike
-  // `rev-parse HEAD`, which errors on an unborn branch).
+
   const branch = (await run("git", ["-C", cwd, "branch", "--show-current"])).trim();
   branchCache.set(cwd, { branch, at: now });
   return branch;
 }
 
-// Prune stale branch-cache entries so it can't grow unbounded across a long
-// session of transient cwds.
 function pruneBranchCache() {
   const now = Date.now();
   for (const [cwd, v] of branchCache) if (now - v.at > BRANCH_TTL_MS * 4) branchCache.delete(cwd);
 }
 
-// Compute metadata for many panes from one shared snapshot. Returns
-// bridgePid -> { cwd, branch, ports }. The interactive shell is each bridge's
-// first child; use its cwd for the branch and the whole tree for ports.
-export async function computeMetaBatch(bridgePids) {
+export async function computeMetaBatch(bridgePids, agents = []) {
   const result = new Map();
   if (!bridgePids.length) return result;
+
+  const matchers = agents.map((a) => ({
+    name: a.name,
+    set: new Set((a.match || [a.name]).map((s) => String(s).toLowerCase())),
+  }));
 
   const children = await processChildren();
   const shellOf = new Map();
@@ -125,14 +153,20 @@ export async function computeMetaBatch(bridgePids) {
   }
 
   const shellPids = [...new Set(shellOf.values())];
-  const [cwds, ports] = await Promise.all([cwdByPid(shellPids), portsByPid([...treePids])]);
+
+  const [cwds, ports, cmds] = await Promise.all([
+    cwdByPid(shellPids),
+    portsByPid([...treePids]),
+    matchers.length ? commandsByPid([...treePids]) : Promise.resolve(new Map()),
+  ]);
 
   for (const bp of bridgePids) {
     const cwd = cwds.get(shellOf.get(bp)) || "";
     const branch = await gitBranch(cwd);
     const portSet = new Set();
     for (const p of treeOf.get(bp)) { const s = ports.get(p); if (s) for (const x of s) portSet.add(x); }
-    result.set(bp, { cwd, branch, ports: [...portSet].sort((a, b) => a - b) });
+    const agent = detectAgent(treeOf.get(bp), cmds, matchers);
+    result.set(bp, { cwd, branch, ports: [...portSet].sort((a, b) => a - b), agent });
   }
   pruneBranchCache();
   return result;
