@@ -59,8 +59,6 @@ export function handleRequest(req, res) {
     return sendFile(res, file, MIME[path.extname(file)]);
   }
 
-  // Compare against PUBLIC_DIR + separator: a bare startsWith would also accept
-  // a sibling directory whose name merely begins with "public".
   const target = path.normalize(path.join(PUBLIC_DIR, pathname));
   if (target !== PUBLIC_DIR && !target.startsWith(PUBLIC_DIR + path.sep)) {
     res.writeHead(403, { "content-type": "text/plain" });

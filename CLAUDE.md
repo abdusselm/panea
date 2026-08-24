@@ -38,6 +38,18 @@ first resort. Rationale: graph queries cost far fewer tokens than full scans.
 run `build_or_update_graph_tool` (incremental by default) so lookups stay
 accurate.
 
+## Code style: no comments
+
+**Never add comment lines to this codebase.** Not to the user's code, not to
+code you write yourself, in any language (`//`, `#`, `/* */`, JSDoc, docstrings,
+HTML/CSS comments). Write code that explains itself through naming and
+structure instead. Do not "restore" comments a previous edit removed.
+
+The only exceptions: the `#!` shebang, and a license/attribution header where a
+third party's license requires one.
+
+Rationale belongs in the commit message, `README.md`, or this file — not inline.
+
 ## Layout
 
 One responsibility per module — see
@@ -45,11 +57,15 @@ One responsibility per module — see
 rules. **When adding a feature, give it its own module; do
 not append it to an existing file.**
 
-- `server.js` — thin entry: HTTP static server + WebSocket bridge
-  (127.0.0.1:4820, `PANEA_PORT`).
-- `server/` — backend modules: `paths` (config), `static-server`,
-  `session-store`, `commands-store`, `meta` (sidebar cwd/branch/ports via
-  lsof/git), `pane` (one PTY), `connection` (per-socket wiring).
+- `server.js` — browser-mode entry: sets the process title and calls
+  `server/start.js`. The desktop build imports that same module **in-process**
+  instead of spawning a child; a spawned server registered a second app with
+  LaunchServices and put a stray icon in the Dock.
+- `server/` — backend modules: `start` (HTTP + WebSocket bootstrap on
+  127.0.0.1:4820, `PANEA_PORT`), `paths` (config), `static-server`, `origin`
+  (loopback-only Origin/Host guards), `session-store`, `commands-store`, `meta`
+  (sidebar cwd/branch/ports via lsof/git), `pane` (one PTY), `connection`
+  (per-socket wiring).
 - `pty_bridge.py` — PTY via `pty.fork()` execing `zsh -l`; relays fd0/fd1 and
   fd3 (control JSON resize).
 - `electron/main.cjs` — desktop shell; starts `server.js` as a child, opens the

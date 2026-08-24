@@ -1,12 +1,5 @@
 #!/usr/bin/env node
 
-// Generates build/icon.icns — the Dock/Finder icon for the packaged app.
-//
-// Written as a raw pixel buffer plus a hand-rolled PNG encoder so the repo
-// needs no image dependency: zlib and the system `sips`/`iconutil` are enough.
-// The mark is panea's own subject matter — a sidebar rail and two split panes
-// on the terminal background.
-
 import fs from "node:fs";
 import path from "node:path";
 import zlib from "node:zlib";
@@ -17,7 +10,6 @@ const ROOT = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const BUILD = path.join(ROOT, "build");
 const ICONSET = path.join(BUILD, "panea.iconset");
 
-// Same values as public/css/tokens.css, so the icon matches the running UI.
 const BG = [0x28, 0x2c, 0x34];
 const RAIL = [0x2f, 0x34, 0x3d];
 const ACCENT = [0x2f, 0x6f, 0xeb];
@@ -33,8 +25,6 @@ function blend(dst, i, rgb, alpha) {
   dst[i + 3] = Math.max(dst[i + 3], Math.round(255 * alpha));
 }
 
-// Coverage of a pixel by a rounded rect, sampled on a 3x3 grid so edges are
-// antialiased rather than jagged at small icon sizes.
 function roundedCoverage(px, py, x, y, w, h, r) {
   let hits = 0;
   for (let sy = 0; sy < 3; sy++) {
@@ -68,7 +58,6 @@ function fillRounded(buf, x, y, w, h, r, rgb, alpha = 1) {
 function draw() {
   const buf = Buffer.alloc(S * S * 4, 0);
 
-  // macOS squircle proportions: the art sits in the middle ~80% of the canvas.
   const M = S * 0.09;
   const D = S - M * 2;
   const R = D * 0.225;
@@ -82,7 +71,6 @@ function draw() {
   const gap = D * 0.045;
   const radius = D * 0.05;
 
-  // Sidebar rail with the active-tab pill, mirroring the real layout.
   const railW = innerW * 0.28;
   fillRounded(buf, innerX, innerY, railW, innerH, radius, RAIL);
 
@@ -95,14 +83,12 @@ function draw() {
     fillRounded(buf, rowX, y, rowW, rowH, radius * 0.6, TEXT, 0.22);
   }
 
-  // Two stacked panes to the right of the rail — the "panes" in panea.
   const paneX = innerX + railW + gap;
   const paneW = innerW - railW - gap;
   const paneH = (innerH - gap) / 2;
   fillRounded(buf, paneX, innerY, paneW, paneH, radius, PANE);
   fillRounded(buf, paneX, innerY + paneH + gap, paneW, paneH, radius, PANE);
 
-  // A prompt caret in the top pane so it reads as a terminal, not a wireframe.
   const cw = paneW * 0.055;
   const cx = paneX + paneW * 0.12;
   const cy = innerY + paneH * 0.42;
@@ -134,9 +120,8 @@ function encodePng(rgba, size) {
   const ihdr = Buffer.alloc(13);
   ihdr.writeUInt32BE(size, 0);
   ihdr.writeUInt32BE(size, 4);
-  ihdr[8] = 8; // bit depth
-  ihdr[9] = 6; // RGBA
-  // Filter byte 0 per scanline: the image is tiny and only built once.
+  ihdr[8] = 8;
+  ihdr[9] = 6;
   const raw = Buffer.alloc(size * (size * 4 + 1));
   for (let y = 0; y < size; y++) {
     raw[y * (size * 4 + 1)] = 0;
@@ -156,7 +141,6 @@ fs.mkdirSync(ICONSET, { recursive: true });
 const master = path.join(BUILD, "icon.png");
 fs.writeFileSync(master, encodePng(draw(), S));
 
-// iconutil requires exactly these names; sips downsamples from the 1024 master.
 for (const [size, name] of [
   [16, "icon_16x16.png"],
   [32, "icon_16x16@2x.png"],

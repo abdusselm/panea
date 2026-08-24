@@ -1,53 +1,26 @@
 
 
 const { app, BrowserWindow, shell } = require("electron");
-const { spawn } = require("node:child_process");
-const net = require("node:net");
 const path = require("node:path");
+const { pathToFileURL } = require("node:url");
 
 const PORT = Number(process.env.PANEA_PORT || 4820);
 const HOST = "127.0.0.1";
 const ROOT = path.join(__dirname, "..");
 
-// Menu bar, Dock, and Info window naming come from the bundle's Info.plist,
-// which `npm run brand` (wired to postinstall) rewrites in node_modules. These
-// cover the rest: the name Electron uses internally, the About panel, and the
-// process name in ps/Activity Monitor, which follows the executable otherwise.
-process.title = "panea";
-app.setName("panea");
+process.title = "Panea";
+app.setName("Panea");
 app.setAboutPanelOptions({
-  applicationName: "panea",
+  applicationName: "Panea",
   applicationVersion: require("../package.json").version,
   copyright: "Copyright (c) 2026 Abdusselam Keskin. MIT.",
 });
 
-let serverProc = null;
 let win = null;
 
-function startServer() {
-  serverProc = spawn(process.execPath, [path.join(ROOT, "server.js")], {
-    cwd: ROOT,
-    env: { ...process.env, PANEA_PORT: String(PORT), PANEA_NO_OPEN: "1", ELECTRON_RUN_AS_NODE: "1" },
-    stdio: ["ignore", "inherit", "inherit"],
-  });
-  serverProc.on("exit", (code) => {
-    if (code && code !== 0) console.error("panea server exited", code);
-  });
-}
-
-function waitForPort(retries = 100) {
-  return new Promise((resolve, reject) => {
-    const tryOnce = (n) => {
-      const sock = net.connect(PORT, HOST);
-      sock.once("connect", () => { sock.destroy(); resolve(); });
-      sock.once("error", () => {
-        sock.destroy();
-        if (n <= 0) reject(new Error("server did not start"));
-        else setTimeout(() => tryOnce(n - 1), 100);
-      });
-    };
-    tryOnce(retries);
-  });
+async function startServer() {
+  const { start } = await import(pathToFileURL(path.join(ROOT, "server", "start.js")).href);
+  return start({ open: false });
 }
 
 function createWindow() {
@@ -59,7 +32,7 @@ function createWindow() {
     backgroundColor: "#0a0a0a",
     titleBarStyle: "hiddenInset",
     trafficLightPosition: { x: 14, y: 18 },
-    title: "panea",
+    title: "Panea",
     webPreferences: { contextIsolation: true, nodeIntegration: false },
   });
   win.webContents.session.clearCache().catch(() => {});
@@ -103,9 +76,8 @@ function createWindow() {
 }
 
 app.whenReady().then(async () => {
-  startServer();
   try {
-    await waitForPort();
+    await startServer();
   } catch (e) {
     console.error(e.message);
   }
@@ -118,8 +90,4 @@ app.whenReady().then(async () => {
 
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") app.quit();
-});
-
-app.on("quit", () => {
-  if (serverProc) { try { serverProc.kill("SIGTERM"); } catch (_) {} }
 });
