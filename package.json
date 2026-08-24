@@ -4,13 +4,13 @@
   "description": "Local multi-pane terminal workspace for AI coding agents. Browser build or native desktop window.",
   "license": "MIT",
   "author": "Abdusselam Keskin",
-  "homepage": "https://github.com/abdusselamkeskin/panea#readme",
+  "homepage": "https://github.com/abdusselm/panea#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/abdusselamkeskin/panea.git"
+    "url": "git+https://github.com/abdusselm/panea.git"
   },
   "bugs": {
-    "url": "https://github.com/abdusselamkeskin/panea/issues"
+    "url": "https://github.com/abdusselm/panea/issues"
   },
   "keywords": [
     "terminal",

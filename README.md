@@ -49,7 +49,7 @@ by hand with `npm update -g panea`.
 ## Run from a checkout
 
 ```bash
-git clone https://github.com/abdusselamkeskin/panea.git
+git clone https://github.com/abdusselm/panea.git
 cd panea
 npm install
 npm run app     # desktop window (Electron)

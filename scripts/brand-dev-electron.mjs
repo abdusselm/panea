@@ -14,7 +14,7 @@ const LSREGISTER =
   "/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister";
 
 const NAME = "Panea";
-const BUNDLE_ID = "io.github.abdusselamkeskin.panea";
+const BUNDLE_ID = "io.github.abdusselm.panea";
 const RENAME_BUNDLE = process.env.PANEA_RENAME_BUNDLE === "1";
 
 const STOCK_BUNDLE = path.join(DIST, "Electron.app");

@@ -6,7 +6,7 @@ module, no build step, no framework — and the goal is to keep it that way.
 ## Getting set up
 
 ```bash
-git clone https://github.com/abdusselamkeskin/panea.git
+git clone https://github.com/abdusselm/panea.git
 cd panea
 npm install
 npm run app     # desktop window
@@ -54,7 +54,7 @@ The WebSocket bridge hands out a real login shell, so it only ever binds
 connections are accepted, say so explicitly in the pull request.
 
 Please report anything exploitable privately through
-[GitHub security advisories](https://github.com/abdusselamkeskin/panea/security/advisories/new)
+[GitHub security advisories](https://github.com/abdusselm/panea/security/advisories/new)
 rather than in a public issue.
 
 ## Pull requests
