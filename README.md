@@ -18,21 +18,24 @@ panea --port 5000  # somewhere other than 4820
 
 ### What it needs
 
+Nothing to install by hand. The formula depends on **Node** and **Python**, so
+Homebrew brings both with it — panea does not borrow the `python3` stub that
+comes with Xcode, it gets a real `python@3.14` and is pointed straight at it.
+
 | | |
 |---|---|
 | macOS | the only supported platform |
-| Node | pulled in by the formula |
-| `python3` | **required** — runs the PTY. `/usr/bin/python3` comes from the Xcode Command Line Tools, which Homebrew already requires. Override with `PANEA_PYTHON`. |
+| Node | installed by the formula |
+| Python | installed by the formula, used for the PTY. Override with `PANEA_PYTHON`. |
 | `git` | optional — without it the sidebar shows no branch and the diff panel stays empty |
 | `lsof` | optional — without it the sidebar shows no working directory or ports. Ships with macOS. |
 
 Everything else panea shells out to (`zsh`, `open`, `ditto`, `sips`,
 `iconutil`, `PlistBuddy`, `killall`) is part of a stock macOS install.
 
-panea checks `python3` before it starts and tells you what to do if it is
-missing, rather than opening a window full of dead panes. Your login shell comes
-from `$SHELL`, so bash and fish work too — the prompt theme is only layered onto
-zsh.
+panea still checks Python before it starts, so a broken install says so rather
+than opening a window full of dead panes. Your login shell comes from `$SHELL`,
+so bash and fish work too — the prompt theme is only layered onto zsh.
 
 The formula itself is small and installs in seconds. The Electron runtime is
 **not** part of it: Homebrew rewrites Mach-O files inside its Cellar, which

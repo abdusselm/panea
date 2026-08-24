@@ -138,9 +138,12 @@ timer/rAF and bound every cache on teardown; only render the active tab.
 
 ## Constraints (standing)
 
-- Use only pre-signed/notarized runtimes; never a self-built native binary, so
-  panea stays runnable where unsigned binaries are refused. No node-pty (its
-  unsigned `spawn-helper` is exactly that case).
+- Never build a native binary. panea runs on runtimes a package manager already
+  ships — Homebrew's node and `python@3.14` for an installed copy,
+  `/usr/bin/python3` for a checkout — so it stays runnable where unsigned
+  binaries are refused. No node-pty (its unsigned `spawn-helper` is exactly that
+  case). The Python interpreter is never assumed: `server/paths.js` takes
+  `PANEA_PYTHON` first, and the formula sets it.
 - Do not delete or disable the user's software (Oh My Zsh, etc.).
 - Colors follow cmux/ghostty: background `#282c34`, text `#ededed`,
   Tomorrow-Night ANSI. Palette lives in `public/style.css` `:root`.

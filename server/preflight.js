@@ -30,7 +30,7 @@ export function checkPython(python = PY) {
   return { ok: true };
 }
 
-export function describePythonFailure(reason, python = PY) {
+export function describePythonFailure(reason, python = PY, managed = Boolean(process.env.PANEA_PYTHON)) {
   const lines = [`panea: needs a working python3 to run terminals, and ${python} is not usable.`];
 
   if (reason === "missing") {
@@ -42,11 +42,19 @@ export function describePythonFailure(reason, python = PY) {
   }
 
   lines.push("");
-  lines.push("Install the Command Line Tools, which provide it:");
-  lines.push("  xcode-select --install");
+
+  if (managed) {
+    lines.push("Homebrew installs python3 alongside panea, so this one has gone missing.");
+    lines.push("Put it back with:");
+    lines.push("  brew reinstall panea");
+  } else {
+    lines.push("Install it with:");
+    lines.push("  brew install python@3.14");
+  }
+
   lines.push("");
-  lines.push("Or point panea at another interpreter:");
-  lines.push("  PANEA_PYTHON=/opt/homebrew/bin/python3 panea");
+  lines.push("Or point panea at an interpreter you already have:");
+  lines.push("  PANEA_PYTHON=/path/to/python3 panea");
 
   return lines.join("\n");
 }

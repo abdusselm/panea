@@ -16,6 +16,9 @@ reaches users without them asking for it.
   `PANEA_NO_UPDATE=1`.
 - A preflight check that refuses to start with a usable message when `python3`
   cannot run the PTY bridge, instead of opening a window of dead panes.
+- Python is a formula dependency, so installing panea installs it. Nobody is
+  asked to run `xcode-select --install` first, and the interpreter is a real
+  `python@3.14` rather than the Xcode stub.
 - Loopback-only guards on the WebSocket handshake and HTTP `Host`, so no other
   origin can reach the shell bridge.
 - The desktop build presents itself as Panea — its own name, icon, and bundle

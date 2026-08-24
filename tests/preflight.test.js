@@ -18,9 +18,16 @@ test("reports an interpreter that cannot import what the bridge needs", () => {
   assert.equal(result.ok, false);
 });
 
-test("the failure message names the interpreter and both ways out", () => {
-  const message = describePythonFailure("missing", "/usr/bin/python3");
+test("an installed copy is told to repair itself, not to go install python", () => {
+  const message = describePythonFailure("missing", "/opt/homebrew/opt/python@3.14/bin/python3", true);
+  assert.match(message, /brew reinstall panea/);
+  assert.doesNotMatch(message, /brew install python/);
+});
+
+test("a checkout is given the install command, not an Xcode detour", () => {
+  const message = describePythonFailure("missing", "/usr/bin/python3", false);
   assert.match(message, /\/usr\/bin\/python3/);
-  assert.match(message, /xcode-select --install/);
+  assert.match(message, /brew install python@/);
+  assert.doesNotMatch(message, /xcode-select/);
   assert.match(message, /PANEA_PYTHON=/);
 });

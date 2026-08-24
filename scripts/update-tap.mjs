@@ -26,21 +26,25 @@ async function sha256(url) {
 }
 
 const DESC = "Local multi-pane terminal workspace with vertical tabs and split panes";
+const PYTHON = "python@3.14";
 
-function formula(url, digest) {
+function formula(url, digest, version) {
   return `class Panea < Formula
   desc "${DESC}"
   homepage "https://github.com/${REPO}"
   url "${url}"
+  version "${version}"
   sha256 "${digest}"
   license "MIT"
 
   depends_on "node"
+  depends_on "${PYTHON}"
   depends_on :macos
 
   def install
     system "npm", "install", *std_npm_args
-    bin.install_symlink Dir["#{libexec}/bin/*"]
+    (bin/"panea").write_env_script libexec/"bin/panea",
+      PANEA_PYTHON: Formula["${PYTHON}"].opt_bin/"python3"
   end
 
   def caveats
@@ -64,7 +68,7 @@ end
 const digest = await sha256(source);
 
 fs.mkdirSync(path.dirname(FORMULA), { recursive: true });
-fs.writeFileSync(FORMULA, formula(source, digest));
+fs.writeFileSync(FORMULA, formula(source, digest, version));
 
 console.log(`wrote ${FORMULA}`);
 console.log(`  version ${version}`);
