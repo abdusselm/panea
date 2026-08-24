@@ -4,7 +4,7 @@ Notable changes per release. Versions follow [semver](https://semver.org);
 installed copies update themselves on their next launch, so anything listed here
 reaches users without them asking for it.
 
-## [Unreleased]
+## [0.1.3] - 2026-08-24
 
 ### Fixed
 
@@ -65,6 +65,7 @@ reaches users without them asking for it.
 
 - A busy port now prints one line instead of an unhandled `'error'` event.
 
+[0.1.3]: https://github.com/abdusselm/panea/releases/tag/v0.1.3
 [0.1.2]: https://github.com/abdusselm/panea/releases/tag/v0.1.2
 [0.1.1]: https://github.com/abdusselm/panea/releases/tag/v0.1.1
 [0.1.0]: https://github.com/abdusselm/panea/releases/tag/v0.1.0
