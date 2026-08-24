@@ -108,6 +108,9 @@ if (opts.port) {
   process.env.PANEA_PORT = opts.port;
 }
 
+const { preflight } = await import("../server/preflight.js");
+if (!preflight()) process.exit(1);
+
 if (opts.update) {
   const { maybeSelfUpdate } = await import("../server/update.js");
   await maybeSelfUpdate({ root: ROOT, pkg, argv: process.argv.slice(2) });

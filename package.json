@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "description": "Local multi-pane terminal workspace for AI coding agents. Browser build or native desktop window.",
   "license": "MIT",
+  "private": true,
   "author": "Abdusselam Keskin",
   "homepage": "https://github.com/abdusselm/panea#readme",
   "repository": {

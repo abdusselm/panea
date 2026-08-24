@@ -16,8 +16,23 @@ panea --app        # desktop window
 panea --port 5000  # somewhere other than 4820
 ```
 
-Requires macOS and the `python3` that ships with macOS / the Xcode Command Line
-Tools. Homebrew brings Node with it.
+### What it needs
+
+| | |
+|---|---|
+| macOS | the only supported platform |
+| Node | pulled in by the formula |
+| `python3` | **required** — runs the PTY. `/usr/bin/python3` comes from the Xcode Command Line Tools, which Homebrew already requires. Override with `PANEA_PYTHON`. |
+| `git` | optional — without it the sidebar shows no branch and the diff panel stays empty |
+| `lsof` | optional — without it the sidebar shows no working directory or ports. Ships with macOS. |
+
+Everything else panea shells out to (`zsh`, `open`, `ditto`, `sips`,
+`iconutil`, `PlistBuddy`, `killall`) is part of a stock macOS install.
+
+panea checks `python3` before it starts and tells you what to do if it is
+missing, rather than opening a window full of dead panes. Your login shell comes
+from `$SHELL`, so bash and fish work too — the prompt theme is only layered onto
+zsh.
 
 The formula itself is small and installs in seconds. The Electron runtime is
 **not** part of it: Homebrew rewrites Mach-O files inside its Cellar, which
@@ -32,8 +47,7 @@ Electron bundle (see [App identity](#app-identity)).
 
 panea keeps itself current. On launch it asks GitHub for the latest release at
 most once every six hours, and if there is a newer one it upgrades itself and
-restarts — `brew upgrade` for a Homebrew install, `npm install -g` for an npm
-one.
+restarts with `brew upgrade`.
 
 It never does this from a git checkout, and it never moves you onto a
 prerelease. To turn it off:

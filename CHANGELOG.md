@@ -10,9 +10,12 @@ reaches users without them asking for it.
 
 - `panea` command line entry: `panea` serves the browser build, `panea --app`
   opens the desktop window, plus `--port`, `--version`, `--help`.
-- Self-update on launch. Installed copies check npm at most every six hours and
-  install a newer release, then restart. Never fires from a git checkout, never
-  moves anyone onto a prerelease, and is switched off with `PANEA_NO_UPDATE=1`.
+- Self-update on launch. Installed copies check GitHub releases at most every
+  six hours and run `brew upgrade`, then restart. Never fires from a git
+  checkout, never moves anyone onto a prerelease, switched off with
+  `PANEA_NO_UPDATE=1`.
+- A preflight check that refuses to start with a usable message when `python3`
+  cannot run the PTY bridge, instead of opening a window of dead panes.
 - Loopback-only guards on the WebSocket handshake and HTTP `Host`, so no other
   origin can reach the shell bridge.
 - The desktop build presents itself as Panea — its own name, icon, and bundle
@@ -22,8 +25,10 @@ reaches users without them asking for it.
 
 - The desktop build runs the server in-process instead of spawning it, which
   removes a second Dock icon and the startup port race.
-- Electron moved to `dependencies`, so `npm install -g panea` gives a working
-  desktop build in one step.
+- Distribution is a Homebrew tap. The formula installs only the JavaScript;
+  the Electron runtime lands in `~/.panea/electron` on the first `panea --app`,
+  because Homebrew rewrites Mach-O files in its Cellar and that breaks the
+  signature Electron ships with.
 
 ### Fixed
 

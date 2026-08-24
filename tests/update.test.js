@@ -36,23 +36,23 @@ test("ignores unparseable versions", () => {
   assert.equal(isNewer("", "0.1.0"), false);
 });
 
-test("tells a Homebrew install from an npm one, and ignores anything else", () => {
+test("only a Homebrew keg self-updates", () => {
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "panea-test-"));
-
-  const npmInstall = path.join(tmp, "node_modules", "panea");
-  fs.mkdirSync(npmInstall, { recursive: true });
-  assert.equal(detectInstall(npmInstall), "npm");
 
   const brewInstall = path.join(tmp, "Cellar", "panea", "0.1.0", "libexec", "lib", "node_modules", "panea");
   fs.mkdirSync(brewInstall, { recursive: true });
   assert.equal(detectInstall(brewInstall), "homebrew");
 
+  const nodeModules = path.join(tmp, "node_modules", "panea");
+  fs.mkdirSync(nodeModules, { recursive: true });
+  assert.equal(detectInstall(nodeModules), null);
+
   const elsewhere = path.join(tmp, "somewhere", "panea");
   fs.mkdirSync(elsewhere, { recursive: true });
   assert.equal(detectInstall(elsewhere), null);
 
-  fs.mkdirSync(path.join(npmInstall, ".git"));
-  assert.equal(detectInstall(npmInstall), null);
+  fs.mkdirSync(path.join(brewInstall, ".git"));
+  assert.equal(detectInstall(brewInstall), null);
 
   fs.rmSync(tmp, { recursive: true, force: true });
 });

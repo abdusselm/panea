@@ -86,8 +86,5 @@ PANEA_TAP_PUSH=1 node scripts/update-tap.mjs
 That rewrites `Formula/panea.rb` in a sibling `homebrew-tap` checkout (override
 the location with `PANEA_TAP`) and pushes it.
 
-The same workflow also publishes to npm, but only if an `NPM_TOKEN` secret
-exists; without one it simply skips that step.
-
 Installed copies pick a release up on their next launch, so treat every release
 as something that lands on other people's machines without being asked for.

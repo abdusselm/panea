@@ -24,6 +24,7 @@ export const LAYOUTS_FILE = path.join(STATE_DIR, "layouts.json");
 export const SETTINGS_FILE = path.join(STATE_DIR, "settings.json");
 export const AGENTS_FILE = path.join(STATE_DIR, "agents.json");
 
-export const PY = fs.existsSync("/usr/bin/python3") ? "/usr/bin/python3" : "python3";
+export const PY =
+  process.env.PANEA_PYTHON || (fs.existsSync("/usr/bin/python3") ? "/usr/bin/python3" : "python3");
 
 fs.mkdirSync(STATE_DIR, { recursive: true });

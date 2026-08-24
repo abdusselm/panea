@@ -35,21 +35,8 @@ export function isNewer(candidate, current) {
 
 export function detectInstall(root) {
   if (fs.existsSync(path.join(root, ".git"))) return null;
-  if (root.split(path.sep).includes("Cellar")) return "homebrew";
-  if (path.basename(root) !== "panea") return null;
-  if (path.basename(path.dirname(root)) !== "node_modules") return null;
-  try {
-    fs.accessSync(root, fs.constants.W_OK);
-  } catch {
-    return null;
-  }
-  return "npm";
-}
-
-function upgradeCommand(kind, name, version) {
-  if (kind === "npm") return ["npm", ["install", "--global", `${name}@${version}`]];
-  if (kind === "homebrew") return ["brew", ["upgrade", "--formula", name]];
-  return null;
+  if (!root.split(path.sep).includes("Cellar")) return null;
+  return "homebrew";
 }
 
 function checkedRecently() {
@@ -103,13 +90,12 @@ export async function maybeSelfUpdate({ root, pkg, argv }) {
 
   if (!latest || !isNewer(latest, pkg.version)) return;
 
-  const [command, args] = upgradeCommand(kind, pkg.name, latest);
   console.log(`panea ${pkg.version} → ${latest} available, updating…`);
 
-  if (kind === "homebrew") {
-    spawnSync("brew", ["update", "--quiet"], { stdio: ["ignore", "ignore", "ignore"] });
-  }
+  spawnSync("brew", ["update", "--quiet"], { stdio: ["ignore", "ignore", "ignore"] });
 
+  const command = "brew";
+  const args = ["upgrade", "--formula", pkg.name];
   const upgrade = spawnSync(command, args, {
     stdio: ["ignore", "ignore", "pipe"],
     encoding: "utf8",

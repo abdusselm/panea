@@ -57,7 +57,8 @@ One responsibility per module — see
 rules. **When adding a feature, give it its own module; do
 not append it to an existing file.**
 
-- `bin/panea.js` — the published CLI (`npm install -g panea`): flag parsing,
+- `bin/panea.js` — the installed CLI (`brew install abdusselm/tap/panea`):
+  the python3 preflight, flag parsing,
   the self-update call, then either `server/start.js` or the Electron binary.
   **Do not import anything that reads `PANEA_PORT` at module scope before the
   flags are parsed** — `server/paths.js` freezes the port on import, so

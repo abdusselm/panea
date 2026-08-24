@@ -11,15 +11,12 @@ permissions:
 jobs:
   publish:
     runs-on: macos-latest
-    env:
-      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
     steps:
       - uses: actions/checkout@v5
 
       - uses: actions/setup-node@v5
         with:
           node-version: 22
-          registry-url: https://registry.npmjs.org
 
       - name: Install
         run: npm ci --ignore-scripts
@@ -59,8 +56,3 @@ jobs:
           echo "  url    $url"
           echo "  sha256 $(shasum -a 256 source.tar.gz | cut -d' ' -f1)"
 
-      - name: Publish to npm
-        if: ${{ env.NPM_TOKEN != '' }}
-        run: npm publish --provenance --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ env.NPM_TOKEN }}
