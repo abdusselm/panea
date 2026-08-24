@@ -4,7 +4,25 @@ Notable changes per release. Versions follow [semver](https://semver.org);
 installed copies update themselves on their next launch, so anything listed here
 reaches users without them asking for it.
 
-## [Unreleased]
+## [0.1.2] - 2026-08-24
+
+### Fixed
+
+- Panes no longer inherit the environment npm injects into `npm start` and
+  `npm run app`. `npm_config_prefix` made nvm refuse to activate, so `node`,
+  `npx` and anything installed through nvm were missing from every pane, and
+  npm's `node_modules/.bin` entries leaked panea's own dependencies onto the
+  user's `PATH`.
+
+## [0.1.1] - 2026-08-24
+
+### Added
+
+- Python is a formula dependency, so installing panea installs it. Nobody is
+  asked to run `xcode-select --install` first, and the interpreter is a real
+  `python@3.14` rather than the Xcode stub.
+
+## [0.1.0] - 2026-08-24
 
 ### Added
 
@@ -16,9 +34,6 @@ reaches users without them asking for it.
   `PANEA_NO_UPDATE=1`.
 - A preflight check that refuses to start with a usable message when `python3`
   cannot run the PTY bridge, instead of opening a window of dead panes.
-- Python is a formula dependency, so installing panea installs it. Nobody is
-  asked to run `xcode-select --install` first, and the interpreter is a real
-  `python@3.14` rather than the Xcode stub.
 - Loopback-only guards on the WebSocket handshake and HTTP `Host`, so no other
   origin can reach the shell bridge.
 - The desktop build presents itself as Panea — its own name, icon, and bundle
@@ -36,8 +51,7 @@ reaches users without them asking for it.
 ### Fixed
 
 - A busy port now prints one line instead of an unhandled `'error'` event.
-- Panes no longer inherit the environment npm injects into `npm start` and
-  `npm run app`. `npm_config_prefix` made nvm refuse to activate, so `node`,
-  `npx` and anything installed through nvm were missing from every pane, and
-  npm's `node_modules/.bin` entries leaked panea's own dependencies onto the
-  user's `PATH`.
+
+[0.1.2]: https://github.com/abdusselm/panea/releases/tag/v0.1.2
+[0.1.1]: https://github.com/abdusselm/panea/releases/tag/v0.1.1
+[0.1.0]: https://github.com/abdusselm/panea/releases/tag/v0.1.0
