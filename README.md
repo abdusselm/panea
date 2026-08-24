@@ -35,15 +35,30 @@ re-run it any time with `npm run brand`.
 
 It also replaces the bundle identifier, which Electron ships as
 `com.github.Electron` — every Electron app on the machine shares that one — and
-renames the executable from `Electron` to `Panea`. The Dock names an app that
-was launched by exec'ing its binary (rather than through LaunchServices) after
-the executable, and it does so at launch, before any JavaScript runs. Renaming
-the file is what finally stops the Dock from saying "Electron"; `CFBundleName`
-alone does not. `node_modules/electron/path.txt` is repointed to match, so the
-`electron` CLI still finds the binary.
+renames the executable to `Panea`, which is what names the process in `ps` and
+Activity Monitor. `node_modules/electron/path.txt` is repointed to match, so the
+`electron` CLI still finds the binary. Renaming the file does not touch the
+signature inside the Mach-O, so this stays on the safe side of the signing wall.
 
-Renaming the file does not touch the signature inside the Mach-O, so this stays
-on the safe side of the signing wall.
+**Known limitation — the Dock tooltip still reads "Electron".** macOS keeps two
+names for a bundle, and the Dock uses the one derived from the directory name:
+
+```
+NSFileManager.displayNameAtPath  →  Electron     ← from "Electron.app"
+CFBundleName / CFBundleDisplayName  →  Panea
+LaunchServices LSDisplayName        →  Panea
+NSRunningApplication.localizedName  →  Panea
+```
+
+Nothing in the Info.plist overrides the first one — `LSHasLocalizedDisplayName`
+with a localized `InfoPlist.strings` does not work either. The only fix is to
+rename the bundle directory itself to `Panea.app`, which `npm run brand` will do
+when `PANEA_RENAME_BUNDLE=1` is set.
+
+That is opt-in because it is exactly the change a managed Mac refuses: a bundle
+at an unrecognised path, which endpoint security agents challenge for admin
+credentials before it will launch. Leave the flag unset if `npm run app` has to
+work without privileges.
 
 The desktop build also runs the HTTP/WebSocket server **inside** the Electron
 main process rather than spawning it. A spawned server registered itself with

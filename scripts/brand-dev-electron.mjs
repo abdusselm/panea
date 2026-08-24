@@ -7,24 +7,29 @@ import { fileURLToPath } from "node:url";
 
 const ROOT = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const ELECTRON = path.join(ROOT, "node_modules", "electron");
-const APP = path.join(ELECTRON, "dist", "Electron.app");
-const PLIST = path.join(APP, "Contents", "Info.plist");
-const MACOS = path.join(APP, "Contents", "MacOS");
+const DIST = path.join(ELECTRON, "dist");
 const PATH_TXT = path.join(ELECTRON, "path.txt");
-const ICNS = path.join(APP, "Contents", "Resources", "electron.icns");
 const OUR_ICON = path.join(ROOT, "build", "icon.icns");
 const LSREGISTER =
   "/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister";
 
 const NAME = "Panea";
 const BUNDLE_ID = "io.github.abdusselamkeskin.panea";
+const RENAME_BUNDLE = process.env.PANEA_RENAME_BUNDLE === "1";
 
-if (!fs.existsSync(PLIST)) {
+const STOCK_BUNDLE = path.join(DIST, "Electron.app");
+const OUR_BUNDLE = path.join(DIST, `${NAME}.app`);
+
+let app = fs.existsSync(OUR_BUNDLE) ? OUR_BUNDLE : STOCK_BUNDLE;
+
+if (!fs.existsSync(path.join(app, "Contents", "Info.plist"))) {
   process.exit(0);
 }
 
 function plist(...args) {
-  return execFileSync("/usr/libexec/PlistBuddy", [...args, PLIST], { encoding: "utf8" }).trim();
+  return execFileSync("/usr/libexec/PlistBuddy", [...args, path.join(app, "Contents", "Info.plist")], {
+    encoding: "utf8",
+  }).trim();
 }
 
 function setKey(key, value) {
@@ -35,14 +40,20 @@ function setKey(key, value) {
   }
 }
 
+function writePathTxt() {
+  fs.writeFileSync(PATH_TXT, `${path.basename(app)}/Contents/MacOS/${NAME}`);
+}
+
 function refreshLaunchServices() {
   const now = new Date();
-  fs.utimesSync(APP, now, now);
+  fs.utimesSync(app, now, now);
+  for (const target of [STOCK_BUNDLE, OUR_BUNDLE]) {
+    try {
+      execFileSync(LSREGISTER, ["-u", target], { stdio: "ignore" });
+    } catch {}
+  }
   try {
-    execFileSync(LSREGISTER, ["-u", APP], { stdio: "ignore" });
-  } catch {}
-  try {
-    execFileSync(LSREGISTER, ["-f", "-R", "-domain", "local", "-domain", "user", APP], {
+    execFileSync(LSREGISTER, ["-f", "-R", "-domain", "local", "-domain", "user", app], {
       stdio: "ignore",
     });
   } catch {}
@@ -67,13 +78,21 @@ try {
     changed = true;
   }
 
-  const stock = path.join(MACOS, "Electron");
-  const renamed = path.join(MACOS, NAME);
-  if (fs.existsSync(stock) && !fs.existsSync(renamed)) {
-    fs.renameSync(stock, renamed);
+  const stockExecutable = path.join(app, "Contents", "MacOS", "Electron");
+  const ourExecutable = path.join(app, "Contents", "MacOS", NAME);
+  if (fs.existsSync(stockExecutable) && !fs.existsSync(ourExecutable)) {
+    fs.renameSync(stockExecutable, ourExecutable);
     setKey("CFBundleExecutable", NAME);
-    fs.writeFileSync(PATH_TXT, `Electron.app/Contents/MacOS/${NAME}`);
+    writePathTxt();
     console.log(`renamed the executable to ${NAME}`);
+    changed = true;
+  }
+
+  if (RENAME_BUNDLE && app === STOCK_BUNDLE) {
+    fs.renameSync(STOCK_BUNDLE, OUR_BUNDLE);
+    app = OUR_BUNDLE;
+    writePathTxt();
+    console.log(`renamed the bundle to ${NAME}.app`);
     changed = true;
   }
 
@@ -81,10 +100,11 @@ try {
     execFileSync(process.execPath, [path.join(ROOT, "scripts", "make-icon.mjs")], { stdio: "inherit" });
   }
 
-  if (fs.existsSync(OUR_ICON) && fs.existsSync(ICNS)) {
+  const icns = path.join(app, "Contents", "Resources", "electron.icns");
+  if (fs.existsSync(OUR_ICON) && fs.existsSync(icns)) {
     const ours = fs.readFileSync(OUR_ICON);
-    if (!fs.readFileSync(ICNS).equals(ours)) {
-      fs.writeFileSync(ICNS, ours);
+    if (!fs.readFileSync(icns).equals(ours)) {
+      fs.writeFileSync(icns, ours);
       console.log(`applied ${NAME} Dock icon`);
       changed = true;
     }

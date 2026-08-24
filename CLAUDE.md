@@ -74,10 +74,19 @@ not append it to an existing file.**
   (draws `build/icon.icns` with no image dependency), `brand-dev-electron`
   (rewrites the dev Electron bundle's name, icon, bundle ID, and executable
   name so the app presents as Panea, then refreshes the LaunchServices/Dock
-  cache; runs on `postinstall`). All four matter: `CFBundleName` alone leaves
-  the Dock saying "Electron", because it names an exec'd app after its
-  executable, at launch, before any JS runs. Renaming the executable also means
-  `node_modules/electron/path.txt` must be repointed. **Never package into a standalone `.app`** —
+  cache; runs on `postinstall`). Renaming the executable also means
+  `node_modules/electron/path.txt` must be repointed.
+
+  **Do not re-litigate the Dock tooltip.** It reads "Electron" from
+  `NSFileManager.displayNameAtPath`, which comes from the *bundle directory
+  name*. Already tried and confirmed useless: `CFBundleName`,
+  `CFBundleDisplayName`, `CFBundleIdentifier`, `CFBundleExecutable`,
+  `app.setName`, `process.title`, `LSHasLocalizedDisplayName` plus a localized
+  `InfoPlist.strings`, and re-registering with `lsregister`. Every one of those
+  reports "Panea" while the Dock still says "Electron". Only renaming the
+  directory fixes it, which `PANEA_RENAME_BUNDLE=1` does — kept opt-in because
+  a bundle at an unrecognised path is what makes endpoint security agents on a
+  managed Mac demand admin credentials before it will launch. **Never package into a standalone `.app`** —
   renaming the Electron executable breaks its signature, and the ad-hoc re-sign
   trips managed-Mac security agents into demanding admin rights.
 - `public/js/` — frontend ES modules: `theme`, `state`, `dom`, `util`, `ws`,
