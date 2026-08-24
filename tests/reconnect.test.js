@@ -28,7 +28,9 @@ async function listen(t) {
   await once(server, "listening");
   t.after(() => {
     killAll();
+    for (const client of wss.clients) client.terminate();
     wss.close();
+    if (server.closeAllConnections) server.closeAllConnections();
     server.close();
   });
   return server.address().port;
@@ -116,10 +118,10 @@ test("output produced while detached is replayed on reattach", async (t) => {
   first.type(paneId, "echo READY\n");
   assert.ok(await waitFor(() => first.text(paneId).includes("READY\r\n")), "shell never started");
 
-  first.type(paneId, "sleep 2; echo WHILE_AWAY\n");
+  first.type(paneId, "echo ARMED; sleep 2; echo WHILE_AWAY\n");
   assert.ok(
-    await waitFor(() => first.text(paneId).includes("sleep 2; echo WHILE_AWAY")),
-    "the detached command was never delivered"
+    await waitFor(() => first.text(paneId).includes("ARMED\r\n")),
+    "the shell never began running the command we detach from"
   );
   await first.bye();
 
