@@ -2,6 +2,7 @@
 
 import { spawn } from "node:child_process";
 import { PY, BRIDGE, ZSH_THEME_DIR } from "./paths.js";
+import { shellEnv } from "./shell-env.js";
 
 export class Pane {
   constructor(id, opts, onOutput, onExit) {
@@ -12,7 +13,7 @@ export class Pane {
     if (opts.cols) args.push("--cols", String(opts.cols));
     if (opts.rows) args.push("--rows", String(opts.rows));
 
-    const env = { ...process.env };
+    const env = shellEnv();
     const themeOn = process.env.PANEA_NO_THEME !== "1";
     if (themeOn && /zsh$/.test(shell)) {
       env.ZDOTDIR = ZSH_THEME_DIR;

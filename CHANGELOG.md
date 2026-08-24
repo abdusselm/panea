@@ -36,3 +36,8 @@ reaches users without them asking for it.
 ### Fixed
 
 - A busy port now prints one line instead of an unhandled `'error'` event.
+- Panes no longer inherit the environment npm injects into `npm start` and
+  `npm run app`. `npm_config_prefix` made nvm refuse to activate, so `node`,
+  `npx` and anything installed through nvm were missing from every pane, and
+  npm's `node_modules/.bin` entries leaked panea's own dependencies onto the
+  user's `PATH`.
