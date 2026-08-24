@@ -2,6 +2,7 @@
   "name": "panea",
   "version": "0.1.0",
   "description": "Local multi-pane terminal workspace for AI coding agents. Browser build or native desktop window.",
+  "license": "MIT",
   "type": "module",
   "main": "electron/main.cjs",
   "bin": {

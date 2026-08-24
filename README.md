@@ -211,11 +211,52 @@ seconds; no shell configuration required. The rail width is draggable (see
   process snapshot per poll (not per-pane spawns), resize work is coalesced to
   one frame, and terminal scrollback defaults to 5000 lines (`SCROLLBACK` in
   `public/js/panes.js`).
-- Terminal/UI color: `--term-bg` in `public/style.css` and
-  `TERM_THEME.background` in `public/app.js` (currently `#282c34`).
+- Terminal/UI color: `--term-bg` in `public/css/tokens.css` and
+  `TERM_THEME.background` in `public/js/theme.js` (currently `#282c34`).
 - Shell prompt theme is injected via `ZDOTDIR` without touching your dotfiles.
   Disable with `PANEA_NO_THEME=1`.
 - Scales across displays: the layout is fluid (flex + viewport-relative
   overlays), and chrome text uses a rem type scale that steps up on large
   screens (root font-size 16 → 17 ≥2000px → 18 ≥2560px); the palette widens on
   wide viewports too. Terminal font size is independent (`Cmd +/−/0`).
+
+## Security
+
+panea gives its web UI a real login shell, so it is built to be reachable only
+from your own machine:
+
+- The server binds `127.0.0.1` only — never `0.0.0.0`. It is not meant to be
+  exposed to a network, and there is no authentication layer to put in front of
+  one.
+- WebSocket handshakes are rejected unless their `Origin` is a loopback host.
+  The same-origin policy does not cover WebSockets, so without this check any
+  page you visited could connect to the local port and run commands as you.
+- HTTP requests are rejected unless their `Host` is a loopback name, which
+  closes the DNS-rebinding route to the same thing.
+
+Both guards live in `server/origin.js`. If you fork panea and put it behind a
+proxy or a tunnel, you are removing the only thing standing between the open
+internet and a shell — add real authentication first.
+
+## Relation to cmux
+
+panea is inspired by [cmux](https://github.com/manaflow-ai/cmux) — the vertical
+tab rail, the attention rings, and the terminal palette all follow its lead, and
+the docs say "cmux-style" where that is what they mean.
+
+It is an independent implementation and shares no code with it. cmux is a
+Swift/[Ghostty](https://github.com/ghostty-org/ghostty) macOS app; panea is
+Node + Electron + plain ES modules with a `python3` PTY bridge. panea was
+written from scratch to have no native binary to sign. It is not affiliated
+with, endorsed by, or derived from cmux or Manaflow, Inc.
+
+The ANSI colors are the Tomorrow Night palette
+([base16](https://github.com/chriskempson/base16), MIT).
+
+## License
+
+[MIT](LICENSE).
+
+Bundled at runtime: [xterm.js](https://github.com/xtermjs/xterm.js) (MIT),
+[ws](https://github.com/websockets/ws) (MIT), and — for the desktop build —
+[Electron](https://github.com/electron/electron) (MIT).

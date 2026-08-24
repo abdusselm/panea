@@ -2,8 +2,8 @@
 
 Local multi-pane terminal workspace (vertical tabs, split panes, cmux-style
 theme). Desktop app (Electron) or browser. No self-built native binary — uses
-the Node runtime and the Apple-signed system `python3` for the PTY, so it runs
-on a managed/EDR-locked macOS without a signing wall.
+the Node runtime and the Apple-signed system `python3` for the PTY, so there is
+no code-signing step between cloning and running it.
 
 ## Search policy: code-review-graph FIRST
 
@@ -40,8 +40,9 @@ accurate.
 
 ## Layout
 
-One responsibility per module — see `skills/developing-a-feature.md` for the
-full table and the rules. **When adding a feature, give it its own module; do
+One responsibility per module — see
+`.claude/skill/scafoldding-and-template/SKILL.md` for the full table and the
+rules. **When adding a feature, give it its own module; do
 not append it to an existing file.**
 
 - `server.js` — thin entry: HTTP static server + WebSocket bridge
@@ -73,7 +74,8 @@ not append it to an existing file.**
 ## Performance (standing)
 
 panea hosts many terminals at once — be a resource miser. Key rules (full detail
-in `skills/developing-a-feature.md` §4b): never spawn child processes per-pane
+in `.claude/skill/scafoldding-and-template/SKILL.md` §4b): never spawn child
+processes per-pane
 (snapshot once — see `server/meta.js`); coalesce ResizeObserver/hot DOM work to
 one rAF (`scheduleRefit`); patch DOM nodes in place for frequent updates rather
 than rebuilding (`refreshTabName`/`refreshTabMeta`); debounce saves; cancel every
@@ -81,8 +83,9 @@ timer/rAF and bound every cache on teardown; only render the active tab.
 
 ## Constraints (standing)
 
-- Managed corporate Mac: use only pre-signed/notarized runtimes; never a
-  self-built native binary. No node-pty (unsigned `spawn-helper` is blocked).
+- Use only pre-signed/notarized runtimes; never a self-built native binary, so
+  panea stays runnable where unsigned binaries are refused. No node-pty (its
+  unsigned `spawn-helper` is exactly that case).
 - Do not delete or disable the user's software (Oh My Zsh, etc.).
 - Colors follow cmux/ghostty: background `#282c34`, text `#ededed`,
   Tomorrow-Night ANSI. Palette lives in `public/style.css` `:root`.
