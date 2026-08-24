@@ -34,10 +34,16 @@ change shows up immediately. Only this project's `node_modules` is touched;
 re-run it any time with `npm run brand`.
 
 It also replaces the bundle identifier, which Electron ships as
-`com.github.Electron`. The Dock keys its cached tile label by bundle ID, so
-under the stock identifier it kept labelling the app "Electron" no matter what
-the name keys said — and every other Electron app on the machine shares that
-same identifier.
+`com.github.Electron` — every Electron app on the machine shares that one — and
+renames the executable from `Electron` to `Panea`. The Dock names an app that
+was launched by exec'ing its binary (rather than through LaunchServices) after
+the executable, and it does so at launch, before any JavaScript runs. Renaming
+the file is what finally stops the Dock from saying "Electron"; `CFBundleName`
+alone does not. `node_modules/electron/path.txt` is repointed to match, so the
+`electron` CLI still finds the binary.
+
+Renaming the file does not touch the signature inside the Mach-O, so this stays
+on the safe side of the signing wall.
 
 The desktop build also runs the HTTP/WebSocket server **inside** the Electron
 main process rather than spawning it. A spawned server registered itself with

@@ -72,10 +72,12 @@ not append it to an existing file.**
   BrowserWindow, has one-shot screenshot/demo mode gated by `PANEA_*` env.
 - `scripts/` — build-time helpers, never imported by the app: `make-icon`
   (draws `build/icon.icns` with no image dependency), `brand-dev-electron`
-  (rewrites the dev Electron bundle's name, icon, and bundle ID so the app
-  presents as Panea, then refreshes the LaunchServices/Dock cache; runs on
-  `postinstall`). The bundle ID must not stay `com.github.Electron` — the Dock
-  caches its tile label per bundle ID and would keep showing "Electron". **Never package into a standalone `.app`** —
+  (rewrites the dev Electron bundle's name, icon, bundle ID, and executable
+  name so the app presents as Panea, then refreshes the LaunchServices/Dock
+  cache; runs on `postinstall`). All four matter: `CFBundleName` alone leaves
+  the Dock saying "Electron", because it names an exec'd app after its
+  executable, at launch, before any JS runs. Renaming the executable also means
+  `node_modules/electron/path.txt` must be repointed. **Never package into a standalone `.app`** —
   renaming the Electron executable breaks its signature, and the ad-hoc re-sign
   trips managed-Mac security agents into demanding admin rights.
 - `public/js/` — frontend ES modules: `theme`, `state`, `dom`, `util`, `ws`,

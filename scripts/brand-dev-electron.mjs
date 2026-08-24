@@ -6,8 +6,11 @@ import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
 const ROOT = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
-const APP = path.join(ROOT, "node_modules", "electron", "dist", "Electron.app");
+const ELECTRON = path.join(ROOT, "node_modules", "electron");
+const APP = path.join(ELECTRON, "dist", "Electron.app");
 const PLIST = path.join(APP, "Contents", "Info.plist");
+const MACOS = path.join(APP, "Contents", "MacOS");
+const PATH_TXT = path.join(ELECTRON, "path.txt");
 const ICNS = path.join(APP, "Contents", "Resources", "electron.icns");
 const OUR_ICON = path.join(ROOT, "build", "icon.icns");
 const LSREGISTER =
@@ -61,6 +64,16 @@ try {
   if (plist("-c", "Print :CFBundleIdentifier") !== BUNDLE_ID) {
     setKey("CFBundleIdentifier", BUNDLE_ID);
     console.log(`set bundle id to ${BUNDLE_ID}`);
+    changed = true;
+  }
+
+  const stock = path.join(MACOS, "Electron");
+  const renamed = path.join(MACOS, NAME);
+  if (fs.existsSync(stock) && !fs.existsSync(renamed)) {
+    fs.renameSync(stock, renamed);
+    setKey("CFBundleExecutable", NAME);
+    fs.writeFileSync(PATH_TXT, `Electron.app/Contents/MacOS/${NAME}`);
+    console.log(`renamed the executable to ${NAME}`);
     changed = true;
   }
 
