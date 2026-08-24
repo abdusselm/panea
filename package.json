@@ -11,7 +11,10 @@
   "scripts": {
     "start": "node server.js",
     "web": "node server.js",
-    "app": "electron ."
+    "app": "electron .",
+    "icon": "node scripts/make-icon.mjs",
+    "brand": "node scripts/brand-dev-electron.mjs",
+    "postinstall": "node scripts/brand-dev-electron.mjs"
   },
   "dependencies": {
     "@xterm/addon-fit": "^0.10.0",

@@ -9,7 +9,17 @@ const PORT = Number(process.env.PANEA_PORT || 4820);
 const HOST = "127.0.0.1";
 const ROOT = path.join(__dirname, "..");
 
+// Menu bar, Dock, and Info window naming come from the bundle's Info.plist,
+// which `npm run brand` (wired to postinstall) rewrites in node_modules. These
+// cover the rest: the name Electron uses internally, the About panel, and the
+// process name in ps/Activity Monitor, which follows the executable otherwise.
+process.title = "panea";
 app.setName("panea");
+app.setAboutPanelOptions({
+  applicationName: "panea",
+  applicationVersion: require("../package.json").version,
+  copyright: "Copyright (c) 2026 Abdusselam Keskin. MIT.",
+});
 
 let serverProc = null;
 let win = null;

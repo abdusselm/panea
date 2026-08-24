@@ -54,6 +54,12 @@ not append it to an existing file.**
   fd3 (control JSON resize).
 - `electron/main.cjs` — desktop shell; starts `server.js` as a child, opens the
   BrowserWindow, has one-shot screenshot/demo mode gated by `PANEA_*` env.
+- `scripts/` — build-time helpers, never imported by the app: `make-icon`
+  (draws `build/icon.icns` with no image dependency), `brand-dev-electron`
+  (rewrites the dev Electron bundle's `CFBundleName`/icon so the app presents
+  as panea; runs on `postinstall`). **Never package into a standalone `.app`** —
+  renaming the Electron executable breaks its signature, and the ad-hoc re-sign
+  trips managed-Mac security agents into demanding admin rights.
 - `public/js/` — frontend ES modules: `theme`, `state`, `dom`, `util`, `ws`,
   `session`, `tabs`, `panes`, `attention`, `attention-signals`, `notifications`,
   `layouts`, `keyboard`, `palette`, `main`.

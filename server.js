@@ -9,6 +9,10 @@ import { handleRequest } from "./server/static-server.js";
 import { handleConnection } from "./server/connection.js";
 import { verifyClient } from "./server/origin.js";
 
+// Otherwise this shows up as "Electron" in ps/Activity Monitor, because the
+// desktop build runs it through the Electron binary with ELECTRON_RUN_AS_NODE.
+process.title = "panea-server";
+
 const server = http.createServer(handleRequest);
 const wss = new WebSocketServer({ server, verifyClient });
 wss.on("connection", handleConnection);
