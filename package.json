@@ -1,6 +1,6 @@
 {
   "name": "panea",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Local multi-pane terminal workspace for AI coding agents. Browser build or native desktop window.",
   "license": "MIT",
   "private": true,

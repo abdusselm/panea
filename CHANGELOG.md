@@ -4,6 +4,20 @@ Notable changes per release. Versions follow [semver](https://semver.org);
 installed copies update themselves on their next launch, so anything listed here
 reaches users without them asking for it.
 
+## [0.2.1] - 2026-08-25
+
+### Fixed
+
+- Updating no longer ends in a crash. The self-update installed the new version
+  and then relaunched the path it had been started from, which points inside the
+  Homebrew keg that `brew upgrade` had just deleted — so the last thing an
+  update printed was `Cannot find module .../Cellar/panea/<old>/libexec/bin/panea`.
+  The new version was in fact installed and the next launch was fine, but the
+  one that did the updating died. panea now relaunches through the linked
+  `panea` binary, which already points at whatever version is current, and falls
+  back to telling you to run it again rather than starting something that is no
+  longer there.
+
 ## [0.2.0] - 2026-08-25
 
 ### Fixed

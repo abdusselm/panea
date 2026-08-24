@@ -65,6 +65,21 @@ async function latestRelease() {
   return typeof tag === "string" ? tag.replace(/^v/, "") : null;
 }
 
+function brewPrefix(name) {
+  for (const args of [["--prefix", name], ["--prefix"]]) {
+    const out = spawnSync("brew", args, { encoding: "utf8" });
+    if (out.status === 0 && out.stdout.trim()) return out.stdout.trim();
+  }
+  return null;
+}
+
+export function relaunchCommand({ name, argv, prefix, entry, exists = fs.existsSync }) {
+  const linked = prefix ? path.join(prefix, "bin", name) : null;
+  if (linked && exists(linked)) return { command: linked, args: [...argv] };
+  if (entry && exists(entry)) return { command: process.execPath, args: [entry, ...argv] };
+  return null;
+}
+
 function firstMeaningfulLine(text) {
   return (text || "")
     .split("\n")
@@ -109,11 +124,28 @@ export async function maybeSelfUpdate({ root, pkg, argv }) {
     return;
   }
 
+  const relaunch = relaunchCommand({
+    name: pkg.name,
+    argv,
+    prefix: brewPrefix(pkg.name),
+    entry: process.argv[1],
+  });
+
+  if (!relaunch) {
+    console.log(`panea ${latest} installed — run panea again to use it.`);
+    return;
+  }
+
   console.log(`panea ${latest} installed, restarting…`);
 
-  const child = spawn(process.execPath, [process.argv[1], ...argv], {
+  const child = spawn(relaunch.command, relaunch.args, {
     stdio: "inherit",
     env: { ...process.env, PANEA_UPDATED: "1" },
+  });
+  child.on("error", (err) => {
+    console.error(`panea: ${latest} is installed but could not be started — ${err.message}`);
+    console.error("Run panea again to use it.");
+    process.exit(1);
   });
   child.on("exit", (code) => process.exit(code ?? 0));
   await new Promise(() => {});
