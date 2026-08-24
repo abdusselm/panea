@@ -14,6 +14,7 @@ const LSREGISTER =
   "/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister";
 
 const NAME = "Panea";
+const BUNDLE_ID = "io.github.abdusselamkeskin.panea";
 
 if (!fs.existsSync(PLIST)) {
   process.exit(0);
@@ -35,6 +36,9 @@ function refreshLaunchServices() {
   const now = new Date();
   fs.utimesSync(APP, now, now);
   try {
+    execFileSync(LSREGISTER, ["-u", APP], { stdio: "ignore" });
+  } catch {}
+  try {
     execFileSync(LSREGISTER, ["-f", "-R", "-domain", "local", "-domain", "user", APP], {
       stdio: "ignore",
     });
@@ -51,6 +55,12 @@ try {
     setKey("CFBundleName", NAME);
     setKey("CFBundleDisplayName", NAME);
     console.log(`branded dev Electron as "${NAME}"`);
+    changed = true;
+  }
+
+  if (plist("-c", "Print :CFBundleIdentifier") !== BUNDLE_ID) {
+    setKey("CFBundleIdentifier", BUNDLE_ID);
+    console.log(`set bundle id to ${BUNDLE_ID}`);
     changed = true;
   }
 
