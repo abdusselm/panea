@@ -4,6 +4,19 @@ Notable changes per release. Versions follow [semver](https://semver.org);
 installed copies update themselves on their next launch, so anything listed here
 reaches users without them asking for it.
 
+## [0.1.4] - 2026-08-24
+
+### Fixed
+
+- A pane no longer dies when its control pipe closes. 0.1.3 taught the bridge
+  to exit when either pipe to its parent closed, which was too broad: the
+  control pipe carries nothing but resize messages, and losing it is not a
+  reason to kill the user's shell. Only the input pipe closing means the parent
+  is gone. The leak fix that motivated 0.1.3 is unaffected and still covered by
+  its test.
+- Interrupted reads (`EINTR`, `EAGAIN`) are retried instead of being treated as
+  the parent going away.
+
 ## [0.1.3] - 2026-08-24
 
 ### Fixed
@@ -65,6 +78,7 @@ reaches users without them asking for it.
 
 - A busy port now prints one line instead of an unhandled `'error'` event.
 
+[0.1.4]: https://github.com/abdusselm/panea/releases/tag/v0.1.4
 [0.1.3]: https://github.com/abdusselm/panea/releases/tag/v0.1.3
 [0.1.2]: https://github.com/abdusselm/panea/releases/tag/v0.1.2
 [0.1.1]: https://github.com/abdusselm/panea/releases/tag/v0.1.1

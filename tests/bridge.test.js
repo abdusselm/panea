@@ -56,6 +56,20 @@ test("the bridge exits when the pipe to its parent closes", async () => {
   for (const pid of shell) assert.equal(await settled(pid), true, `shell ${pid} outlived the bridge`);
 });
 
+test("closing the control pipe does not take the shell down with it", async () => {
+  const bridge = spawn(PY, [BRIDGE, "/bin/zsh"], { stdio: ["pipe", "pipe", "ignore", "pipe"] });
+  await firstOutput(bridge.stdout);
+
+  let exited = false;
+  bridge.once("exit", () => { exited = true; });
+  bridge.stdio[3].end();
+  await new Promise((resolve) => setTimeout(resolve, 3000));
+
+  assert.equal(exited, false, "a closed control pipe killed the pane");
+  assert.equal(alive(bridge.pid), true);
+  bridge.kill("SIGKILL");
+});
+
 test("a killed server takes its panes with it instead of orphaning them", async () => {
   const paneUrl = pathToFileURL(path.join(ROOT, "server", "pane.js")).href;
   const server = spawn(process.execPath, [

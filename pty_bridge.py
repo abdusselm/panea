@@ -5,10 +5,19 @@ import os
 import pty
 import select
 import signal
+import errno
 import struct
 import sys
 import termios
 import time
+
+RETRY = (errno.EINTR, errno.EAGAIN, errno.EWOULDBLOCK)
+
+def read_fd(fd, size):
+    try:
+        return os.read(fd, size), None
+    except OSError as exc:
+        return b"", "retry" if exc.errno in RETRY else "closed"
 
 def terminate(pid, master_fd):
     try:
@@ -116,37 +125,32 @@ def main():
             continue
 
         if master_fd in readable:
-            try:
-                data = os.read(master_fd, 65536)
-            except OSError:
-                data = b""
-            if not data:
-                break
-            try:
-                os.write(stdout_fd, data)
-            except OSError:
-                break
+            data, problem = read_fd(master_fd, 65536)
+            if problem != "retry":
+                if not data:
+                    break
+                try:
+                    os.write(stdout_fd, data)
+                except OSError:
+                    break
 
         if stdin_fd in readable:
-            try:
-                data = os.read(stdin_fd, 65536)
-            except OSError:
-                data = b""
-            if not data:
-                break
-            else:
+            data, problem = read_fd(stdin_fd, 65536)
+            if problem != "retry":
+                if not data:
+                    break
                 try:
                     os.write(master_fd, data)
                 except OSError:
                     break
 
         if has_control and control_fd in readable:
-            try:
-                chunk = os.read(control_fd, 4096)
-            except OSError:
-                chunk = b""
-            if not chunk:
-                break
+            chunk, problem = read_fd(control_fd, 4096)
+            if problem == "retry":
+                pass
+            elif not chunk:
+                watch = [fd for fd in watch if fd != control_fd]
+                has_control = False
             else:
                 control_buf += chunk
                 while b"\n" in control_buf:
