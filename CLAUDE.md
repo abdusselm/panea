@@ -71,9 +71,16 @@ not append it to an existing file.**
 - `server/` — backend modules: `start` (HTTP + WebSocket bootstrap on
   127.0.0.1:4820, `PANEA_PORT`), `paths` (config), `static-server`, `origin`
   (loopback-only Origin/Host guards), `session-store`, `commands-store`, `meta`
-  (sidebar cwd/branch/ports via lsof/git), `pane` (one PTY), `connection`
-  (per-socket wiring), `update` (self-update against GitHub releases),
-  `electron` (where the Electron bundle lives).
+  (sidebar cwd/branch/ports via lsof/git), `pane` (one PTY), `pane-registry`
+  (pane lifetime across sockets), `keepalive` (per-socket ping/pong),
+  `connection` (per-socket wiring), `update` (self-update against GitHub
+  releases), `electron` (where the Electron bundle lives).
+
+  **A pane must outlive its WebSocket.** PTYs live in `server/pane-registry.js`,
+  not in the connection — a socket that drops (laptop sleep, an idle hour) only
+  *detaches*, buffering output, and the client re-`attach`es on reconnect.
+  Killing panes from `ws.on("close")` is what made every pane silently swallow
+  keystrokes after a lunch break.
 
   **Never let the Electron runtime land inside a Homebrew Cellar.** Homebrew
   rewrites dylib IDs for every Mach-O file it finds there, which breaks the
@@ -110,8 +117,9 @@ not append it to an existing file.**
   renaming the Electron executable breaks its signature, and the ad-hoc re-sign
   trips managed-Mac security agents into demanding admin rights.
 - `public/js/` — frontend ES modules: `theme`, `state`, `dom`, `util`, `ws`,
-  `session`, `tabs`, `panes`, `attention`, `attention-signals`, `notifications`,
-  `layouts`, `keyboard`, `palette`, `main`.
+  `connection-status`, `session`, `tabs`, `panes`, `attention`,
+  `attention-signals`, `notifications`, `layouts`, `keyboard`, `palette`,
+  `main`.
   Loaded via `<script type="module" src="/js/main.js">`. `main.js` exposes a
   `window.panea` debug bridge (ES modules don't leak globals).
 - `public/index.html` — markup (single `<link>` to `style.css`).
@@ -119,7 +127,8 @@ not append it to an existing file.**
   `public/css/` in cascade order. Add rules to a partial, not here.
 - `public/css/` — one partial per UI area, each mirroring its JS module:
   `tokens` (`:root` design tokens), `base` (reset + shared motion), `sidebar`,
-  `tabs`, `panes`, `palette`, `notifications`, `modals`. **When adding a
+  `connection-status`, `tabs`, `panes`, `palette`, `notifications`, `modals`.
+  **When adding a
   feature's styles, put them in the matching partial (or a new one); never let
   `style.css` grow rules of its own.**
 - `shell/zsh/` — `ZDOTDIR` shim sourcing the user's dotfiles then applying the

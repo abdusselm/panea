@@ -11,9 +11,17 @@ import { setGitStatus, setGitDiff } from "./git.js";
 import { setShortcutOverrides } from "./shortcuts.js";
 import { refreshOpenSettings } from "./settings.js";
 import { setAgents } from "./agents.js";
+import { reattachPanes } from "./panes.js";
+import { setConnectionState } from "./connection-status.js";
+
+const RECONNECT_MS = 1000;
+const PROBE_TIMEOUT_MS = 3000;
 
 let ws = null;
 let wsReady = false;
+let everOpened = false;
+let reconnectTimer = null;
+let probeTimer = null;
 const pendingOpens = [];
 
 export function wsSend(obj) {
@@ -22,13 +30,68 @@ export function wsSend(obj) {
   else if (obj.type === "open") pendingOpens.push(data);
 }
 
+function scheduleReconnect() {
+  if (reconnectTimer) return;
+  reconnectTimer = setTimeout(() => { reconnectTimer = null; connect(); }, RECONNECT_MS);
+}
+
+function dropSocket() {
+  clearTimeout(probeTimer);
+  probeTimer = null;
+  wsReady = false;
+  if (!ws) return;
+  ws.onopen = ws.onclose = ws.onerror = ws.onmessage = null;
+  try { ws.close(); } catch (_) {}
+  ws = null;
+}
+
+function probeConnection() {
+  if (!ws || ws.readyState !== WebSocket.OPEN) { connect(); return; }
+  if (probeTimer) return;
+  probeTimer = setTimeout(() => {
+    probeTimer = null;
+    giveUpOnSocket();
+  }, PROBE_TIMEOUT_MS);
+  try { ws.send(JSON.stringify({ type: "ping" })); }
+  catch (_) { giveUpOnSocket(); }
+}
+
+function giveUpOnSocket() {
+  dropSocket();
+  setConnectionState("reconnecting");
+  connect();
+}
+
 export function connect() {
+  if (ws && (ws.readyState === WebSocket.CONNECTING || ws.readyState === WebSocket.OPEN)) return;
+  clearTimeout(reconnectTimer);
+  reconnectTimer = null;
   ws = new WebSocket(`ws://${location.host}`);
-  ws.onopen = () => { wsReady = true; while (pendingOpens.length) ws.send(pendingOpens.shift()); };
-  ws.onclose = () => { wsReady = false; setTimeout(connect, 1000); };
+  const sock = ws;
+  ws.onopen = () => {
+    const resumed = everOpened;
+    everOpened = true;
+    wsReady = true;
+    while (pendingOpens.length) sock.send(pendingOpens.shift());
+    if (resumed) reattachPanes();
+    setConnectionState(resumed ? "restored" : "online");
+  };
+  ws.onclose = () => {
+    if (sock !== ws) return;
+    wsReady = false;
+    clearTimeout(probeTimer);
+    probeTimer = null;
+    setConnectionState("reconnecting");
+    scheduleReconnect();
+  };
+  ws.onerror = () => { if (sock === ws) try { sock.close(); } catch (_) {} };
   ws.onmessage = (ev) => {
     const msg = JSON.parse(ev.data);
     switch (msg.type) {
+      case "pong":
+        clearTimeout(probeTimer);
+        probeTimer = null;
+        break;
       case "output": {
         const p = state.panes.get(msg.paneId);
         if (!p) return;
@@ -81,3 +144,7 @@ export function connect() {
     }
   };
 }
+
+document.addEventListener("visibilitychange", () => { if (!document.hidden) probeConnection(); });
+window.addEventListener("focus", probeConnection);
+window.addEventListener("online", probeConnection);

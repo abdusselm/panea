@@ -37,7 +37,8 @@ Frontend (`public/js/`):
 | `state.js` | `state` (tab/pane model), `runtime` (mutable flags), `focusedPane()` |
 | `dom.js` | long-lived top-level element refs |
 | `util.js` | pure helpers: base64, ids, path, tree traversal, title cleanup |
-| `ws.js` | socket lifecycle + inbound message dispatch (`wsSend`, `connect`) |
+| `ws.js` | socket lifecycle + inbound message dispatch (`wsSend`, `connect`), wake probe, pane reattach |
+| `connection-status.js` | reconnect indicator + disconnected pane dimming, both behind a delay threshold |
 | `session.js` | serialize / persist / restore layout (per-leaf cwd + agent + scrollback) |
 | `tabs.js` | tab lifecycle, sidebar list, metadata rows, ctx menu, titles, rename, drag-reorder |
 | `panes.js` | xterm panes, split tree, focus, resize, restart, tree→DOM |
@@ -69,7 +70,9 @@ Backend (`server/`):
 | `meta.js` | sidebar context (cwd / git branch / ports) + AI-agent detection via ps/lsof/git |
 | `git.js` | on-demand git status + per-file diff for the diff panel |
 | `pane.js` | the `Pane` class (one PTY) |
-| `connection.js` | per-socket wiring: panes map, I/O relay, meta poll |
+| `pane-registry.js` | pane lifetime across sockets: open/attach/detach, detached-output buffer |
+| `keepalive.js` | per-socket ping/pong liveness so a dead connection is detected, not hung on |
+| `connection.js` | per-socket wiring: attached sinks, I/O relay, meta poll |
 
 Styles (`public/css/`) — `style.css` is an entry that only `@import`s these
 partials in cascade order; each owns one UI area and mirrors its JS module:
@@ -79,6 +82,7 @@ partials in cascade order; each owns one UI area and mirrors its JS module:
 | `tokens.css` | `:root` design tokens (color, radius, metrics) |
 | `base.css` | reset, document shell, shared `kbd`, the breathing keyframe |
 | `sidebar.css` | sidebar rail: header, brand, new-tab, bell, ⌘K button, footer |
+| `connection-status.css` | the reconnect strip above the tab list |
 | `tabs.css` | tab list rows, badges, port pills, rename, context menu |
 | `panes.css` | workspace, split tree, terminal leaf, empty state |
 | `find.css` | in-terminal find box floating over the focused pane |

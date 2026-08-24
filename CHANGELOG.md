@@ -4,6 +4,39 @@ Notable changes per release. Versions follow [semver](https://semver.org);
 installed copies update themselves on their next launch, so anything listed here
 reaches users without them asking for it.
 
+## [0.2.0] - 2026-08-25
+
+### Fixed
+
+- Panes no longer go deaf after the machine has been idle. A pane's shell was
+  owned by the WebSocket that opened it, so a connection dropped by sleep or an
+  idle hour killed every shell on that socket. The browser reconnected a second
+  later, but nothing re-opened the panes: the reconnected socket had an empty
+  pane map, so every keystroke was looked up against a pane the server no longer
+  had and silently discarded. Coming back from lunch meant a screen full of
+  terminals that swallowed input without printing an error or an exit notice.
+  Shells now live in a registry that outlives any one connection — a dropped
+  socket only detaches, and the client re-attaches on reconnect.
+- Output a pane produces while nothing is attached is buffered (bounded at
+  512 KB per pane, oldest first) and replayed on re-attach, so a build that
+  finishes while the laptop is closed is still there afterwards.
+- Reattaching to a pane the server genuinely no longer has now reports the exit
+  instead of failing silently, which puts the pane back in the familiar
+  "press ⏎ to restart" state.
+- Dead connections are detected rather than waited on: the server pings every
+  25 seconds and drops a socket that stops answering, and the client probes the
+  socket when the window regains focus or the machine comes back online, so a
+  reconnect after sleep takes about three seconds instead of a TCP timeout.
+
+### Added
+
+- A reconnect indicator in the sidebar, and dimmed panes while the connection
+  is down. Both wait 800 ms before appearing, so the sub-second reconnects that
+  happen in normal use stay invisible and only a real disconnect is announced.
+  Keystrokes typed while disconnected are still dropped rather than replayed —
+  feeding a half-typed command to a shell that has since come back is worse
+  than losing it — so the dimming is there to say so before you type.
+
 ## [0.1.4] - 2026-08-24
 
 ### Fixed
@@ -78,6 +111,7 @@ reaches users without them asking for it.
 
 - A busy port now prints one line instead of an unhandled `'error'` event.
 
+[0.2.0]: https://github.com/abdusselm/panea/releases/tag/v0.2.0
 [0.1.4]: https://github.com/abdusselm/panea/releases/tag/v0.1.4
 [0.1.3]: https://github.com/abdusselm/panea/releases/tag/v0.1.3
 [0.1.2]: https://github.com/abdusselm/panea/releases/tag/v0.1.2

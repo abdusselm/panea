@@ -1,6 +1,7 @@
 
 
-import { Pane } from "./pane.js";
+import { openPane, attachPane, detachPane, livePane, closePane } from "./pane-registry.js";
+import { keepAlive } from "./keepalive.js";
 import { loadSession, saveSession } from "./session-store.js";
 import { loadCommands } from "./commands-store.js";
 import { loadLayouts, saveLayout, deleteLayout } from "./layouts-store.js";
@@ -8,13 +9,12 @@ import { loadSettings, saveSettings } from "./settings-store.js";
 import { loadAgents } from "./agents-store.js";
 import { computeMetaBatch } from "./meta.js";
 import { gitStatus, gitDiff } from "./git.js";
-import { onShutdown } from "./shutdown.js";
 
 const META_POLL_MS = 3500;
 const META_FIRST_POLL_MS = 900;
 
 export function handleConnection(ws) {
-  const panes = new Map();
+  const attached = new Map();
   const lastMeta = new Map();
 
   const agents = loadAgents();
@@ -23,16 +23,28 @@ export function handleConnection(ws) {
     if (ws.readyState === ws.OPEN) ws.send(JSON.stringify(obj));
   };
 
+  const bind = (paneId) => {
+    const sink = {
+      output: (data) => send({ type: "output", paneId, data: data.toString("base64") }),
+      exit: (code) => send({ type: "exit", paneId, code }),
+    };
+    const entry = attachPane(paneId, sink);
+    if (entry) attached.set(paneId, sink);
+    return entry;
+  };
+
   let polling = false;
   const pollMeta = async () => {
     if (polling) return;
-    const entries = [...panes].filter(([, pane]) => pane.child && pane.child.pid);
+    const entries = [...attached.keys()]
+      .map((id) => [id, livePane(id)])
+      .filter(([, pane]) => pane && pane.child && pane.child.pid);
     if (!entries.length) return;
     polling = true;
     try {
       const byBridge = await computeMetaBatch(entries.map(([, pane]) => pane.child.pid), agents);
       for (const [id, pane] of entries) {
-        if (!panes.has(id)) continue;
+        if (!attached.has(id)) continue;
         const meta = byBridge.get(pane.child.pid);
         if (!meta) continue;
         const key = JSON.stringify(meta);
@@ -60,33 +72,42 @@ export function handleConnection(ws) {
 
     switch (msg.type) {
       case "open": {
-        if (panes.has(msg.paneId)) return;
-        const pane = new Pane(
-          msg.paneId,
-          { cwd: msg.cwd, cols: msg.cols, rows: msg.rows },
-          (data) => send({ type: "output", paneId: msg.paneId, data: data.toString("base64") }),
-          (code) => {
-            panes.delete(msg.paneId);
-            send({ type: "exit", paneId: msg.paneId, code });
-          }
-        );
-        panes.set(msg.paneId, pane);
+        if (attached.has(msg.paneId) && livePane(msg.paneId)) return;
+        openPane(msg.paneId, { cwd: msg.cwd, cols: msg.cols, rows: msg.rows });
+        bind(msg.paneId);
         if (!process.env.PANEA_NO_META_POLL) setTimeout(() => pollMeta(), META_FIRST_POLL_MS);
         break;
       }
+      case "attach": {
+        lastMeta.delete(msg.paneId);
+        if (!bind(msg.paneId)) {
+          attached.delete(msg.paneId);
+          send({ type: "exit", paneId: msg.paneId, code: 0 });
+          break;
+        }
+        const pane = livePane(msg.paneId);
+        if (pane && msg.cols && msg.rows) pane.resize(msg.cols, msg.rows);
+        if (!process.env.PANEA_NO_META_POLL) setTimeout(() => pollMeta(), META_FIRST_POLL_MS);
+        break;
+      }
+      case "ping": {
+        send({ type: "pong" });
+        break;
+      }
       case "input": {
-        const pane = panes.get(msg.paneId);
+        const pane = livePane(msg.paneId);
         if (pane) pane.write(Buffer.from(msg.data, "base64"));
         break;
       }
       case "resize": {
-        const pane = panes.get(msg.paneId);
+        const pane = livePane(msg.paneId);
         if (pane) pane.resize(msg.cols, msg.rows);
         break;
       }
       case "close": {
-        const pane = panes.get(msg.paneId);
-        if (pane) { pane.kill(); panes.delete(msg.paneId); lastMeta.delete(msg.paneId); }
+        closePane(msg.paneId);
+        attached.delete(msg.paneId);
+        lastMeta.delete(msg.paneId);
         break;
       }
       case "session": {
@@ -132,17 +153,13 @@ export function handleConnection(ws) {
     }
   });
 
-  const teardown = () => {
-    if (metaTimer) clearInterval(metaTimer);
-    for (const pane of panes.values()) pane.kill();
-    panes.clear();
-    lastMeta.clear();
-  };
-
-  const releaseShutdown = onShutdown(teardown);
+  const stopKeepAlive = keepAlive(ws);
 
   ws.on("close", () => {
-    releaseShutdown();
-    teardown();
+    stopKeepAlive();
+    if (metaTimer) clearInterval(metaTimer);
+    for (const [id, sink] of attached) detachPane(id, sink);
+    attached.clear();
+    lastMeta.clear();
   });
 }

@@ -117,6 +117,20 @@ export function createPane(paneId, tabId, cwd, restore) {
   return pane;
 }
 
+export function reattachPanes() {
+  for (const p of state.panes.values()) {
+    if (p.exited) continue;
+    let dims = null;
+    try { dims = p.fit.proposeDimensions(); } catch (_) {}
+    wsSend({
+      type: "attach",
+      paneId: p.id,
+      cols: dims ? dims.cols : p.term.cols,
+      rows: dims ? dims.rows : p.term.rows,
+    });
+  }
+}
+
 export function setFontSize(n) {
   runtime.fontSize = Math.max(MIN_FONT_SIZE, Math.min(MAX_FONT_SIZE, n));
   for (const p of state.panes.values()) p.term.options.fontSize = runtime.fontSize;
