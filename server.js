@@ -7,9 +7,10 @@ import { WebSocketServer } from "ws";
 import { PORT, HOST } from "./server/paths.js";
 import { handleRequest } from "./server/static-server.js";
 import { handleConnection } from "./server/connection.js";
+import { verifyClient } from "./server/origin.js";
 
 const server = http.createServer(handleRequest);
-const wss = new WebSocketServer({ server });
+const wss = new WebSocketServer({ server, verifyClient });
 wss.on("connection", handleConnection);
 
 server.listen(PORT, HOST, () => {

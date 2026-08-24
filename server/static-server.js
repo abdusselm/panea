@@ -3,6 +3,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { PUBLIC_DIR, NODE_MODULES } from "./paths.js";
+import { isAllowedHost } from "./origin.js";
 
 const MIME = {
   ".html": "text/html; charset=utf-8",
@@ -38,8 +39,19 @@ function sendFile(res, filePath, mime) {
 }
 
 export function handleRequest(req, res) {
+  if (!isAllowedHost(req.headers.host)) {
+    res.writeHead(403, { "content-type": "text/plain" });
+    return res.end("forbidden");
+  }
+
   const url = new URL(req.url, `http://${req.headers.host}`);
-  let pathname = decodeURIComponent(url.pathname);
+  let pathname;
+  try {
+    pathname = decodeURIComponent(url.pathname);
+  } catch {
+    res.writeHead(400, { "content-type": "text/plain" });
+    return res.end("bad request");
+  }
   if (pathname === "/") pathname = "/index.html";
 
   if (VENDOR[pathname]) {
@@ -47,9 +59,11 @@ export function handleRequest(req, res) {
     return sendFile(res, file, MIME[path.extname(file)]);
   }
 
+  // Compare against PUBLIC_DIR + separator: a bare startsWith would also accept
+  // a sibling directory whose name merely begins with "public".
   const target = path.normalize(path.join(PUBLIC_DIR, pathname));
-  if (!target.startsWith(PUBLIC_DIR)) {
-    res.writeHead(403);
+  if (target !== PUBLIC_DIR && !target.startsWith(PUBLIC_DIR + path.sep)) {
+    res.writeHead(403, { "content-type": "text/plain" });
     return res.end("forbidden");
   }
   sendFile(res, target, MIME[path.extname(target)] || "application/octet-stream");
