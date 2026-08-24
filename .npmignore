@@ -1,0 +1,10 @@
+shell/zsh/.zsh_history
+shell/zsh/.zcompdump*
+build/
+dist/
+tests/
+.code-review-graph/
+.claude/
+*.log
+.DS_Store
+__pycache__/

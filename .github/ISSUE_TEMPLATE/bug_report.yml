@@ -1,0 +1,56 @@
+name: Bug report
+description: Something in panea behaves wrongly
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected, what you got instead.
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open two tabs
+        2. Split the second one down
+        3. Restart panea
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: panea version
+      description: Output of `panea --version`
+    validations:
+      required: true
+
+  - type: input
+    id: macos
+    attributes:
+      label: macOS version
+      description: Output of `sw_vers -productVersion`
+    validations:
+      required: true
+
+  - type: dropdown
+    id: mode
+    attributes:
+      label: Which build
+      options:
+        - Desktop window (panea --app)
+        - Browser (panea)
+        - Both
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Console output
+      description: Anything panea printed to the terminal. No secrets, please.
+      render: shell

@@ -57,6 +57,12 @@ One responsibility per module — see
 rules. **When adding a feature, give it its own module; do
 not append it to an existing file.**
 
+- `bin/panea.js` — the published CLI (`npm install -g panea`): flag parsing,
+  the self-update call, then either `server/start.js` or the Electron binary.
+  **Do not import anything that reads `PANEA_PORT` at module scope before the
+  flags are parsed** — `server/paths.js` freezes the port on import, so
+  `--port` is silently ignored if the chain is pulled in early. That is why
+  `server/update.js` is imported dynamically.
 - `server.js` — browser-mode entry: sets the process title and calls
   `server/start.js`. The desktop build imports that same module **in-process**
   instead of spawning a child; a spawned server registered a second app with
@@ -65,12 +71,15 @@ not append it to an existing file.**
   127.0.0.1:4820, `PANEA_PORT`), `paths` (config), `static-server`, `origin`
   (loopback-only Origin/Host guards), `session-store`, `commands-store`, `meta`
   (sidebar cwd/branch/ports via lsof/git), `pane` (one PTY), `connection`
-  (per-socket wiring).
+  (per-socket wiring), `update` (self-update against the npm registry).
 - `pty_bridge.py` — PTY via `pty.fork()` execing `zsh -l`; relays fd0/fd1 and
   fd3 (control JSON resize).
 - `electron/main.cjs` — desktop shell; starts `server.js` as a child, opens the
   BrowserWindow, has one-shot screenshot/demo mode gated by `PANEA_*` env.
-- `scripts/` — build-time helpers, never imported by the app: `make-icon`
+- `scripts/` — build-time helpers, never imported by the app: `ensure-electron`
+  (downloads the Electron runtime — as of Electron 43 the package ships **no**
+  install script, so `npm install` leaves `node_modules/electron/dist` empty and
+  the desktop build dead until this runs), `make-icon`
   (draws `build/icon.icns` with no image dependency), `brand-dev-electron`
   (rewrites the dev Electron bundle's name, icon, bundle ID, and executable
   name so the app presents as Panea, then refreshes the LaunchServices/Dock

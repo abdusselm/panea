@@ -4,21 +4,62 @@ Local multi-pane terminal workspace — vertical tabs, split panes, cmux-style
 theme. Desktop app (Electron) or browser. No native binary to sign; uses Node
 and the system `python3` for the PTY.
 
-## Requirements
-
-- macOS
-- Node.js 18+
-- `python3` (ships with macOS / Xcode Command Line Tools)
-
-## Run
+## Install
 
 ```bash
+npm install -g panea
+```
+
+```bash
+panea              # browser build -> http://127.0.0.1:4820
+panea --app        # desktop window
+panea --port 5000  # somewhere other than 4820
+```
+
+Requires macOS, Node.js 18+, and the `python3` that ships with macOS / the Xcode
+Command Line Tools. The install pulls Electron, so it is a few hundred megabytes
+and takes a minute; it also restarts the Dock once while renaming the Electron
+bundle (see [App identity](#app-identity)).
+
+If `npm install -g` asks for `sudo`, your npm prefix points somewhere only root
+can write, and self-update will not be able to write there either. Point npm at
+your own directory once:
+
+```bash
+npm config set prefix ~/.npm-global
+echo 'export PATH="$HOME/.npm-global/bin:$PATH"' >> ~/.zshrc
+```
+
+### Updating
+
+panea keeps itself current. On launch it asks npm for the latest version at most
+once every six hours, and if there is a newer one it installs it and restarts.
+
+It never does this from a git checkout, and it never moves you onto a
+prerelease. To turn it off:
+
+```bash
+PANEA_NO_UPDATE=1 panea     # this run only
+panea --no-update           # same
+```
+
+Set `PANEA_NO_UPDATE=1` in your shell profile to disable it for good, and update
+by hand with `npm update -g panea`.
+
+## Run from a checkout
+
+```bash
+git clone https://github.com/abdusselamkeskin/panea.git
+cd panea
 npm install
 npm run app     # desktop window (Electron)
 npm start       # browser version -> http://127.0.0.1:4820
+npm test
 ```
 
-Change the port: `PANEA_PORT=5000 npm run app`
+Change the port: `PANEA_PORT=5000 npm run app`. A checkout never self-updates.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the house rules — the big one is that
+this codebase carries no comments.
 
 ### App identity
 

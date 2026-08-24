@@ -3,27 +3,64 @@
   "version": "0.1.0",
   "description": "Local multi-pane terminal workspace for AI coding agents. Browser build or native desktop window.",
   "license": "MIT",
+  "author": "Abdusselam Keskin",
+  "homepage": "https://github.com/abdusselamkeskin/panea#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/abdusselamkeskin/panea.git"
+  },
+  "bugs": {
+    "url": "https://github.com/abdusselamkeskin/panea/issues"
+  },
+  "keywords": [
+    "terminal",
+    "tmux",
+    "panes",
+    "xterm",
+    "electron",
+    "ai-agents",
+    "macos"
+  ],
   "type": "module",
   "main": "electron/main.cjs",
   "bin": {
-    "panea": "server.js"
+    "panea": "bin/panea.js"
   },
+  "files": [
+    "bin",
+    "electron",
+    "public",
+    "scripts",
+    "server",
+    "shell",
+    "!shell/zsh/.zsh_history",
+    "!shell/zsh/.zcompdump*",
+    "server.js",
+    "pty_bridge.py",
+    "commands.example.json",
+    "!**/.DS_Store"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "os": [
+    "darwin"
+  ],
   "scripts": {
     "start": "node server.js",
     "web": "node server.js",
     "app": "electron .",
     "icon": "node scripts/make-icon.mjs",
     "brand": "node scripts/brand-dev-electron.mjs",
-    "postinstall": "node scripts/brand-dev-electron.mjs"
+    "postinstall": "node scripts/ensure-electron.mjs && node scripts/brand-dev-electron.mjs",
+    "test": "node --test"
   },
   "dependencies": {
     "@xterm/addon-fit": "^0.10.0",
     "@xterm/addon-search": "^0.16.0",
     "@xterm/addon-serialize": "^0.14.0",
     "@xterm/xterm": "^5.5.0",
+    "electron": "^43.0.0",
     "ws": "^8.18.0"
-  },
-  "devDependencies": {
-    "electron": "^43.0.0"
   }
 }

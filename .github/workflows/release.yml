@@ -1,0 +1,52 @@
+name: release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: https://registry.npmjs.org
+
+      - name: Install
+        run: npm ci --ignore-scripts
+
+      - name: Test
+        run: npm test
+
+      - name: Tag matches package.json
+        run: |
+          tagged="${GITHUB_REF_NAME#v}"
+          packaged=$(node -p "require('./package.json').version")
+          if [ "$tagged" != "$packaged" ]; then
+            echo "tag $GITHUB_REF_NAME does not match package.json $packaged"
+            exit 1
+          fi
+
+      - name: The tarball carries no shell history or completion dumps
+        run: |
+          if npm pack --dry-run 2>&1 | grep -qiE 'zsh_history|zcompdump'; then
+            echo "packaged tarball contains shell runtime files"
+            exit 1
+          fi
+
+      - name: Publish
+        run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: GitHub release
+        run: gh release create "$GITHUB_REF_NAME" --generate-notes
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

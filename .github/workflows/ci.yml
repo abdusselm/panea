@@ -1,0 +1,60 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install
+        run: npm ci --ignore-scripts
+
+      - name: Test
+        run: npm test
+
+      - name: CLI starts
+        run: |
+          node bin/panea.js --version
+          node bin/panea.js --help > /dev/null
+
+      - name: Server accepts loopback and rejects everything else
+        run: |
+          PANEA_NO_OPEN=1 PANEA_NO_META_POLL=1 PANEA_PORT=4820 \
+            node bin/panea.js --no-update &
+          for i in $(seq 1 30); do
+            nc -z 127.0.0.1 4820 && break
+            sleep 1
+          done
+          code=$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:4820/)
+          test "$code" = "200"
+          code=$(curl -s -o /dev/null -w '%{http_code}' -H 'Host: evil.com' http://127.0.0.1:4820/)
+          test "$code" = "403"
+
+  package:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Pack
+        run: npm pack --dry-run
+
+      - name: The tarball carries no shell history or completion dumps
+        run: |
+          if npm pack --dry-run 2>&1 | grep -qiE 'zsh_history|zcompdump'; then
+            echo "packaged tarball contains shell runtime files"
+            exit 1
+          fi
