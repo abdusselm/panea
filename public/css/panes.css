@@ -83,7 +83,9 @@ body.resizing-split .leaf-term { pointer-events: none; }
 }
 .resume-bar .rb-x:hover { color: var(--text); }
 
-.leaf-term { flex: 1; min-height: 0; padding: 6px 8px; }
+.leaf-term { flex: 1; min-height: 0; padding: 6px 8px; transition: opacity 160ms ease; }
+body.disconnected .leaf-term { opacity: 0.4; }
+body.disconnected .leaf.focused { border-color: var(--border); }
 .leaf.exited .leaf-term::after {
   content: "process exited — press ⏎ to restart";
   color: var(--text-dim); font-size: var(--fs-sm);
