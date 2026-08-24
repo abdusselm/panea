@@ -8,6 +8,7 @@ import { loadSettings, saveSettings } from "./settings-store.js";
 import { loadAgents } from "./agents-store.js";
 import { computeMetaBatch } from "./meta.js";
 import { gitStatus, gitDiff } from "./git.js";
+import { onShutdown } from "./shutdown.js";
 
 const META_POLL_MS = 3500;
 const META_FIRST_POLL_MS = 900;
@@ -131,10 +132,17 @@ export function handleConnection(ws) {
     }
   });
 
-  ws.on("close", () => {
+  const teardown = () => {
     if (metaTimer) clearInterval(metaTimer);
     for (const pane of panes.values()) pane.kill();
     panes.clear();
     lastMeta.clear();
+  };
+
+  const releaseShutdown = onShutdown(teardown);
+
+  ws.on("close", () => {
+    releaseShutdown();
+    teardown();
   });
 }

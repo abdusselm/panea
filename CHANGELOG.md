@@ -4,6 +4,19 @@ Notable changes per release. Versions follow [semver](https://semver.org);
 installed copies update themselves on their next launch, so anything listed here
 reaches users without them asking for it.
 
+## [Unreleased]
+
+### Fixed
+
+- Panes no longer outlive the server that spawned them. `pty_bridge.py` treated
+  the parent's pipe closing as "stop watching that pipe" and kept relaying
+  forever, so every panea that exited without a clean WebSocket close left its
+  whole set of shells behind. One machine had 174 bridges alive, 169 of them
+  reparented to `launchd`, the oldest two days old, holding ~490 MB between the
+  bridges and their shells.
+- The server now tears its panes down on `SIGINT`, `SIGTERM`, `SIGHUP` and
+  process exit, not only when a WebSocket closes.
+
 ## [0.1.2] - 2026-08-24
 
 ### Fixed

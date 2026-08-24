@@ -8,6 +8,35 @@ import signal
 import struct
 import sys
 import termios
+import time
+
+def terminate(pid, master_fd):
+    try:
+        os.close(master_fd)
+    except OSError:
+        pass
+    try:
+        os.kill(pid, signal.SIGHUP)
+    except OSError:
+        return None
+    deadline = time.time() + 2.0
+    while time.time() < deadline:
+        try:
+            done, status = os.waitpid(pid, os.WNOHANG)
+        except (ChildProcessError, OSError):
+            return None
+        if done:
+            return status
+        time.sleep(0.05)
+    try:
+        os.kill(pid, signal.SIGKILL)
+    except OSError:
+        pass
+    try:
+        _, status = os.waitpid(pid, 0)
+        return status
+    except (ChildProcessError, OSError):
+        return None
 
 def set_winsize(fd, rows, cols):
     try:
@@ -73,12 +102,12 @@ def main():
 
     watch = [master_fd, stdin_fd] + ([control_fd] if has_control else [])
 
-    def cleanup(*_):
-        try:
-            os.close(master_fd)
-        except OSError:
-            pass
-    signal.signal(signal.SIGTERM, lambda *_: (cleanup(), sys.exit(0)))
+    def on_signal(*_):
+        terminate(pid, master_fd)
+        sys.exit(0)
+
+    signal.signal(signal.SIGTERM, on_signal)
+    signal.signal(signal.SIGHUP, on_signal)
 
     while True:
         try:
@@ -104,7 +133,7 @@ def main():
             except OSError:
                 data = b""
             if not data:
-                watch = [fd for fd in watch if fd != stdin_fd]
+                break
             else:
                 try:
                     os.write(master_fd, data)
@@ -117,8 +146,7 @@ def main():
             except OSError:
                 chunk = b""
             if not chunk:
-                watch = [fd for fd in watch if fd != control_fd]
-                has_control = False
+                break
             else:
                 control_buf += chunk
                 while b"\n" in control_buf:
@@ -133,10 +161,12 @@ def main():
                     if msg.get("t") == "resize":
                         set_winsize(master_fd, int(msg.get("rows", rows)), int(msg.get("cols", cols)))
 
+    status = terminate(pid, master_fd)
+    if status is None:
+        sys.exit(0)
     try:
-        _, status = os.waitpid(pid, 0)
         code = os.waitstatus_to_exitcode(status)
-    except (ChildProcessError, OSError):
+    except ValueError:
         code = 0
     sys.exit(code if isinstance(code, int) and code >= 0 else 0)
 
