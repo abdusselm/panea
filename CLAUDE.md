@@ -50,6 +50,15 @@ third party's license requires one.
 
 Rationale belongs in the commit message, `README.md`, or this file — not inline.
 
+## Releasing: follow `.claude/skill/ci-cd-operations/SKILL.md`
+
+Every commit that changes shipped code is a release. Before committing, bumping
+a version, tagging, or packaging, read
+`.claude/skill/ci-cd-operations/SKILL.md` and follow it: `package.json` version
++1 in the same commit, summary-style commit body, a `CHANGELOG.md` section,
+`npm test`, tag `v<version>`, then the tap. Installed copies self-update, so a
+skipped step ships to users or silently strands them.
+
 ## Layout
 
 One responsibility per module — see

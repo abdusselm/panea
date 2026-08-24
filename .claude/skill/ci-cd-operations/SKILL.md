@@ -26,6 +26,11 @@ that tag.
 One commit, one version. Never bundle two features under one bump, and never
 commit shipped code without a bump.
 
+**Repo-only files do not ship and get no bump**: `CLAUDE.md`, `.claude/`,
+`README.md`, `CONTRIBUTING.md`, `.github/`. Nothing in the `files` array of
+`package.json` means nothing in the tarball. Commit those on their own, with no
+version change and no changelog entry.
+
 Nothing else stores the version — `bin/panea.js`, `electron/main.cjs`, and
 `scripts/update-tap.mjs` all read `package.json`. Do not hardcode it anywhere.
 
@@ -105,29 +110,40 @@ never separated — a tag on the wrong commit ships the wrong tarball, because
 Homebrew fetches
 `https://github.com/abdusselm/panea/archive/refs/tags/v<version>.tar.gz`.
 
-## 6. Publish the GitHub release
+## 6. Let the workflow publish the release, then write real notes
 
-`server/update.js` polls
-`https://api.github.com/repos/abdusselm/panea/releases/latest` and compares
-`tag_name` to the running version. **No release, no update reaches anyone.**
+`.github/workflows/release.yml` fires on every `v*` tag. It reruns the tests,
+**fails the release if the tag does not match `package.json`**, checks the
+tarball carries no shell history, and runs `gh release create --generate-notes`.
+
+So do **not** run `gh release create` yourself — it returns
+`HTTP 422: Release.tag_name already exists`. Wait for the run, then replace the
+generated notes with the changelog section:
 
 ```bash
-gh release create v<version> --title "panea <version>" --notes "<changelog section>"
+gh run list --limit 3
+gh release edit v<version> --notes "<the CHANGELOG section body>"
 ```
 
-- The tag must already be pushed.
-- Prerelease tags are ignored on purpose (`isNewer` refuses them), so do not
-  mark a release as prerelease unless you intend nobody to receive it.
+This matters because `server/update.js` polls
+`https://api.github.com/repos/abdusselm/panea/releases/latest` and compares
+`tag_name` to the running version. **No release, no update reaches anyone**, and
+a red workflow means no release. Prerelease tags are refused by `isNewer` on
+purpose — never mark a release prerelease unless nobody should receive it.
 
 ## 7. Update the Homebrew tap
 
+The workflow only *prints* the tarball checksum; pushing the formula is manual.
+
 ```bash
-PANEA_TAP_PUSH=1 npm run tap
+PANEA_TAP_PUSH=1 node scripts/update-tap.mjs
 ```
 
 `scripts/update-tap.mjs` downloads the tag tarball, hashes it, rewrites
-`Formula/panea.rb`, and pushes. Run it **after** the tag is on GitHub — it
-hashes the published tarball, and a missing tag fails the fetch.
+`Formula/panea.rb` in the sibling `homebrew-tap` checkout (`PANEA_TAP` to point
+elsewhere), and pushes. Run it **after** the tag is on GitHub — it hashes the
+published tarball, and a missing tag fails the fetch. Until this runs, nobody's
+`brew upgrade` finds the new version, however green the release is.
 
 ## 8. What users then see
 
@@ -151,5 +167,5 @@ after a release.
 3. `CHANGELOG.md` section for the new version
 4. `npm test` green, tests added for behaviour changes
 5. `git commit` + `git tag v<version>` + `git push --follow-tags`
-6. `gh release create v<version>`
+6. Workflow goes green, then `gh release edit v<version> --notes …`
 7. `npm run tap` with `PANEA_TAP_PUSH=1`
