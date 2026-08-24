@@ -71,7 +71,16 @@ not append it to an existing file.**
   127.0.0.1:4820, `PANEA_PORT`), `paths` (config), `static-server`, `origin`
   (loopback-only Origin/Host guards), `session-store`, `commands-store`, `meta`
   (sidebar cwd/branch/ports via lsof/git), `pane` (one PTY), `connection`
-  (per-socket wiring), `update` (self-update against the npm registry).
+  (per-socket wiring), `update` (self-update against GitHub releases),
+  `electron` (where the Electron bundle lives).
+
+  **Never let the Electron runtime land inside a Homebrew Cellar.** Homebrew
+  rewrites dylib IDs for every Mach-O file it finds there, which breaks the
+  signature Electron ships with — `brew install` printed `Failed to fix install
+  linkage` and left a bundle that a managed Mac would refuse. `server/electron.js`
+  resolves the bundle from `PANEA_ELECTRON_DIR`, then the package's own
+  `node_modules`, then `~/.panea/electron`, and `targetDirFor` sends Homebrew
+  installs to the last of those.
 - `pty_bridge.py` — PTY via `pty.fork()` execing `zsh -l`; relays fd0/fd1 and
   fd3 (control JSON resize).
 - `electron/main.cjs` — desktop shell; starts `server.js` as a child, opens the
@@ -79,7 +88,8 @@ not append it to an existing file.**
 - `scripts/` — build-time helpers, never imported by the app: `ensure-electron`
   (downloads the Electron runtime — as of Electron 43 the package ships **no**
   install script, so `npm install` leaves `node_modules/electron/dist` empty and
-  the desktop build dead until this runs), `make-icon`
+  the desktop build dead until this runs), `update-tap` (rewrites the Homebrew
+  formula for a release), `make-icon`
   (draws `build/icon.icns` with no image dependency), `brand-dev-electron`
   (rewrites the dev Electron bundle's name, icon, bundle ID, and executable
   name so the app presents as Panea, then refreshes the LaunchServices/Dock

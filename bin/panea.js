@@ -1,12 +1,10 @@
 #!/usr/bin/env node
 
-import { spawn } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import path from "node:path";
 import fs from "node:fs";
-import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
 
-const require = createRequire(import.meta.url);
 const ROOT = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const pkg = JSON.parse(fs.readFileSync(path.join(ROOT, "package.json"), "utf8"));
 
@@ -46,13 +44,29 @@ function parse(argv) {
   return opts;
 }
 
-function runDesktop() {
-  let electron;
-  try {
-    electron = require("electron");
-  } catch {
-    console.error("panea: the desktop build needs Electron, which is not installed.");
-    console.error("Reinstall with:  npm install -g panea");
+async function electronExecutable() {
+  const { resolveExecutable } = await import("../server/electron.js");
+
+  let executable = resolveExecutable(ROOT);
+  if (executable) return executable;
+
+  const installer = path.join(ROOT, "scripts", "ensure-electron.mjs");
+  spawnSync(process.execPath, [installer], { stdio: "inherit" });
+
+  executable = resolveExecutable(ROOT);
+  if (executable) {
+    spawnSync(process.execPath, [path.join(ROOT, "scripts", "brand-dev-electron.mjs")], {
+      stdio: "inherit",
+    });
+  }
+  return resolveExecutable(ROOT);
+}
+
+async function runDesktop() {
+  const electron = await electronExecutable();
+  if (!electron) {
+    console.error("panea: the desktop build needs the Electron runtime, which could not be installed.");
+    console.error("The browser build still works — run `panea` on its own.");
     process.exit(1);
   }
 
@@ -99,5 +113,5 @@ if (opts.update) {
   await maybeSelfUpdate({ root: ROOT, pkg, argv: process.argv.slice(2) });
 }
 
-if (opts.app) runDesktop();
+if (opts.app) await runDesktop();
 else await runBrowser();

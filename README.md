@@ -7,7 +7,7 @@ and the system `python3` for the PTY.
 ## Install
 
 ```bash
-npm install -g panea
+brew install abdusselm/tap/panea
 ```
 
 ```bash
@@ -16,24 +16,24 @@ panea --app        # desktop window
 panea --port 5000  # somewhere other than 4820
 ```
 
-Requires macOS, Node.js 18+, and the `python3` that ships with macOS / the Xcode
-Command Line Tools. The install pulls Electron, so it is a few hundred megabytes
-and takes a minute; it also restarts the Dock once while renaming the Electron
-bundle (see [App identity](#app-identity)).
+Requires macOS and the `python3` that ships with macOS / the Xcode Command Line
+Tools. Homebrew brings Node with it.
 
-If `npm install -g` asks for `sudo`, your npm prefix points somewhere only root
-can write, and self-update will not be able to write there either. Point npm at
-your own directory once:
+The formula itself is small and installs in seconds. The Electron runtime is
+**not** part of it: Homebrew rewrites Mach-O files inside its Cellar, which
+invalidates the signature Electron ships with, so the first `panea --app`
+downloads it into `~/.panea/electron` instead — a few hundred megabytes, once.
+`panea` on its own needs none of that and starts immediately.
 
-```bash
-npm config set prefix ~/.npm-global
-echo 'export PATH="$HOME/.npm-global/bin:$PATH"' >> ~/.zshrc
-```
+That first desktop launch also restarts the Dock once while renaming the
+Electron bundle (see [App identity](#app-identity)).
 
 ### Updating
 
-panea keeps itself current. On launch it asks npm for the latest version at most
-once every six hours, and if there is a newer one it installs it and restarts.
+panea keeps itself current. On launch it asks GitHub for the latest release at
+most once every six hours, and if there is a newer one it upgrades itself and
+restarts — `brew upgrade` for a Homebrew install, `npm install -g` for an npm
+one.
 
 It never does this from a git checkout, and it never moves you onto a
 prerelease. To turn it off:
@@ -44,7 +44,7 @@ panea --no-update           # same
 ```
 
 Set `PANEA_NO_UPDATE=1` in your shell profile to disable it for good, and update
-by hand with `npm update -g panea`.
+by hand with `brew upgrade panea`.
 
 ## Run from a checkout
 

@@ -11,6 +11,8 @@ permissions:
 jobs:
   publish:
     runs-on: macos-latest
+    env:
+      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
     steps:
       - uses: actions/checkout@v5
 
@@ -41,12 +43,24 @@ jobs:
             exit 1
           fi
 
-      - name: Publish
-        run: npm publish --provenance --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-
       - name: GitHub release
         run: gh release create "$GITHUB_REF_NAME" --generate-notes
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Homebrew formula checksum
+        run: |
+          url="https://github.com/${GITHUB_REPOSITORY}/archive/refs/tags/${GITHUB_REF_NAME}.tar.gz"
+          for i in $(seq 1 10); do
+            if curl -fsSL "$url" -o source.tar.gz; then break; fi
+            sleep 3
+          done
+          echo "Update the tap formula with:"
+          echo "  url    $url"
+          echo "  sha256 $(shasum -a 256 source.tar.gz | cut -d' ' -f1)"
+
+      - name: Publish to npm
+        if: ${{ env.NPM_TOKEN != '' }}
+        run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ env.NPM_TOKEN }}

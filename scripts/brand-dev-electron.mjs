@@ -5,10 +5,10 @@ import path from "node:path";
 import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
+import { resolveBundle, packagedBundleDir } from "../server/electron.js";
+
 const ROOT = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
-const ELECTRON = path.join(ROOT, "node_modules", "electron");
-const DIST = path.join(ELECTRON, "dist");
-const PATH_TXT = path.join(ELECTRON, "path.txt");
+const PATH_TXT = path.join(ROOT, "node_modules", "electron", "path.txt");
 const OUR_ICON = path.join(ROOT, "build", "icon.icns");
 const LSREGISTER =
   "/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister";
@@ -17,14 +17,16 @@ const NAME = "Panea";
 const BUNDLE_ID = "io.github.abdusselm.panea";
 const RENAME_BUNDLE = process.env.PANEA_RENAME_BUNDLE === "1";
 
-const STOCK_BUNDLE = path.join(DIST, "Electron.app");
-const OUR_BUNDLE = path.join(DIST, `${NAME}.app`);
+let app = resolveBundle(ROOT);
 
-let app = fs.existsSync(OUR_BUNDLE) ? OUR_BUNDLE : STOCK_BUNDLE;
-
-if (!fs.existsSync(path.join(app, "Contents", "Info.plist"))) {
+if (!app) {
   process.exit(0);
 }
+
+const DIST = path.dirname(app);
+const STOCK_BUNDLE = path.join(DIST, "Electron.app");
+const OUR_BUNDLE = path.join(DIST, `${NAME}.app`);
+const TRACKS_PATH_TXT = DIST === packagedBundleDir(ROOT);
 
 function plist(...args) {
   return execFileSync("/usr/libexec/PlistBuddy", [...args, path.join(app, "Contents", "Info.plist")], {
@@ -41,6 +43,7 @@ function setKey(key, value) {
 }
 
 function writePathTxt() {
+  if (!TRACKS_PATH_TXT) return;
   fs.writeFileSync(PATH_TXT, `${path.basename(app)}/Contents/MacOS/${NAME}`);
 }
 

@@ -76,6 +76,18 @@ npm version minor      # or patch / major
 git push --follow-tags
 ```
 
-The `release` workflow publishes the tag to npm. Installed copies pick it up on
-their next launch, so treat every release as something that lands on other
-people's machines without being asked for.
+The `release` workflow tests the tag, creates the GitHub release, and prints the
+sha256 for the Homebrew formula. Then point the tap at it:
+
+```bash
+PANEA_TAP_PUSH=1 node scripts/update-tap.mjs
+```
+
+That rewrites `Formula/panea.rb` in a sibling `homebrew-tap` checkout (override
+the location with `PANEA_TAP`) and pushes it.
+
+The same workflow also publishes to npm, but only if an `NPM_TOKEN` secret
+exists; without one it simply skips that step.
+
+Installed copies pick a release up on their next launch, so treat every release
+as something that lands on other people's machines without being asked for.
