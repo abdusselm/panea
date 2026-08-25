@@ -101,8 +101,14 @@ commit. If the change touched symbols or files, refresh the knowledge graph
 git add -A
 git commit -m "<subject>" -m "<body>"
 git tag v<version>
-git push origin main --follow-tags
+git push origin main
+git push origin v<version>
 ```
+
+Push the tag by name. `--follow-tags` pushes **annotated** tags only, so a
+`git tag v<version>` made the line above goes nowhere and the push reports only
+the branch — no tag, no workflow, no release, and every installed copy stays on
+the old version while `git log` looks perfectly released.
 
 The tag is always `v` + the exact `package.json` version. Tag and commit are
 never separated — a tag on the wrong commit ships the wrong tarball, because
@@ -165,6 +171,6 @@ after a release.
 2. Commit message: type(scope) subject + summary body, no session trailer
 3. `CHANGELOG.md` section for the new version
 4. `npm test` green, tests added for behaviour changes
-5. `git commit` + `git tag v<version>` + `git push --follow-tags`
+5. `git commit` + `git tag v<version>` + `git push origin main` + `git push origin v<version>`
 6. Workflow goes green, then `gh release edit v<version> --notes …`
 7. `npm run tap` with `PANEA_TAP_PUSH=1`
