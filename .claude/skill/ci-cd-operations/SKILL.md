@@ -6,22 +6,21 @@ matters: the version lands in `package.json` **in the same commit** as the code,
 because the tag is cut from that commit and the Homebrew formula is built from
 that tag.
 
-## 1. Bump the version by one
+## 1. Bump the patch number by one
 
-`package.json` `version` goes up by exactly **one patch** per commit:
+"Bump the version by one" in this repo always means **the last number, +1**.
+Only `package.json` `version`'s patch field moves:
 
 ```
-0.2.0 → 0.2.1 → 0.2.2 → …
+0.4.0 → 0.4.1 → 0.4.2 → … → 0.4.9 → 0.4.10 → …
 ```
 
-- **Patch +1 is the default.** Use it for fixes, additions, refactors,
-  docs-in-code — anything that does not break how the app is invoked or
-  configured.
-- **Minor +1** (`0.2.7 → 0.3.0`) only when a release changes behaviour a user
-  would notice as new: a new pane/tab capability, a new flag, a changed
-  keybinding.
-- **Major +1** only on a break: a removed flag, a moved state directory, a
-  config file that stops being read.
+- **Patch +1 is the only bump you make on your own.** Fixes, new features, new
+  flags, refactors, docs-in-code — all of it is a patch. A feature is not a
+  reason to roll the minor number, and the patch number does not stop at 9.
+- **Minor +1** (`0.4.7 → 0.5.0`) and **major +1** happen **only when the
+  maintainer asks for that release in so many words.** Never infer one from how
+  big the change feels.
 
 One commit, one version. Never bundle two features under one bump, and never
 commit shipped code without a bump.
@@ -162,7 +161,7 @@ after a release.
 
 ## Checklist
 
-1. `package.json` version +1
+1. `package.json` patch +1 (`0.4.0 → 0.4.1`) — minor/major only on request
 2. Commit message: type(scope) subject + summary body, no session trailer
 3. `CHANGELOG.md` section for the new version
 4. `npm test` green, tests added for behaviour changes

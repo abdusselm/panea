@@ -54,8 +54,9 @@ Rationale belongs in the commit message, `README.md`, or this file — not inlin
 
 Every commit that changes shipped code is a release. Before committing, bumping
 a version, tagging, or packaging, read
-`.claude/skill/ci-cd-operations/SKILL.md` and follow it: `package.json` version
-+1 in the same commit, summary-style commit body, a `CHANGELOG.md` section,
+`.claude/skill/ci-cd-operations/SKILL.md` and follow it: `package.json` **patch**
++1 in the same commit (`0.4.0 → 0.4.1`; a minor or major bump happens only when
+asked for), summary-style commit body, a `CHANGELOG.md` section,
 `npm test`, tag `v<version>`, then the tap. Installed copies self-update, so a
 skipped step ships to users or silently strands them.
 
