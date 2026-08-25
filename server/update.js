@@ -54,6 +54,12 @@ function recordCheck() {
   } catch {}
 }
 
+function forgetCheck() {
+  try {
+    fs.rmSync(STAMP, { force: true });
+  } catch {}
+}
+
 async function latestRelease() {
   const res = await fetch(RELEASES, {
     headers: { accept: "application/vnd.github+json", "user-agent": "panea" },
@@ -63,6 +69,19 @@ async function latestRelease() {
   const body = await res.json();
   const tag = body.tag_name ?? body.name;
   return typeof tag === "string" ? tag.replace(/^v/, "") : null;
+}
+
+export function highestVersion(versions) {
+  return versions.reduce((best, value) => {
+    if (!parseVersion(value)) return best;
+    return best === null || isNewer(value, best) ? value : best;
+  }, null);
+}
+
+function installedVersion(name) {
+  const out = spawnSync("brew", ["list", "--versions", name], { encoding: "utf8" });
+  if (out.status !== 0) return null;
+  return highestVersion(out.stdout.trim().split(/\s+/).slice(1));
 }
 
 function brewPrefix(name) {
@@ -107,19 +126,37 @@ export async function maybeSelfUpdate({ root, pkg, argv }) {
 
   console.log(`panea ${pkg.version} → ${latest} available, updating…`);
 
-  spawnSync("brew", ["update", "--quiet"], { stdio: ["ignore", "ignore", "ignore"] });
-
   const command = "brew";
   const args = ["upgrade", "--formula", pkg.name];
+
+  const refresh = spawnSync("brew", ["update", "--quiet"], {
+    stdio: ["ignore", "ignore", "pipe"],
+    encoding: "utf8",
+  });
+  if (refresh.status !== 0) {
+    const reason = firstMeaningfulLine(refresh.stderr);
+    console.warn(`panea: could not refresh Homebrew${reason ? ` (${reason})` : ""}`);
+  }
+
   const upgrade = spawnSync(command, args, {
     stdio: ["ignore", "ignore", "pipe"],
     encoding: "utf8",
   });
 
   if (upgrade.status !== 0) {
+    forgetCheck();
     const reason = firstMeaningfulLine(upgrade.stderr);
     console.warn(`panea: could not update automatically${reason ? ` (${reason})` : ""}`);
     console.warn(`Run it yourself with:  ${command} ${args.join(" ")}`);
+    console.warn(`Or turn this off with: PANEA_NO_UPDATE=1`);
+    return;
+  }
+
+  const installed = installedVersion(pkg.name);
+  if (installed && isNewer(latest, installed)) {
+    forgetCheck();
+    console.warn(`panea: Homebrew reported success but ${installed} is still what is installed.`);
+    console.warn(`The ${latest} formula has not landed in the tap yet — panea will retry next run.`);
     console.warn(`Or turn this off with: PANEA_NO_UPDATE=1`);
     return;
   }

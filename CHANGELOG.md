@@ -4,6 +4,23 @@ Notable changes per release. Versions follow [semver](https://semver.org);
 installed copies update themselves on their next launch, so anything listed here
 reaches users without them asking for it.
 
+## [0.4.1] - 2026-08-25
+
+### Fixed
+
+- The self-update could announce a version it had not installed. When the
+  Homebrew tap had not caught up with the GitHub release yet, `brew upgrade`
+  found nothing to do and exited successfully, so panea printed
+  `0.4.0 installed, restarting…` and relaunched the same old version — and
+  because the check is throttled to once every six hours, it would not look
+  again until that window passed. panea now reads back what is actually
+  installed, says so plainly when the formula is still behind, and retries on
+  the next launch instead of waiting out the six hours. A failed upgrade behaves
+  the same way.
+- A Homebrew refresh that fails no longer does so in silence. `brew update` ran
+  with its output discarded, so a dropped network or a conflicted tap left no
+  trace and simply looked like "no update available"; the reason is now printed.
+
 ## [0.4.0] - 2026-08-25
 
 ### Added

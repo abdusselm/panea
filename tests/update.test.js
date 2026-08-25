@@ -4,7 +4,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
-import { isNewer, detectInstall, relaunchCommand } from "../server/update.js";
+import { isNewer, detectInstall, relaunchCommand, highestVersion } from "../server/update.js";
 
 test("compares released versions", () => {
   assert.equal(isNewer("0.2.0", "0.1.0"), true);
@@ -34,6 +34,21 @@ test("ignores unparseable versions", () => {
   assert.equal(isNewer("latest", "0.1.0"), false);
   assert.equal(isNewer("0.2.0", "not-a-version"), false);
   assert.equal(isNewer("", "0.1.0"), false);
+});
+
+test("reads the newest keg when brew keeps several installed", () => {
+  assert.equal(highestVersion(["0.2.1", "0.4.0", "0.3.0"]), "0.4.0");
+  assert.equal(highestVersion(["0.1.4"]), "0.1.4");
+});
+
+test("skips keg names brew prints that are not versions", () => {
+  assert.equal(highestVersion(["HEAD-a1b2c3", "0.1.4"]), "0.1.4");
+  assert.equal(highestVersion([]), null);
+});
+
+test("a stale tap leaves the installed version behind the release", () => {
+  assert.equal(isNewer("0.4.0", highestVersion(["0.2.1"])), true);
+  assert.equal(isNewer("0.4.0", highestVersion(["0.2.1", "0.4.0"])), false);
 });
 
 test("restarts through the linked binary, which follows the upgrade", () => {
