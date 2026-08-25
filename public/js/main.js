@@ -17,8 +17,9 @@ import { chordFromEvent, chordFor } from "./shortcuts.js";
 import { setAgents, mountResumeBar } from "./agents.js";
 import { persist } from "./session.js";
 import { initSidebarResize, applySidebarWidth } from "./sidebar.js";
+import { startPaneRename, setPaneColor, openPaneMenuForPane } from "./pane-identity.js";
 
-window.panea = { state, runtime, newTab, openPalette, togglePalette, openNotifications, toggleNotifications, reopenClosedTab, saveCurrentLayout, openLayout, saveLayoutInteractive, openLayoutInteractive, deleteLayoutPick, openGit, toggleGit, openFind, toggleFind, openSettings, splitPane, closePane, handleActivity, setAgents, mountResumeBar, persist, applySidebarWidth };
+window.panea = { state, runtime, newTab, openPalette, togglePalette, openNotifications, toggleNotifications, reopenClosedTab, saveCurrentLayout, openLayout, saveLayoutInteractive, openLayoutInteractive, deleteLayoutPick, openGit, toggleGit, openFind, toggleFind, openSettings, splitPane, closePane, handleActivity, setAgents, mountResumeBar, persist, applySidebarWidth, startPaneRename, setPaneColor, openPaneMenuForPane };
 
 document.getElementById("new-tab").onclick = () => newTab();
 document.getElementById("empty-new").onclick = () => newTab();

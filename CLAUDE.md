@@ -129,7 +129,8 @@ not append it to an existing file.**
   `connection-status`, `session`, `tabs`, `panes`, `pane-tree` (pure split-tree
   surgery — swap/move a leaf, the only frontend module `node --test` can
   import), `pane-arrange` (header drag-and-drop onto another pane's edge or
-  centre), `attention`,
+  centre), `pane-identity` (per-pane custom name + color, and the pane context
+  menu), `attention`,
   `attention-signals`, `notifications`, `layouts`, `keyboard`, `palette`,
   `main`.
   Loaded via `<script type="module" src="/js/main.js">`. `main.js` exposes a
@@ -139,7 +140,7 @@ not append it to an existing file.**
   `public/css/` in cascade order. Add rules to a partial, not here.
 - `public/css/` — one partial per UI area, each mirroring its JS module:
   `tokens` (`:root` design tokens), `base` (reset + shared motion), `sidebar`,
-  `connection-status`, `tabs`, `panes`, `pane-arrange`,
+  `connection-status`, `tabs`, `panes`, `pane-arrange`, `pane-identity`,
   `palette`, `notifications`, `modals`.
   **When adding a
   feature's styles, put them in the matching partial (or a new one); never let

@@ -7,6 +7,7 @@ import { uid, countLeaves, firstLeaf, eachLeaf, shortPath, cleanTitle } from "./
 import { createPane, renderTab, focusPane, destroyPane, refitTab } from "./panes.js";
 import { persist } from "./session.js";
 import { recordClosedTab } from "./layouts.js";
+import { paneLabel } from "./pane-identity.js";
 
 export function newTab(cwd) {
   const paneId = uid();
@@ -65,14 +66,21 @@ export function serializeTab(tab) {
 }
 
 function remapTreeIds(node) {
-  if (!node || node.kind === "leaf") return { kind: "leaf", id: uid() };
+  if (!node || node.kind === "leaf") {
+    const leaf = { kind: "leaf", id: uid() };
+    if (node && node.name) leaf.name = node.name;
+    if (node && node.color) leaf.color = node.color;
+    return leaf;
+  }
   return { kind: "split", dir: node.dir, ratio: node.ratio, children: [remapTreeIds(node.children[0]), remapTreeIds(node.children[1])] };
 }
 
 export function instantiateTree(tab, node) {
   if (!node) return;
   if (node.kind === "leaf") {
-    const restore = (node.agent || node.scroll) ? { agent: node.agent || "", scroll: node.scroll || "" } : undefined;
+    const restore = (node.agent || node.scroll || node.name || node.color)
+      ? { agent: node.agent || "", scroll: node.scroll || "", name: node.name || "", color: node.color || "" }
+      : undefined;
     createPane(node.id, tab.id, node.cwd || tab.cwd, restore);
   } else {
     instantiateTree(tab, node.children[0]);
@@ -279,7 +287,7 @@ export function setPaneTitle(paneId, raw) {
   const p = state.panes.get(paneId);
   if (!p) return;
   p.title = cleanTitle(raw);
-  if (p.titleEl) p.titleEl.textContent = p.title;
+  if (p.titleEl && !p.customTitle && !p.renaming) p.titleEl.textContent = p.title;
   const tab = state.tabs.find((t) => t.id === p.tabId);
   if (tab) updateTabName(tab);
 }
@@ -295,7 +303,7 @@ export function updateTabName(tab) {
   if (tab.customName) return;
   if (runtime.renaming) return;
   const p = namingPane(tab);
-  const name = (p && p.title) || "shell";
+  const name = paneLabel(p);
 
   if (name !== tab.name) { tab.name = name; refreshTabName(tab); persist(); }
 }

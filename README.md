@@ -176,6 +176,18 @@ moves the pane to that side (left/right splits horizontally, top/bottom
 vertically) and collapses the split it came from; the middle **swaps** the two
 panes without changing the layout. The new arrangement persists across restarts.
 
+## Naming and coloring panes
+
+**Double-click a pane's title** to rename it — the name sticks, so a shell that
+keeps rewriting its own title no longer overwrites it, and the tab in the
+sidebar picks the name up. Clear the field to hand the title back to the shell.
+
+**Right-click a pane's header** for the pane menu: rename, a row of color
+swatches, and close. A color tints that pane's border, header, and folder icon
+so a busy split is readable at a glance; click the active swatch (or the crossed
+circle) to clear it. Both the name and the color are per-pane and survive a
+restart. `Cmd-K` also has *Rename pane* and *Pane color…*.
+
 ## Command palette
 
 `Cmd-K` opens a fuzzy command palette. Commands are grouped by function under

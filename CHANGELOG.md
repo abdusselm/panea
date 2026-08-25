@@ -4,6 +4,20 @@ Notable changes per release. Versions follow [semver](https://semver.org);
 installed copies update themselves on their next launch, so anything listed here
 reaches users without them asking for it.
 
+## [0.4.0] - 2026-08-25
+
+### Added
+
+- Panes can be named and colored. A pane was labelled by whatever its shell last
+  set as the terminal title, so four splits in one repo all read the same thing
+  and any name you gave one was overwritten by the next prompt. Double-click a
+  pane's title to rename it — the name is now yours and survives both the shell
+  and a restart — and right-click the header for a menu with rename, a row of
+  color swatches, and close. A color tints that pane's border, header, and icon,
+  which is what makes a four-way split readable at a glance. Emptying the name
+  hands the title back to the shell; clicking the active swatch clears the color.
+  Both are also in the command palette as *Rename pane* and *Pane color…*.
+
 ## [0.3.0] - 2026-08-25
 
 ### Added

@@ -13,6 +13,7 @@ import { openGit } from "./git.js";
 import { openFind } from "./find.js";
 import { openSettings } from "./settings.js";
 import { chordFor, prettyChord } from "./shortcuts.js";
+import { startPaneRename, openPaneMenuForPane } from "./pane-identity.js";
 
 const hk = (id) => prettyChord(chordFor(id));
 
@@ -99,6 +100,8 @@ function buildPaletteCommands() {
   add("Panes", "Split down", hk("split-down"), () => { const p = focusedPane(); if (p) splitPane(p.id, "v"); });
   add("Panes", "Close pane", hk("close-pane"), () => { const p = focusedPane(); if (p) closePane(p.id); });
   add("Panes", "Restart pane", "", () => { const p = focusedPane(); if (p) restartPane(p.id); });
+  add("Panes", "Rename pane", "", () => { const p = focusedPane(); if (p) startPaneRename(p); });
+  add("Panes", "Pane color…", "", () => { const p = focusedPane(); if (p) openPaneMenuForPane(p); });
   add("Panes", "Find in terminal", hk("find"), () => openFind());
   add("Panes", "Clear terminal", "", clearFocusedTerminal);
 

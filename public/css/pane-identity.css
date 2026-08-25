@@ -1,0 +1,39 @@
+
+
+.leaf.tinted { border-color: color-mix(in srgb, var(--pane-color) 45%, var(--border)); }
+.leaf.tinted.focused { border-color: var(--pane-color); }
+.leaf.tinted .leaf-bar {
+  background: color-mix(in srgb, var(--pane-color) 14%, var(--bg-elev));
+  border-bottom-color: color-mix(in srgb, var(--pane-color) 35%, var(--border));
+}
+.leaf.tinted .leaf-bar .ico { color: var(--pane-color); opacity: 1; }
+.leaf.tinted .leaf-bar .title { color: color-mix(in srgb, var(--pane-color) 30%, var(--text)); }
+
+.pane-rename-input {
+  flex: 1; min-width: 0; font-size: var(--fs-sm); font-family: inherit;
+  color: var(--text); background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--accent); border-radius: 4px;
+  padding: 1px 5px; outline: none;
+}
+
+.pane-menu .pane-swatches {
+  display: flex; flex-wrap: wrap; gap: 5px;
+  padding: 6px 8px; margin: 4px 0;
+  border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+}
+.pane-menu .swatch {
+  width: 16px; height: 16px; padding: 0; flex: 0 0 16px;
+  border-radius: 50%; cursor: pointer;
+  background: var(--sw); border: 1px solid rgba(0, 0, 0, 0.35);
+}
+.pane-menu .swatch:hover { background: var(--sw); transform: scale(1.15); }
+.pane-menu .swatch.none:hover { background: transparent; }
+.pane-menu .swatch.on { box-shadow: 0 0 0 2px var(--bg-elev), 0 0 0 3px var(--text); }
+.pane-menu .swatch.none {
+  background: transparent; border: 1px solid var(--border-strong);
+  position: relative; overflow: hidden;
+}
+.pane-menu .swatch.none::after {
+  content: ""; position: absolute; left: -2px; top: 6px; width: 20px; height: 1px;
+  background: var(--text-dim); transform: rotate(-45deg);
+}
