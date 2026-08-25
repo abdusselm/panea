@@ -1,0 +1,20 @@
+
+
+.leaf-bar[draggable="true"] { cursor: grab; }
+body.arranging-panes .leaf-bar[draggable="true"] { cursor: grabbing; }
+body.arranging-panes { user-select: none; }
+body.arranging-panes .leaf-term { pointer-events: none; }
+
+.leaf.drag-source { opacity: 0.5; }
+
+.pane-drop {
+  position: absolute; z-index: 30; pointer-events: none;
+  background: rgba(47, 111, 235, 0.16);
+  border: 1px solid var(--accent); border-radius: 8px;
+  transition: inset 90ms ease;
+}
+.pane-drop.center { inset: 6px; }
+.pane-drop.left { inset: 2px 50% 2px 2px; }
+.pane-drop.right { inset: 2px 2px 2px 50%; }
+.pane-drop.top { inset: 2px 2px 50% 2px; }
+.pane-drop.bottom { inset: 50% 2px 2px 2px; }

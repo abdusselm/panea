@@ -4,6 +4,18 @@ Notable changes per release. Versions follow [semver](https://semver.org);
 installed copies update themselves on their next launch, so anything listed here
 reaches users without them asking for it.
 
+## [0.3.0] - 2026-08-25
+
+### Added
+
+- Panes can be rearranged inside a terminal. Until now a split was frozen where
+  it was created: a pane that belonged at the bottom of the window had to be
+  closed and re-opened somewhere else, losing whatever was running in it. Drag a
+  pane by its header bar and drop it on another pane — the outer quarter of an
+  edge moves it to that side and collapses the split it came from, the middle
+  swaps the two panes in place. The shells keep running throughout, and the new
+  arrangement is saved with the session.
+
 ## [0.2.1] - 2026-08-25
 
 ### Fixed

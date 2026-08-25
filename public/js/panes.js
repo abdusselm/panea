@@ -10,6 +10,7 @@ import { handleGlobalKey } from "./keyboard.js";
 import { persist } from "./session.js";
 import { closeFindFor } from "./find.js";
 import { mountResumeBar } from "./agents.js";
+import { wirePaneArrange } from "./pane-arrange.js";
 
 const { Terminal } = window;
 const FitAddon = window.FitAddon;
@@ -93,8 +94,9 @@ export function createPane(paneId, tabId, cwd, restore) {
   const ro = new ResizeObserver(() => scheduleRefit(paneId));
   ro.observe(termEl);
 
-  const pane = { id: paneId, term, fit, search, serialize, tabId, cwd, exited: false, el, termEl, ro, titleEl, title: titleText, attention: false, attnReason: "", attnMessage: "", idleTimer: null, burstStart: 0, burstBytes: 0, refitRAF: 0, restoreAgent: (restore && restore.agent) || "", promptBuf: "", lastPrompt: "", meta: { cwd: cwd || "", branch: "", ports: [], agent: "" } };
+  const pane = { id: paneId, term, fit, search, serialize, tabId, cwd, exited: false, el, termEl, ro, titleEl, title: titleText, customTitle: "", color: "", renaming: false, attention: false, attnReason: "", attnMessage: "", idleTimer: null, burstStart: 0, burstBytes: 0, refitRAF: 0, restoreAgent: (restore && restore.agent) || "", promptBuf: "", lastPrompt: "", meta: { cwd: cwd || "", branch: "", ports: [], agent: "" } };
   state.panes.set(paneId, pane);
+  wirePaneArrange(pane);
 
   if (restore) {
     if (restore.scroll) {

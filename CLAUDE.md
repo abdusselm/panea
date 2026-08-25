@@ -126,7 +126,10 @@ not append it to an existing file.**
   renaming the Electron executable breaks its signature, and the ad-hoc re-sign
   trips managed-Mac security agents into demanding admin rights.
 - `public/js/` — frontend ES modules: `theme`, `state`, `dom`, `util`, `ws`,
-  `connection-status`, `session`, `tabs`, `panes`, `attention`,
+  `connection-status`, `session`, `tabs`, `panes`, `pane-tree` (pure split-tree
+  surgery — swap/move a leaf, the only frontend module `node --test` can
+  import), `pane-arrange` (header drag-and-drop onto another pane's edge or
+  centre), `attention`,
   `attention-signals`, `notifications`, `layouts`, `keyboard`, `palette`,
   `main`.
   Loaded via `<script type="module" src="/js/main.js">`. `main.js` exposes a
@@ -136,7 +139,8 @@ not append it to an existing file.**
   `public/css/` in cascade order. Add rules to a partial, not here.
 - `public/css/` — one partial per UI area, each mirroring its JS module:
   `tokens` (`:root` design tokens), `base` (reset + shared motion), `sidebar`,
-  `connection-status`, `tabs`, `panes`, `palette`, `notifications`, `modals`.
+  `connection-status`, `tabs`, `panes`, `pane-arrange`,
+  `palette`, `notifications`, `modals`.
   **When adding a
   feature's styles, put them in the matching partial (or a new one); never let
   `style.css` grow rules of its own.**

@@ -168,6 +168,14 @@ restarts**. Neither pane can be dragged to nothing (min ~8%).
 The **sidebar** itself is resizable the same way: drag its right edge to set the
 rail width (160–520px), which also persists across restarts.
 
+## Rearranging panes
+
+Grab a pane by its **header bar** and drop it on another pane in the same
+terminal. The drop target previews where it lands: the outer quarter of an edge
+moves the pane to that side (left/right splits horizontally, top/bottom
+vertically) and collapses the split it came from; the middle **swaps** the two
+panes without changing the layout. The new arrangement persists across restarts.
+
 ## Command palette
 
 `Cmd-K` opens a fuzzy command palette. Commands are grouped by function under
