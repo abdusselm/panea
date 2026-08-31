@@ -6,6 +6,7 @@ import { closePane, splitPane } from "./panes.js";
 import { reopenClosedTab } from "./layouts.js";
 import { toggleNotifications } from "./notifications.js";
 import { toggleFind } from "./find.js";
+import { toggleScrollAnchor } from "./scroll-anchor.js";
 import { toggleGit } from "./git.js";
 import { togglePalette } from "./palette.js";
 import { wsSend } from "./ws.js";
@@ -18,6 +19,7 @@ export const SHORTCUTS = [
   { id: "split-down", label: "Split down", category: "Panes", def: "Cmd-Shift-D", run: (pid) => splitPane(state.focusedPaneId || pid, "v") },
   { id: "close-pane", label: "Close pane", category: "Panes", def: "Cmd-W", run: (pid) => closePane(state.focusedPaneId || pid) },
   { id: "find", label: "Find in terminal", category: "Panes", def: "Cmd-F", run: () => toggleFind() },
+  { id: "jump-latest", label: "Jump to latest / back", category: "Panes", def: "Cmd-J", run: (pid) => toggleScrollAnchor(state.focusedPaneId || pid) },
   { id: "git-diff", label: "Git diff", category: "View", def: "Cmd-G", run: () => toggleGit() },
   { id: "notifications", label: "Notifications", category: "View", def: "Cmd-Shift-N", run: () => toggleNotifications() },
 ];

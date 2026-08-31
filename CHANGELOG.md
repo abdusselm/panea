@@ -4,6 +4,19 @@ Notable changes per release. Versions follow [semver](https://semver.org);
 installed copies update themselves on their next launch, so anything listed here
 reaches users without them asking for it.
 
+## [0.4.2] - 2026-08-31
+
+### Added
+
+- Scrolling back through a long conversation used to strand you: the only way
+  back to the newest output was to drag the scrollbar all the way down again,
+  guessing when you had arrived. A pane that is not at the bottom now shows a
+  small pill in its corner saying how many lines sit below you — click it, or
+  press ⌘J, to jump to the latest output. The pill then offers the way back,
+  returning you to the exact line you were reading, and forgets that position
+  after twelve seconds so it can never send you somewhere stale. The shortcut
+  is rebindable in Settings.
+
 ## [0.4.1] - 2026-08-25
 
 ### Fixed

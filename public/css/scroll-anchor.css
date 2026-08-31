@@ -1,0 +1,27 @@
+
+
+.scroll-anchor {
+  position: absolute; right: 16px; bottom: 12px; z-index: 30;
+  display: none; pointer-events: none;
+}
+.scroll-anchor.open { display: block; }
+
+.scroll-anchor-btn {
+  pointer-events: auto;
+  display: flex; align-items: center; gap: 6px;
+  padding: 4px 10px 4px 8px;
+  background: var(--bg-elev); border: 1px solid var(--border-strong);
+  border-radius: 999px; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+  color: var(--text-dim); font-family: inherit; font-size: var(--fs-xs);
+  font-variant-numeric: tabular-nums; cursor: pointer;
+  opacity: 0.8; transition: opacity 120ms ease, color 120ms ease, border-color 120ms ease;
+}
+.scroll-anchor-btn:hover { opacity: 1; color: var(--text); border-color: var(--accent); }
+
+.scroll-anchor-arrow {
+  width: 12px; text-align: center; line-height: 1;
+  color: var(--attention); font-size: var(--fs-sm);
+}
+.scroll-anchor-arrow::before { content: "↓"; }
+.scroll-anchor.back .scroll-anchor-arrow::before { content: "↑"; }
+.scroll-anchor.back .scroll-anchor-arrow { color: var(--accent); }

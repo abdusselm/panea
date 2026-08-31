@@ -12,6 +12,7 @@ import { closeFindFor } from "./find.js";
 import { mountResumeBar } from "./agents.js";
 import { wirePaneArrange } from "./pane-arrange.js";
 import { wirePaneIdentity, applyPaneIdentity } from "./pane-identity.js";
+import { wireScrollAnchor, closeScrollAnchorFor } from "./scroll-anchor.js";
 
 const { Terminal } = window;
 const FitAddon = window.FitAddon;
@@ -99,6 +100,7 @@ export function createPane(paneId, tabId, cwd, restore) {
   state.panes.set(paneId, pane);
   wirePaneArrange(pane);
   wirePaneIdentity(pane);
+  wireScrollAnchor(pane);
   applyPaneIdentity(pane, restore);
 
   if (restore) {
@@ -173,6 +175,7 @@ export function destroyPane(paneId) {
   const p = state.panes.get(paneId);
   if (!p) return;
   closeFindFor(paneId);
+  closeScrollAnchorFor(paneId);
   try { p.ro.disconnect(); } catch (_) {}
   if (p.refitRAF) cancelAnimationFrame(p.refitRAF);
   clearTimeout(p.idleTimer);
