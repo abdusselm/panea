@@ -44,11 +44,21 @@ async function firstOutput(stream, ms = 8000) {
   await Promise.race([once(stream, "data"), timer]);
 }
 
-test("the bridge exits when the pipe to its parent closes", async () => {
+function release(t, bridge, shell) {
+  t.after(() => {
+    for (const pid of [...shell, bridge.pid]) { try { process.kill(pid, "SIGKILL"); } catch {} }
+    for (const stream of [bridge.stdin, bridge.stdout, bridge.stdio[3]]) {
+      try { if (stream) stream.destroy(); } catch {}
+    }
+  });
+}
+
+test("the bridge exits when the pipe to its parent closes", async (t) => {
   const bridge = spawn(PY, [BRIDGE, "/bin/zsh"], { stdio: ["pipe", "pipe", "ignore", "pipe"] });
   await firstOutput(bridge.stdout);
 
   const shell = childrenOf(bridge.pid);
+  release(t, bridge, shell);
   bridge.stdin.end();
 
   const [code] = await once(bridge, "exit");
@@ -56,9 +66,10 @@ test("the bridge exits when the pipe to its parent closes", async () => {
   for (const pid of shell) assert.equal(await settled(pid), true, `shell ${pid} outlived the bridge`);
 });
 
-test("closing the control pipe does not take the shell down with it", async () => {
+test("closing the control pipe does not take the shell down with it", async (t) => {
   const bridge = spawn(PY, [BRIDGE, "/bin/zsh"], { stdio: ["pipe", "pipe", "ignore", "pipe"] });
   await firstOutput(bridge.stdout);
+  release(t, bridge, childrenOf(bridge.pid));
 
   let exited = false;
   bridge.once("exit", () => { exited = true; });
@@ -67,7 +78,7 @@ test("closing the control pipe does not take the shell down with it", async () =
 
   assert.equal(exited, false, "a closed control pipe killed the pane");
   assert.equal(alive(bridge.pid), true);
-  bridge.kill("SIGKILL");
+
 });
 
 test("a killed server takes its panes with it instead of orphaning them", async () => {
