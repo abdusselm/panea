@@ -14,6 +14,7 @@ import { openFind } from "./find.js";
 import { openSettings } from "./settings.js";
 import { chordFor, prettyChord } from "./shortcuts.js";
 import { startPaneRename, openPaneMenuForPane } from "./pane-identity.js";
+import { hidePane, revealAllPanes, countHiddenPanes } from "./pane-visibility.js";
 
 const hk = (id) => prettyChord(chordFor(id));
 
@@ -99,6 +100,11 @@ function buildPaletteCommands() {
   add("Panes", "Split right", hk("split-right"), () => { const p = focusedPane(); if (p) splitPane(p.id, "h"); });
   add("Panes", "Split down", hk("split-down"), () => { const p = focusedPane(); if (p) splitPane(p.id, "v"); });
   add("Panes", "Close pane", hk("close-pane"), () => { const p = focusedPane(); if (p) closePane(p.id); });
+  add("Panes", "Hide pane", hk("hide-pane"), () => { const p = focusedPane(); if (p) hidePane(p.id); });
+  const activeTab = state.tabs.find((t) => t.id === state.activeTabId);
+  if (activeTab && countHiddenPanes(activeTab)) {
+    add("Panes", `Reveal hidden panes (${countHiddenPanes(activeTab)})`, "", () => revealAllPanes(activeTab));
+  }
   add("Panes", "Restart pane", "", () => { const p = focusedPane(); if (p) restartPane(p.id); });
   add("Panes", "Rename pane", "", () => { const p = focusedPane(); if (p) startPaneRename(p); });
   add("Panes", "Pane color…", "", () => { const p = focusedPane(); if (p) openPaneMenuForPane(p); });

@@ -5,6 +5,7 @@ import { updateTabName, refreshTabMeta } from "./tabs.js";
 import { closePane } from "./panes.js";
 import { persist } from "./session.js";
 import { setPaneDraggable } from "./pane-arrange.js";
+import { togglePaneHidden } from "./pane-visibility.js";
 
 export const PANE_COLORS = [
   { id: "red", label: "Red", hex: "#cc6666" },
@@ -98,6 +99,7 @@ export function openPaneMenu(p, x, y) {
   m.className = "ctx-menu pane-menu";
   m.innerHTML = `
     <button data-a="rename">Rename pane</button>
+    <button data-a="hide">${p.hidden ? "Reveal pane" : "Hide pane"}</button>
     <div class="pane-swatches"></div>
     <button data-a="close">Close pane</button>`;
   const swatches = m.querySelector(".pane-swatches");
@@ -119,6 +121,7 @@ export function openPaneMenu(p, x, y) {
   m.style.left = Math.min(x, window.innerWidth - m.offsetWidth - 8) + "px";
   m.style.top = Math.min(y, window.innerHeight - m.offsetHeight - 8) + "px";
   m.querySelector('[data-a="rename"]').onclick = () => { closeMenu(); startPaneRename(p); };
+  m.querySelector('[data-a="hide"]').onclick = () => { closeMenu(); togglePaneHidden(p.id); };
   m.querySelector('[data-a="close"]').onclick = () => { closeMenu(); closePane(p.id); };
   menuEl = m;
   setTimeout(() => document.addEventListener("mousedown", onDocDown, true), 0);

@@ -37,6 +37,7 @@ function serializeTree(node) {
     if (agent) leaf.agent = agent;
     if (p.customTitle) leaf.name = p.customTitle;
     if (p.color) leaf.color = p.color;
+    if (p.hidden) leaf.hidden = true;
     const scroll = captureScroll(p);
     if (scroll) leaf.scroll = scroll;
   }

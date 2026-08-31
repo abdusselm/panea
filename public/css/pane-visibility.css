@@ -1,0 +1,51 @@
+
+
+.leaf.hidden-pane {
+  flex-shrink: 0; cursor: pointer;
+  border-style: dashed; border-color: var(--border-strong);
+  background:
+    repeating-linear-gradient(135deg, rgba(148, 154, 166, 0.08) 0 5px, transparent 5px 11px),
+    var(--bg-elev);
+}
+.leaf.hidden-pane.tinted {
+  border-color: color-mix(in srgb, var(--pane-color) 45%, var(--border-strong));
+  background:
+    repeating-linear-gradient(135deg, color-mix(in srgb, var(--pane-color) 16%, transparent) 0 5px, transparent 5px 11px),
+    var(--bg-elev);
+}
+.leaf.hidden-pane:hover { border-color: var(--accent); }
+.leaf.hidden-pane.focused { border-color: var(--border-strong); }
+
+.leaf.hidden-pane.attn { border-color: rgba(245, 128, 107, 0.65); }
+.leaf.hidden-pane.attn .leaf-bar { background: rgba(245, 128, 107, 0.12); }
+.leaf.hidden-pane.attn .leaf-bar .title { color: var(--text); }
+
+.leaf.hidden-pane > *:not(.leaf-bar) { display: none; }
+.leaf.hidden-pane .leaf-bar { background: transparent; border-bottom: none; }
+.leaf.hidden-pane .leaf-bar .ico { display: none; }
+.leaf.hidden-pane .leaf-bar .title { color: var(--text-dim); }
+.leaf.hidden-pane .leaf-bar .title::after { content: " · hidden"; opacity: 0.7; }
+.leaf.hidden-pane .actions button:not([data-act="hide"]) { display: none; }
+.leaf.hidden-pane .actions button[data-act="hide"] { color: var(--text); }
+
+.leaf.hidden-pane.rail-row { height: auto; }
+
+.leaf.hidden-pane.rail-col { width: 34px; }
+.leaf.hidden-pane.rail-col .leaf-bar {
+  flex: 1 1 auto; height: 100%; flex-direction: column;
+  padding: 8px 0 6px; gap: 8px;
+}
+.leaf.hidden-pane.rail-col .leaf-bar .title {
+  writing-mode: vertical-rl; text-orientation: mixed;
+  flex: 1 1 auto; min-height: 0; text-align: left;
+}
+.leaf.hidden-pane.rail-col .leaf-bar .actions { flex-direction: column; }
+
+.split.rail-pack { flex-shrink: 0; }
+.split.rail-pack.rail-col { width: auto; min-width: 34px; max-width: 190px; }
+.split.rail-pack.rail-row { height: auto; min-height: 32px; }
+
+.split-gutter.locked { cursor: default; }
+.split-gutter.locked:hover::after { background: transparent; }
+
+.tab .sub .hidden-count { color: var(--attention); }

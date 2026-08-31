@@ -8,6 +8,7 @@ import { createPane, renderTab, focusPane, destroyPane, refitTab } from "./panes
 import { persist } from "./session.js";
 import { recordClosedTab } from "./layouts.js";
 import { paneLabel } from "./pane-identity.js";
+import { countHiddenPanes } from "./pane-visibility.js";
 
 export function newTab(cwd) {
   const paneId = uid();
@@ -70,6 +71,7 @@ function remapTreeIds(node) {
     const leaf = { kind: "leaf", id: uid() };
     if (node && node.name) leaf.name = node.name;
     if (node && node.color) leaf.color = node.color;
+    if (node && node.hidden) leaf.hidden = true;
     return leaf;
   }
   return { kind: "split", dir: node.dir, ratio: node.ratio, children: [remapTreeIds(node.children[0]), remapTreeIds(node.children[1])] };
@@ -78,8 +80,8 @@ function remapTreeIds(node) {
 export function instantiateTree(tab, node) {
   if (!node) return;
   if (node.kind === "leaf") {
-    const restore = (node.agent || node.scroll || node.name || node.color)
-      ? { agent: node.agent || "", scroll: node.scroll || "", name: node.name || "", color: node.color || "" }
+    const restore = (node.agent || node.scroll || node.name || node.color || node.hidden)
+      ? { agent: node.agent || "", scroll: node.scroll || "", name: node.name || "", color: node.color || "", hidden: !!node.hidden }
       : undefined;
     createPane(node.id, tab.id, node.cwd || tab.cwd, restore);
   } else {
@@ -238,6 +240,14 @@ function fillTabMeta(row, tab) {
     b.className = "branch";
     b.textContent = "⑂ " + meta.branch;
     subEl.appendChild(b);
+    subEl.appendChild(document.createTextNode(" · "));
+  }
+  const hiddenCount = countHiddenPanes(tab);
+  if (hiddenCount) {
+    const h = document.createElement("span");
+    h.className = "hidden-count";
+    h.textContent = `${hiddenCount} hidden`;
+    subEl.appendChild(h);
     subEl.appendChild(document.createTextNode(" · "));
   }
   subEl.appendChild(document.createTextNode(dir));

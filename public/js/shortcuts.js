@@ -3,6 +3,7 @@
 import { state } from "./state.js";
 import { newTab } from "./tabs.js";
 import { closePane, splitPane } from "./panes.js";
+import { hidePane } from "./pane-visibility.js";
 import { reopenClosedTab } from "./layouts.js";
 import { toggleNotifications } from "./notifications.js";
 import { toggleFind } from "./find.js";
@@ -19,6 +20,7 @@ export const SHORTCUTS = [
   { id: "split-right", label: "Split right", category: "Panes", def: "Cmd-D", run: (pid) => splitPane(state.focusedPaneId || pid, "h") },
   { id: "split-down", label: "Split down", category: "Panes", def: "Cmd-Shift-D", run: (pid) => splitPane(state.focusedPaneId || pid, "v") },
   { id: "close-pane", label: "Close pane", category: "Panes", def: "Cmd-W", run: (pid) => closePane(state.focusedPaneId || pid) },
+  { id: "hide-pane", label: "Hide pane", category: "Panes", def: "Cmd-Shift-H", run: (pid) => hidePane(state.focusedPaneId || pid) },
   { id: "find", label: "Find in terminal", category: "Panes", def: "Cmd-F", run: () => toggleFind() },
   { id: "jump-latest", label: "Jump to latest / back", category: "Panes", def: "Cmd-J", run: (pid) => toggleScrollAnchor(state.focusedPaneId || pid) },
   { id: "transcript", label: "Transcript (fold exchanges)", category: "Panes", def: "Cmd-E", run: () => toggleTranscript() },

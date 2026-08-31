@@ -4,6 +4,23 @@ Notable changes per release. Versions follow [semver](https://semver.org);
 installed copies update themselves on their next launch, so anything listed here
 reaches users without them asking for it.
 
+## [0.4.5] - 2026-08-31
+
+### Added
+
+- Getting a split out of the way used to mean closing it, which kills the shell
+  and everything it was in the middle of. ⌘⇧H — or the new eye button in a
+  pane's header, or *Hide pane* in its right-click menu — now folds a pane down
+  to a rail instead: a dashed, striped strip that stays where the pane was and
+  keeps its name, its color, and its notification dot. The shell keeps running,
+  the scrollback stays, and the strip is deliberately nothing like a closed
+  pane, so a hidden pane cannot be quietly forgotten. The sidebar tab also
+  reports how many of its panes are hidden while you are looking at another
+  terminal. Click the rail to bring the pane back at its old size; ⌘K has *Hide
+  pane* and *Reveal hidden panes*. The last visible pane refuses to hide,
+  closing a hidden pane's only visible sibling brings it back, and hidden panes
+  come back hidden after a restart.
+
 ## [0.4.4] - 2026-08-31
 
 ### Added

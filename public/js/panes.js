@@ -12,6 +12,7 @@ import { closeFindFor } from "./find.js";
 import { mountResumeBar } from "./agents.js";
 import { wirePaneArrange } from "./pane-arrange.js";
 import { wirePaneIdentity, applyPaneIdentity } from "./pane-identity.js";
+import { wirePaneVisibility, applyPaneHidden, firstVisiblePaneId, ensureVisiblePane, syncSplitLayout } from "./pane-visibility.js";
 import { wireScrollAnchor, closeScrollAnchorFor } from "./scroll-anchor.js";
 import { requestPaneCwd, forgetPaneCwd } from "./pane-cwd.js";
 import { closeTranscriptFor } from "./transcript.js";
@@ -65,6 +66,7 @@ export function createPane(paneId, tabId, cwd, restore, opts) {
       <div class="actions">
         <button data-act="split-h" title="Split right (Cmd-D)">${ICON.splitH}</button>
         <button data-act="split-v" title="Split down (Cmd-Shift-D)">${ICON.splitV}</button>
+        <button data-act="hide" title="Hide pane (keeps it running)">${ICON.eyeOff}</button>
         <button class="close" data-act="close" title="Close (Cmd-W)">${ICON.close}</button>
       </div>
     </div>
@@ -100,12 +102,14 @@ export function createPane(paneId, tabId, cwd, restore, opts) {
   const ro = new ResizeObserver(() => scheduleRefit(paneId));
   ro.observe(termEl);
 
-  const pane = { id: paneId, term, fit, search, serialize, tabId, cwd, exited: false, opened: false, queuedInput: [], exchanges: [], el, termEl, ro, titleEl, title: titleText, customTitle: "", color: "", renaming: false, attention: false, attnReason: "", attnMessage: "", idleTimer: null, burstStart: 0, burstBytes: 0, refitRAF: 0, restoreAgent: (restore && restore.agent) || "", promptBuf: "", lastPrompt: "", meta: { cwd: cwd || "", branch: "", ports: [], agent: "" } };
+  const pane = { id: paneId, term, fit, search, serialize, tabId, cwd, exited: false, hidden: false, opened: false, queuedInput: [], exchanges: [], el, termEl, ro, titleEl, title: titleText, customTitle: "", color: "", renaming: false, attention: false, attnReason: "", attnMessage: "", idleTimer: null, burstStart: 0, burstBytes: 0, refitRAF: 0, restoreAgent: (restore && restore.agent) || "", promptBuf: "", lastPrompt: "", meta: { cwd: cwd || "", branch: "", ports: [], agent: "" } };
   state.panes.set(paneId, pane);
   wirePaneArrange(pane);
   wirePaneIdentity(pane);
+  wirePaneVisibility(pane);
   wireScrollAnchor(pane);
   applyPaneIdentity(pane, restore);
+  applyPaneHidden(pane, restore);
 
   if (restore) {
     if (restore.scroll) {
@@ -131,7 +135,7 @@ export function createPane(paneId, tabId, cwd, restore, opts) {
 function openShell(pane, cwd) {
   if (!state.panes.has(pane.id)) return;
   let dims = null;
-  try { dims = pane.fit.proposeDimensions(); } catch (_) {}
+  if (!pane.hidden) { try { dims = pane.fit.proposeDimensions(); } catch (_) {} }
   if (cwd && cwd !== pane.cwd) {
     pane.cwd = cwd;
     pane.meta.cwd = cwd;
@@ -147,7 +151,7 @@ export function reattachPanes() {
   for (const p of state.panes.values()) {
     if (p.exited) continue;
     let dims = null;
-    try { dims = p.fit.proposeDimensions(); } catch (_) {}
+    if (!p.hidden) { try { dims = p.fit.proposeDimensions(); } catch (_) {} }
     wsSend({
       type: "attach",
       paneId: p.id,
@@ -167,7 +171,7 @@ export function setFontSize(n) {
 
 export function refit(paneId) {
   const p = state.panes.get(paneId);
-  if (!p) return;
+  if (!p || p.hidden) return;
   const tab = state.tabs.find((t) => t.id === p.tabId);
   if (!tab || tab.id !== state.activeTabId) return;
   try {
@@ -178,6 +182,12 @@ export function refit(paneId) {
 export function refitTab(tab) { eachLeaf(tab.tree, (leaf) => scheduleRefit(leaf.id)); }
 
 export function focusPane(paneId) {
+  const target = state.panes.get(paneId);
+  if (target && target.hidden) {
+    const visible = firstVisiblePaneId(target.tabId);
+    if (!visible) return;
+    paneId = visible;
+  }
   if (state.focusedPaneId && state.panes.has(state.focusedPaneId))
     state.panes.get(state.focusedPaneId).el.classList.remove("focused");
   const p = state.panes.get(paneId);
@@ -289,6 +299,7 @@ export function closePane(paneId) {
   } else {
     tab.tree = sibling;
   }
+  ensureVisiblePane(tab);
   renderTab(tab);
   const nl = firstLeaf(tab.tree);
   if (nl) focusPane(nl.id);
@@ -320,13 +331,14 @@ function renderNode(node) {
   split.append(a, gutter, b);
   const r = clampRatio(typeof node.ratio === "number" ? node.ratio : 0.5);
   node.ratio = r;
-  applyRatio(a, b, r);
+  syncSplitLayout(node, split, gutter, a, b);
   wireGutter(split, gutter, node, a, b);
   return split;
 }
 
 function wireGutter(split, gutter, node, a, b) {
   gutter.addEventListener("mousedown", (e) => {
+    if (gutter.classList.contains("locked")) return;
     e.preventDefault();
     e.stopPropagation();
     const horiz = node.dir === "h";
