@@ -4,6 +4,18 @@ Notable changes per release. Versions follow [semver](https://semver.org);
 installed copies update themselves on their next launch, so anything listed here
 reaches users without them asking for it.
 
+## [0.4.3] - 2026-08-31
+
+### Changed
+
+- Splitting a pane dropped you in your home directory, so every split began
+  with retyping the `cd` you had already done. A split now opens in the
+  directory the pane it came from is in at that moment — read live from the
+  running shell, so it is right even when you split seconds after a `cd`. If
+  the shell cannot be reached, the split falls back to the directory panea last
+  saw rather than to your home directory, and anything typed while the new
+  shell is starting is delivered instead of dropped.
+
 ## [0.4.2] - 2026-08-31
 
 ### Added

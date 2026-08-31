@@ -13,6 +13,7 @@ import { refreshOpenSettings } from "./settings.js";
 import { setAgents } from "./agents.js";
 import { reattachPanes } from "./panes.js";
 import { setConnectionState } from "./connection-status.js";
+import { deliverPaneCwd } from "./pane-cwd.js";
 
 const RECONNECT_MS = 1000;
 const PROBE_TIMEOUT_MS = 3000;
@@ -128,6 +129,9 @@ export function connect() {
         }
         break;
       }
+      case "paneCwd":
+        deliverPaneCwd(msg.paneId, msg.cwd || "");
+        break;
       case "gitStatus":
         setGitStatus(msg);
         break;

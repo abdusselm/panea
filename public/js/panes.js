@@ -13,6 +13,7 @@ import { mountResumeBar } from "./agents.js";
 import { wirePaneArrange } from "./pane-arrange.js";
 import { wirePaneIdentity, applyPaneIdentity } from "./pane-identity.js";
 import { wireScrollAnchor, closeScrollAnchorFor } from "./scroll-anchor.js";
+import { requestPaneCwd, forgetPaneCwd } from "./pane-cwd.js";
 
 const { Terminal } = window;
 const FitAddon = window.FitAddon;
@@ -29,7 +30,8 @@ function scheduleRefit(paneId) {
   p.refitRAF = requestAnimationFrame(() => { p.refitRAF = 0; refit(paneId); });
 }
 
-export function createPane(paneId, tabId, cwd, restore) {
+export function createPane(paneId, tabId, cwd, restore, opts) {
+  const inheritFrom = (opts && opts.inheritFrom) || "";
   const term = new Terminal({
     fontFamily: FONT_FAMILY,
     fontSize: runtime.fontSize,
@@ -88,7 +90,8 @@ export function createPane(paneId, tabId, cwd, restore) {
   term.onData((d) => {
     const p = state.panes.get(paneId);
     if (p && p.exited) { if (d === "\r") restartPane(paneId); return; }
-    wsSend({ type: "input", paneId, data: u8ToB64(enc.encode(d)) });
+    if (p && !p.opened) p.queuedInput.push(d);
+    else wsSend({ type: "input", paneId, data: u8ToB64(enc.encode(d)) });
     trackAgentPrompt(p, d);
   });
   term.attachCustomKeyEventHandler((e) => handleGlobalKey(e, paneId));
@@ -96,7 +99,7 @@ export function createPane(paneId, tabId, cwd, restore) {
   const ro = new ResizeObserver(() => scheduleRefit(paneId));
   ro.observe(termEl);
 
-  const pane = { id: paneId, term, fit, search, serialize, tabId, cwd, exited: false, el, termEl, ro, titleEl, title: titleText, customTitle: "", color: "", renaming: false, attention: false, attnReason: "", attnMessage: "", idleTimer: null, burstStart: 0, burstBytes: 0, refitRAF: 0, restoreAgent: (restore && restore.agent) || "", promptBuf: "", lastPrompt: "", meta: { cwd: cwd || "", branch: "", ports: [], agent: "" } };
+  const pane = { id: paneId, term, fit, search, serialize, tabId, cwd, exited: false, opened: false, queuedInput: [], el, termEl, ro, titleEl, title: titleText, customTitle: "", color: "", renaming: false, attention: false, attnReason: "", attnMessage: "", idleTimer: null, burstStart: 0, burstBytes: 0, refitRAF: 0, restoreAgent: (restore && restore.agent) || "", promptBuf: "", lastPrompt: "", meta: { cwd: cwd || "", branch: "", ports: [], agent: "" } };
   state.panes.set(paneId, pane);
   wirePaneArrange(pane);
   wirePaneIdentity(pane);
@@ -118,10 +121,25 @@ export function createPane(paneId, tabId, cwd, restore) {
 
   requestAnimationFrame(() => {
     refit(paneId);
-    const dims = fit.proposeDimensions();
-    wsSend({ type: "open", paneId, cwd: cwd || undefined, cols: dims ? dims.cols : 80, rows: dims ? dims.rows : 24 });
+    if (!inheritFrom) { openShell(pane, cwd); return; }
+    requestPaneCwd(inheritFrom, cwd, wsSend).then((live) => openShell(pane, live || cwd));
   });
   return pane;
+}
+
+function openShell(pane, cwd) {
+  if (!state.panes.has(pane.id)) return;
+  let dims = null;
+  try { dims = pane.fit.proposeDimensions(); } catch (_) {}
+  if (cwd && cwd !== pane.cwd) {
+    pane.cwd = cwd;
+    pane.meta.cwd = cwd;
+    setPaneTitle(pane.id, cwd.split("/").filter(Boolean).pop() || "shell");
+  }
+  wsSend({ type: "open", paneId: pane.id, cwd: cwd || undefined, cols: dims ? dims.cols : 80, rows: dims ? dims.rows : 24 });
+  pane.opened = true;
+  for (const d of pane.queuedInput) wsSend({ type: "input", paneId: pane.id, data: u8ToB64(enc.encode(d)) });
+  pane.queuedInput = [];
 }
 
 export function reattachPanes() {
@@ -176,6 +194,7 @@ export function destroyPane(paneId) {
   if (!p) return;
   closeFindFor(paneId);
   closeScrollAnchorFor(paneId);
+  forgetPaneCwd(paneId);
   try { p.ro.disconnect(); } catch (_) {}
   if (p.refitRAF) cancelAnimationFrame(p.refitRAF);
   clearTimeout(p.idleTimer);
@@ -230,7 +249,7 @@ export function splitPane(paneId, dir) {
   } else {
     tab.tree = split;
   }
-  createPane(newId, tab.id, tab.cwd);
+  createPane(newId, tab.id, (src.meta && src.meta.cwd) || src.cwd || tab.cwd, null, { inheritFrom: paneId });
   renderTab(tab);
   focusPane(newId);
   refitTab(tab);

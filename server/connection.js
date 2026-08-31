@@ -7,7 +7,7 @@ import { loadCommands } from "./commands-store.js";
 import { loadLayouts, saveLayout, deleteLayout } from "./layouts-store.js";
 import { loadSettings, saveSettings } from "./settings-store.js";
 import { loadAgents } from "./agents-store.js";
-import { computeMetaBatch } from "./meta.js";
+import { computeMetaBatch, cwdOfBridge } from "./meta.js";
 import { gitStatus, gitDiff } from "./git.js";
 
 const META_POLL_MS = 3500;
@@ -92,6 +92,14 @@ export function handleConnection(ws) {
       }
       case "ping": {
         send({ type: "pong" });
+        break;
+      }
+      case "getPaneCwd": {
+        const pane = livePane(msg.paneId);
+        const pid = pane && pane.child && pane.child.pid;
+        const reply = (cwd) => send({ type: "paneCwd", paneId: msg.paneId, cwd });
+        if (!pid) { reply(""); break; }
+        cwdOfBridge(pid).then(reply, () => reply(""));
         break;
       }
       case "input": {

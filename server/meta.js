@@ -130,6 +130,14 @@ function pruneBranchCache() {
   for (const [cwd, v] of branchCache) if (now - v.at > BRANCH_TTL_MS * 4) branchCache.delete(cwd);
 }
 
+export async function cwdOfBridge(bridgePid) {
+  if (!bridgePid) return "";
+  const children = await processChildren();
+  const shell = (children.get(String(bridgePid)) || [])[0] || String(bridgePid);
+  const cwds = await cwdByPid([shell]);
+  return cwds.get(shell) || "";
+}
+
 export async function computeMetaBatch(bridgePids, agents = []) {
   const result = new Map();
   if (!bridgePids.length) return result;
