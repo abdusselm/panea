@@ -131,7 +131,10 @@ not append it to an existing file.**
   surgery — swap/move a leaf, the only frontend module `node --test` can
   import), `pane-arrange` (header drag-and-drop onto another pane's edge or
   centre), `pane-identity` (per-pane custom name + color, and the pane context
-  menu), `attention`,
+  menu), `pane-visibility` (folds a pane to a rail instead of closing it, and
+  owns the rail-aware split sizing `renderNode` applies), `pane-rail` (pure
+  rail/ratio share math — like `pane-tree`, importable by `node --test`),
+  `attention`,
   `attention-signals`, `notifications`, `layouts`, `keyboard`, `palette`,
   `main`.
   Loaded via `<script type="module" src="/js/main.js">`. `main.js` exposes a
@@ -142,7 +145,7 @@ not append it to an existing file.**
 - `public/css/` — one partial per UI area, each mirroring its JS module:
   `tokens` (`:root` design tokens), `base` (reset + shared motion), `sidebar`,
   `connection-status`, `tabs`, `panes`, `pane-arrange`, `pane-identity`,
-  `palette`, `notifications`, `modals`.
+  `pane-visibility`, `palette`, `notifications`, `modals`.
   **When adding a
   feature's styles, put them in the matching partial (or a new one); never let
   `style.css` grow rules of its own.**

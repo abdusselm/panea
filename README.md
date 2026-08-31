@@ -148,6 +148,7 @@ one: `killall Dock` refreshes it.
 | `Cmd-T` | new tab |
 | `Shift-Cmd-T` | reopen last closed tab |
 | `Cmd-W` | close focused pane |
+| `Cmd-Shift-H` | hide focused pane (keeps it running) |
 | `Cmd-D` | split right |
 | `Cmd-Shift-D` | split down |
 | `Cmd-1 … 9` | switch tab |
@@ -167,6 +168,20 @@ restarts**. Neither pane can be dragged to nothing (min ~8%).
 
 The **sidebar** itself is resizable the same way: drag its right edge to set the
 rail width (160–520px), which also persists across restarts.
+
+## Hiding a pane
+
+`Cmd-Shift-H`, the eye button in a pane's header, or *Hide pane* in the pane
+menu folds a pane down to a **rail** — a dashed, striped strip that keeps the
+pane's name, color, and notification dot where the pane used to be. It is
+deliberately nothing like a closed pane: the shell keeps running, the scrollback
+stays, and the strip is still on screen, so a hidden pane cannot be forgotten.
+The sidebar tab also reports `N hidden` while the tab is inactive.
+
+Click the rail (or its eye button) to bring the pane back at its old size.
+`Cmd-K` has *Hide pane* and *Reveal hidden panes*. The last visible pane in a
+terminal refuses to hide, closing a pane's only visible sibling reveals it
+again, and hidden panes come back hidden after a restart.
 
 ## Rearranging panes
 
