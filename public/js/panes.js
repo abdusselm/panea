@@ -14,6 +14,7 @@ import { wirePaneArrange } from "./pane-arrange.js";
 import { wirePaneIdentity, applyPaneIdentity } from "./pane-identity.js";
 import { wireScrollAnchor, closeScrollAnchorFor } from "./scroll-anchor.js";
 import { requestPaneCwd, forgetPaneCwd } from "./pane-cwd.js";
+import { closeTranscriptFor } from "./transcript.js";
 
 const { Terminal } = window;
 const FitAddon = window.FitAddon;
@@ -99,7 +100,7 @@ export function createPane(paneId, tabId, cwd, restore, opts) {
   const ro = new ResizeObserver(() => scheduleRefit(paneId));
   ro.observe(termEl);
 
-  const pane = { id: paneId, term, fit, search, serialize, tabId, cwd, exited: false, opened: false, queuedInput: [], el, termEl, ro, titleEl, title: titleText, customTitle: "", color: "", renaming: false, attention: false, attnReason: "", attnMessage: "", idleTimer: null, burstStart: 0, burstBytes: 0, refitRAF: 0, restoreAgent: (restore && restore.agent) || "", promptBuf: "", lastPrompt: "", meta: { cwd: cwd || "", branch: "", ports: [], agent: "" } };
+  const pane = { id: paneId, term, fit, search, serialize, tabId, cwd, exited: false, opened: false, queuedInput: [], exchanges: [], el, termEl, ro, titleEl, title: titleText, customTitle: "", color: "", renaming: false, attention: false, attnReason: "", attnMessage: "", idleTimer: null, burstStart: 0, burstBytes: 0, refitRAF: 0, restoreAgent: (restore && restore.agent) || "", promptBuf: "", lastPrompt: "", meta: { cwd: cwd || "", branch: "", ports: [], agent: "" } };
   state.panes.set(paneId, pane);
   wirePaneArrange(pane);
   wirePaneIdentity(pane);
@@ -194,7 +195,10 @@ export function destroyPane(paneId) {
   if (!p) return;
   closeFindFor(paneId);
   closeScrollAnchorFor(paneId);
+  closeTranscriptFor(paneId);
   forgetPaneCwd(paneId);
+  for (const x of p.exchanges) { try { x.marker.dispose(); } catch (_) {} }
+  p.exchanges.length = 0;
   try { p.ro.disconnect(); } catch (_) {}
   if (p.refitRAF) cancelAnimationFrame(p.refitRAF);
   clearTimeout(p.idleTimer);
@@ -230,8 +234,21 @@ function finalizePrompt(p) {
   p.promptBuf = "";
   if (!text) return;
   p.lastPrompt = text;
+  markExchange(p, text);
   const tab = state.tabs.find((t) => t.id === p.tabId);
   if (tab) refreshTabMeta(tab);
+}
+
+const EXCHANGE_MAX = 200;
+function markExchange(p, text) {
+  let marker = null;
+  try { marker = p.term.registerMarker(0); } catch (_) { return; }
+  if (!marker) return;
+  p.exchanges.push({ marker, text });
+  if (p.exchanges.length > EXCHANGE_MAX) {
+    const stale = p.exchanges.shift();
+    try { stale.marker.dispose(); } catch (_) {}
+  }
 }
 
 export function splitPane(paneId, dir) {

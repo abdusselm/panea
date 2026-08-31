@@ -4,6 +4,22 @@ Notable changes per release. Versions follow [semver](https://semver.org);
 installed copies update themselves on their next launch, so anything listed here
 reaches users without them asking for it.
 
+## [0.4.4] - 2026-08-31
+
+### Added
+
+- A long session with an AI CLI is one unbroken wall of output, and finding
+  the exchange you half-remember means scrolling through everything after it.
+  ⌘E now opens a transcript of the pane: the scrollback split into collapsible
+  sections, each headed by what you asked and how many lines the answer ran to.
+  Open one section, or all of them, or press ↧ to send the pane itself back to
+  that point. Questions typed after this release are used as the section
+  boundaries; scrollback panea never watched — a restored session, or an agent
+  already running — is split on the agent's own turn markers instead, so a
+  conversation that predates the feature still folds. The transcript is a
+  read-only snapshot: it never touches the running pane, and closing it leaves
+  the keyboard back in the terminal.
+
 ## [0.4.3] - 2026-08-31
 
 ### Changed
