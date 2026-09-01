@@ -1,0 +1,22 @@
+
+
+.pane-boot {
+  position: absolute; left: 50%; bottom: 10px; transform: translateX(-50%);
+  z-index: 4; pointer-events: none; white-space: nowrap;
+  display: none; align-items: center; gap: 8px;
+  padding: 4px 12px 4px 10px; border-radius: 999px;
+  background: var(--bg-elev); border: 1px solid var(--border-strong);
+  color: var(--text-dim); font-size: var(--fs-sm);
+  font-variant-numeric: tabular-nums;
+}
+.pane-boot.open { display: flex; }
+.pane-boot.slow { color: var(--text); border-color: var(--attention); }
+
+.pane-boot-spinner {
+  width: 11px; height: 11px; flex: 0 0 11px; border-radius: 50%;
+  border: 2px solid var(--border-strong); border-top-color: var(--accent);
+  animation: pane-boot-spin 0.7s linear infinite;
+}
+.pane-boot.slow .pane-boot-spinner { border-top-color: var(--attention); }
+
+@keyframes pane-boot-spin { to { transform: rotate(360deg); } }

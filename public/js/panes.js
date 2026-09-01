@@ -14,6 +14,7 @@ import { wirePaneArrange } from "./pane-arrange.js";
 import { wirePaneIdentity, applyPaneIdentity } from "./pane-identity.js";
 import { wirePaneVisibility, applyPaneHidden, firstVisiblePaneId, ensureVisiblePane, syncSplitLayout } from "./pane-visibility.js";
 import { wireScrollAnchor, closeScrollAnchorFor } from "./scroll-anchor.js";
+import { wirePaneBoot, markPaneBooting, noteBootInput, closePaneBootFor } from "./pane-boot.js";
 import { requestPaneCwd, forgetPaneCwd } from "./pane-cwd.js";
 import { closeTranscriptFor } from "./transcript.js";
 
@@ -95,6 +96,7 @@ export function createPane(paneId, tabId, cwd, restore, opts) {
     if (p && p.exited) { if (d === "\r") restartPane(paneId); return; }
     if (p && !p.opened) p.queuedInput.push(d);
     else wsSend({ type: "input", paneId, data: u8ToB64(enc.encode(d)) });
+    noteBootInput(paneId);
     trackAgentPrompt(p, d);
   });
   term.attachCustomKeyEventHandler((e) => handleGlobalKey(e, paneId));
@@ -108,6 +110,7 @@ export function createPane(paneId, tabId, cwd, restore, opts) {
   wirePaneIdentity(pane);
   wirePaneVisibility(pane);
   wireScrollAnchor(pane);
+  wirePaneBoot(pane);
   applyPaneIdentity(pane, restore);
   applyPaneHidden(pane, restore);
 
@@ -142,8 +145,12 @@ function openShell(pane, cwd) {
     setPaneTitle(pane.id, cwd.split("/").filter(Boolean).pop() || "shell");
   }
   wsSend({ type: "open", paneId: pane.id, cwd: cwd || undefined, cols: dims ? dims.cols : 80, rows: dims ? dims.rows : 24 });
+  markPaneBooting(pane.id);
   pane.opened = true;
-  for (const d of pane.queuedInput) wsSend({ type: "input", paneId: pane.id, data: u8ToB64(enc.encode(d)) });
+  for (const d of pane.queuedInput) {
+    wsSend({ type: "input", paneId: pane.id, data: u8ToB64(enc.encode(d)) });
+    noteBootInput(pane.id);
+  }
   pane.queuedInput = [];
 }
 
@@ -205,6 +212,7 @@ export function destroyPane(paneId) {
   if (!p) return;
   closeFindFor(paneId);
   closeScrollAnchorFor(paneId);
+  closePaneBootFor(paneId);
   closeTranscriptFor(paneId);
   forgetPaneCwd(paneId);
   for (const x of p.exchanges) { try { x.marker.dispose(); } catch (_) {} }
@@ -224,6 +232,7 @@ export function restartPane(paneId) {
   p.term.reset();
   const dims = p.fit.proposeDimensions();
   wsSend({ type: "open", paneId, cwd: p.cwd || undefined, cols: dims ? dims.cols : 80, rows: dims ? dims.rows : 24 });
+  markPaneBooting(paneId);
 }
 
 const PROMPT_MAX = 200;

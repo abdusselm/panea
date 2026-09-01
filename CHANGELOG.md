@@ -4,6 +4,20 @@ Notable changes per release. Versions follow [semver](https://semver.org);
 installed copies update themselves on their next launch, so anything listed here
 reaches users without them asking for it.
 
+## [0.4.7] - 2026-09-01
+
+### Added
+
+- A new pane used to look ready before it was. The cursor blinked, the pane took
+  focus, and typing echoed characters back — but a shell still working through
+  its startup files had not reached its prompt yet, so nothing ran. `ls` moved
+  the cursor down a line and printed nothing, which reads exactly like a frozen
+  pane. A pane whose shell takes more than a second to start now says
+  "starting shell…" with a running count, and past six seconds it points at the
+  likely cause, your shell config. The badge ignores the terminal echoing your
+  own keystrokes back and clears only when the shell really answers, so it stays
+  up precisely when you are typing into a shell that cannot hear you yet.
+
 ## [0.4.6] - 2026-09-01
 
 ### Fixed

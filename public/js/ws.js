@@ -14,6 +14,7 @@ import { setAgents } from "./agents.js";
 import { reattachPanes } from "./panes.js";
 import { setConnectionState } from "./connection-status.js";
 import { deliverPaneCwd } from "./pane-cwd.js";
+import { markPaneReady } from "./pane-boot.js";
 
 const RECONNECT_MS = 1000;
 const PROBE_TIMEOUT_MS = 3000;
@@ -98,12 +99,14 @@ export function connect() {
         if (!p) return;
         const bytes = b64ToU8(msg.data);
         p.term.write(bytes);
+        markPaneReady(msg.paneId, bytes);
         handleActivity(msg.paneId, bytes);
         break;
       }
       case "exit": {
         const p = state.panes.get(msg.paneId);
         if (p) {
+          markPaneReady(msg.paneId);
           p.exited = true;
           p.el.classList.add("exited");
           p.term.write("\r\n\x1b[90m[process exited] press Enter to restart\x1b[0m\r\n");
