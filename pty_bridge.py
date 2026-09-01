@@ -12,12 +12,27 @@ import termios
 import time
 
 RETRY = (errno.EINTR, errno.EAGAIN, errno.EWOULDBLOCK)
+MAX_PENDING = 1 << 20
 
 def read_fd(fd, size):
     try:
         return os.read(fd, size), None
     except OSError as exc:
         return b"", "retry" if exc.errno in RETRY else "closed"
+
+def drain_fd(fd, data):
+    view = memoryview(data)
+    while view:
+        try:
+            written = os.write(fd, view)
+        except OSError as exc:
+            if exc.errno in RETRY:
+                break
+            return b"", "closed"
+        if not written:
+            break
+        view = view[written:]
+    return bytes(view), None
 
 def terminate(pid, master_fd):
     try:
@@ -109,8 +124,6 @@ def main():
     except OSError:
         has_control = False
 
-    watch = [master_fd, stdin_fd] + ([control_fd] if has_control else [])
-
     def on_signal(*_):
         terminate(pid, master_fd)
         sys.exit(0)
@@ -118,9 +131,26 @@ def main():
     signal.signal(signal.SIGTERM, on_signal)
     signal.signal(signal.SIGHUP, on_signal)
 
+    to_shell = b""
+    to_client = b""
+
     while True:
+        watch = []
+        if len(to_client) < MAX_PENDING:
+            watch.append(master_fd)
+        if len(to_shell) < MAX_PENDING:
+            watch.append(stdin_fd)
+        if has_control:
+            watch.append(control_fd)
+
+        drainable = []
+        if to_shell:
+            drainable.append(master_fd)
+        if to_client:
+            drainable.append(stdout_fd)
+
         try:
-            readable, _, _ = select.select(watch, [], [], 30)
+            readable, writable, _ = select.select(watch, drainable, [], 30)
         except (InterruptedError, OSError):
             continue
 
@@ -129,27 +159,30 @@ def main():
             if problem != "retry":
                 if not data:
                     break
-                try:
-                    os.write(stdout_fd, data)
-                except OSError:
-                    break
+                to_client += data
 
         if stdin_fd in readable:
             data, problem = read_fd(stdin_fd, 65536)
             if problem != "retry":
                 if not data:
                     break
-                try:
-                    os.write(master_fd, data)
-                except OSError:
-                    break
+                to_shell += data
+
+        if to_shell and master_fd in writable:
+            to_shell, problem = drain_fd(master_fd, to_shell)
+            if problem:
+                break
+
+        if to_client and stdout_fd in writable:
+            to_client, problem = drain_fd(stdout_fd, to_client)
+            if problem:
+                break
 
         if has_control and control_fd in readable:
             chunk, problem = read_fd(control_fd, 4096)
             if problem == "retry":
                 pass
             elif not chunk:
-                watch = [fd for fd in watch if fd != control_fd]
                 has_control = False
             else:
                 control_buf += chunk
@@ -164,6 +197,16 @@ def main():
                         continue
                     if msg.get("t") == "resize":
                         set_winsize(master_fd, int(msg.get("rows", rows)), int(msg.get("cols", cols)))
+
+    deadline = time.time() + 1.0
+    while to_client and time.time() < deadline:
+        try:
+            select.select([], [stdout_fd], [], 0.1)
+        except (InterruptedError, OSError):
+            break
+        to_client, problem = drain_fd(stdout_fd, to_client)
+        if problem:
+            break
 
     status = terminate(pid, master_fd)
     if status is None:

@@ -86,10 +86,15 @@ body.resizing-split .leaf-term { pointer-events: none; }
 .leaf-term { flex: 1; min-height: 0; padding: 6px 8px; transition: opacity 160ms ease; }
 body.disconnected .leaf-term { opacity: 0.4; }
 body.disconnected .leaf.focused { border-color: var(--border); }
-.leaf.exited .leaf-term::after {
+.leaf.exited::after {
   content: "process exited — press ⏎ to restart";
-  color: var(--text-dim); font-size: var(--fs-sm);
+  position: absolute; left: 50%; bottom: 10px; transform: translateX(-50%);
+  z-index: 4; pointer-events: none; white-space: nowrap;
+  padding: 4px 10px; border-radius: 6px;
+  background: var(--bg-elev); border: 1px solid var(--border-strong);
+  color: var(--text); font-size: var(--fs-sm);
 }
+.leaf.exited { border-color: rgba(245, 128, 107, 0.5); }
 
 #empty {
   position: absolute; inset: 0; display: flex; align-items: center;

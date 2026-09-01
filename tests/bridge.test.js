@@ -81,6 +81,35 @@ test("closing the control pipe does not take the shell down with it", async (t) 
 
 });
 
+test("input that the tty cannot swallow yet waits instead of killing the pane", async (t) => {
+  const bridge = spawn(PY, [BRIDGE, "/bin/zsh"], { stdio: ["pipe", "pipe", "ignore", "pipe"] });
+  await firstOutput(bridge.stdout);
+  release(t, bridge, childrenOf(bridge.pid));
+
+  let exited = false;
+  bridge.once("exit", () => { exited = true; });
+
+  bridge.stdin.write("sleep 5\r");
+  await new Promise((resolve) => setTimeout(resolve, 1500));
+
+  for (let i = 0; i < 64; i++) bridge.stdin.write("x".repeat(1024));
+  await new Promise((resolve) => setTimeout(resolve, 2000));
+
+  assert.equal(exited, false, "a full tty input queue killed the pane");
+  assert.equal(alive(bridge.pid), true);
+
+  let seen = "";
+  bridge.stdout.on("data", (d) => { seen += d.toString(); });
+  bridge.stdin.write("\x03");
+  bridge.stdin.write("echo still-here\r");
+
+  const deadline = Date.now() + 40000;
+  while (Date.now() < deadline && !seen.includes("still-here")) {
+    await new Promise((resolve) => setTimeout(resolve, 200));
+  }
+  assert.ok(seen.includes("still-here"), "the pane never accepted input again after the tty drained");
+});
+
 test("a killed server takes its panes with it instead of orphaning them", async () => {
   const paneUrl = pathToFileURL(path.join(ROOT, "server", "pane.js")).href;
   const server = spawn(process.execPath, [

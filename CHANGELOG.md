@@ -4,6 +4,25 @@ Notable changes per release. Versions follow [semver](https://semver.org);
 installed copies update themselves on their next launch, so anything listed here
 reaches users without them asking for it.
 
+## [0.4.6] - 2026-09-01
+
+### Fixed
+
+- A pane could stop responding to the keyboard for good: you came back to a
+  terminal you had left alone, typed, and nothing happened, as though the pane
+  had died. It had. panea writes your keystrokes into a non-blocking pty, and
+  whenever the program in the pane was not draining its input fast enough —
+  a full-screen TUI mid-render, anything busy for a moment — the write came
+  back "not now" and panea treated that as fatal, hung up on the shell, and
+  killed the pane. Keystrokes that only partly made it through were dropped on
+  the floor. Input is now held and delivered when the terminal is ready, so a
+  busy pane simply waits instead of dying, and nothing you type is lost.
+- When a pane's process did exit, the notice saying so was drawn underneath the
+  terminal's own output, where a full-screen program hid it completely — so a
+  dead pane looked alive but deaf, silently swallowing everything except Enter.
+  The notice is now a badge pinned over the pane, and the pane's border turns
+  red, so a pane that needs Enter to restart says so.
+
 ## [0.4.5] - 2026-08-31
 
 ### Added
