@@ -4,6 +4,23 @@ Notable changes per release. Versions follow [semver](https://semver.org);
 installed copies update themselves on their next launch, so anything listed here
 reaches users without them asking for it.
 
+## [0.4.8] - 2026-09-01
+
+### Fixed
+
+- Commands in a pane could run but print nothing at all. You typed `ls`, saw it
+  echo, the prompt came back — and not a line of output, over and over, while
+  the same shell in iTerm behaved perfectly. The command really did run; only
+  its output was missing. If your zsh setup uses powerlevel10k's instant prompt,
+  p10k captures the shell's stdin and stdout while your startup files load and
+  hands them back from a `precmd` hook. panea's theme was deleting p10k's hooks
+  to make its own prompt render, and that deletion took the hand-back with it,
+  so the shell kept running with its output redirected into a buffer nobody
+  read. panea now switches instant prompt off in its own panes, where it has
+  nothing to do anyway — panea already shows a "starting shell…" badge while a
+  shell boots. The bug came and went because it only bit once p10k had written
+  its instant-prompt cache, which a session in another terminal would recreate.
+
 ## [0.4.7] - 2026-09-01
 
 ### Added
