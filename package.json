@@ -54,7 +54,8 @@
     "icon": "node scripts/make-icon.mjs",
     "brand": "node scripts/brand-dev-electron.mjs",
     "postinstall": "node scripts/ensure-electron.mjs && node scripts/brand-dev-electron.mjs",
-    "test": "node --test"
+    "test": "node --test",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@xterm/addon-fit": "^0.10.0",
@@ -63,5 +64,8 @@
     "@xterm/xterm": "^5.5.0",
     "electron": "^43.0.0",
     "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.62.1"
   }
 }

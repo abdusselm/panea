@@ -9,3 +9,6 @@ build/
 
 shell/zsh/.zsh_history
 shell/zsh/.zcompdump*
+
+test-results/
+playwright-report/
