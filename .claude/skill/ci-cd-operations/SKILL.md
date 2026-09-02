@@ -152,13 +152,20 @@ published tarball, and a missing tag fails the fetch. Until this runs, nobody's
 
 ## 8. What users then see
 
-There is no in-app update banner and no version in the UI. The whole mechanism
-is `bin/panea.js` calling `maybeSelfUpdate` on launch:
+The update check no longer blocks startup. `bin/panea.js` opens the app first;
+once `server/start.js` is listening, it calls `watchForUpdates` in the
+background:
 
 - Homebrew kegs only (`detectInstall`); a git checkout never self-updates.
 - At most one check per 6 hours (`~/.panea/update-check.json`).
-- On a newer release: `brew update`, `brew upgrade --formula panea`, then the
-  process relaunches itself with `PANEA_UPDATED=1`.
+- On a newer release: `brew update`, then `brew upgrade --formula panea` with
+  its progress broadcast over the websocket — the sidebar shows a small
+  downloading indicator (`public/js/update-status.js`).
+- It does **not** relaunch itself. The install finishes in the background and
+  the sidebar switches to "ready — restart to use it"; the process only
+  restarts when the user quits and reopens panea themselves. Killing panes out
+  from under a live session (`pane-registry.js`'s shutdown hook) is worse than
+  a stale version for one more session.
 - Opt out with `--no-update` or `PANEA_NO_UPDATE=1`.
 
 So a broken tag, an unpushed tag, or a missing GitHub release is silent — the
