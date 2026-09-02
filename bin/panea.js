@@ -111,10 +111,7 @@ if (opts.port) {
 const { preflight } = await import("../server/preflight.js");
 if (!preflight()) process.exit(1);
 
-if (opts.update) {
-  const { maybeSelfUpdate } = await import("../server/update.js");
-  await maybeSelfUpdate({ root: ROOT, pkg, argv: process.argv.slice(2) });
-}
+if (!opts.update) process.env.PANEA_NO_UPDATE = "1";
 
 if (opts.app) await runDesktop();
 else await runBrowser();

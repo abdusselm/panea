@@ -9,6 +9,7 @@ import { loadSettings, saveSettings } from "./settings-store.js";
 import { loadAgents } from "./agents-store.js";
 import { computeMetaBatch, cwdOfBridge } from "./meta.js";
 import { gitStatus, gitDiff } from "./git.js";
+import { getUpdateStatus } from "./update.js";
 
 const META_POLL_MS = 3500;
 const META_FIRST_POLL_MS = 900;
@@ -65,6 +66,8 @@ export function handleConnection(ws) {
   send({ type: "layouts", layouts: loadLayouts() });
   send({ type: "settings", settings: loadSettings() });
   send({ type: "agents", agents });
+  const updateStatus = getUpdateStatus();
+  if (updateStatus.state !== "idle") send({ type: "update", ...updateStatus });
 
   ws.on("message", (raw) => {
     let msg;

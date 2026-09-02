@@ -4,7 +4,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
-import { isNewer, detectInstall, relaunchCommand, highestVersion } from "../server/update.js";
+import { isNewer, detectInstall, relaunchCommand, highestVersion, parseProgressPercent } from "../server/update.js";
 
 test("compares released versions", () => {
   assert.equal(isNewer("0.2.0", "0.1.0"), true);
@@ -106,4 +106,17 @@ test("only a Homebrew keg self-updates", () => {
   assert.equal(detectInstall(brewInstall), null);
 
   fs.rmSync(tmp, { recursive: true, force: true });
+});
+
+test("reads brew's curl-style progress meter out of a chunk of output", () => {
+  assert.equal(parseProgressPercent("######                     9.5%"), 9.5);
+  assert.equal(parseProgressPercent("#################### 100.0%"), 100);
+});
+
+test("keeps the last percentage when a chunk carries several redraws", () => {
+  assert.equal(parseProgressPercent("12.0%\r45.5%\r80.0%"), 80);
+});
+
+test("reports no progress when the chunk has none", () => {
+  assert.equal(parseProgressPercent("==> Downloading https://example.com/panea.tar.gz"), null);
 });

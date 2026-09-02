@@ -4,6 +4,21 @@ Notable changes per release. Versions follow [semver](https://semver.org);
 installed copies update themselves on their next launch, so anything listed here
 reaches users without them asking for it.
 
+## [0.4.10] - 2026-09-02
+
+### Changed
+
+- Launching panea no longer sits on a blank terminal while it silently checks
+  for and installs an update — there was no progress shown, so a slow check
+  looked like panea had failed to start. The app now opens immediately; the
+  update check and download run in the background afterward, with a small
+  progress indicator in the sidebar while a new version downloads.
+- An update no longer restarts panea out from under you. Previously, once the
+  download finished, panea relaunched itself immediately — killing every open
+  pane's shell mid-session. It now downloads and installs in the background,
+  then shows "ready — restart to use it" so you can restart on your own
+  schedule instead of losing work to a surprise relaunch.
+
 ## [0.4.9] - 2026-09-02
 
 ### Added

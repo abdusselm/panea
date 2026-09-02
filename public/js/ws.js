@@ -13,6 +13,7 @@ import { refreshOpenSettings } from "./settings.js";
 import { setAgents } from "./agents.js";
 import { reattachPanes } from "./panes.js";
 import { setConnectionState } from "./connection-status.js";
+import { applyUpdateStatus } from "./update-status.js";
 import { deliverPaneCwd } from "./pane-cwd.js";
 import { markPaneReady } from "./pane-boot.js";
 
@@ -147,6 +148,9 @@ export function connect() {
         break;
       case "agents":
         setAgents(msg.agents);
+        break;
+      case "update":
+        applyUpdateStatus(msg);
         break;
     }
   };

@@ -8,6 +8,14 @@ import { PORT, HOST } from "./paths.js";
 import { handleRequest } from "./static-server.js";
 import { handleConnection } from "./connection.js";
 import { verifyClient } from "./origin.js";
+import { watchForUpdates } from "./update.js";
+
+function broadcast(wss, obj) {
+  const data = JSON.stringify({ type: "update", ...obj });
+  for (const client of wss.clients) {
+    if (client.readyState === client.OPEN) client.send(data);
+  }
+}
 
 export function start({ open = false } = {}) {
   const server = http.createServer(handleRequest);
@@ -21,6 +29,7 @@ export function start({ open = false } = {}) {
       const url = `http://${HOST}:${PORT}`;
       console.log(`panea-ready ${url}`);
       if (open) spawn("open", [url], { stdio: "ignore" }).on("error", () => {});
+      watchForUpdates((status) => broadcast(wss, status));
       resolve({ server, wss, url });
     });
   });
