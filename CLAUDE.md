@@ -1,5 +1,11 @@
 # panea — project instructions
 
+## Output style: `.claude/rules/response-style.md`
+
+Follow `.claude/rules/response-style.md` for every reply in this project —
+concise, no preambles, no recaps, answer-first. This governs conversational
+style only, not code style.
+
 Local multi-pane terminal workspace (vertical tabs, split panes, cmux-style
 theme). Desktop app (Electron) or browser. No self-built native binary — uses
 the Node runtime and the Apple-signed system `python3` for the PTY, so there is
