@@ -1,0 +1,33 @@
+
+
+body.git-resizing { user-select: none; }
+body.git-resizing .gd-diff, body.git-resizing .gd-files { pointer-events: none; }
+
+.git-grip { position: absolute; z-index: 3; }
+.git-grip-left, .git-grip-right { top: 12px; bottom: 16px; width: 9px; cursor: ew-resize; }
+.git-grip-left { left: -4px; }
+.git-grip-right { right: -4px; }
+
+.git-grip-bottom { left: 16px; right: 16px; bottom: -4px; height: 9px; cursor: ns-resize; }
+
+.git-grip-bottom-left, .git-grip-bottom-right { width: 20px; height: 20px; bottom: -4px; }
+.git-grip-bottom-left { left: -4px; cursor: nesw-resize; }
+.git-grip-bottom-right { right: -4px; cursor: nwse-resize; }
+
+.git-grip-bottom-right::after {
+  content: ""; position: absolute; right: 6px; bottom: 6px; width: 8px; height: 8px;
+  border-right: 2px solid var(--border-strong); border-bottom: 2px solid var(--border-strong);
+  border-radius: 0 0 3px 0; opacity: 0.8;
+}
+.git-grip-bottom-right:hover::after { border-color: var(--accent); opacity: 1; }
+
+.gd-split {
+  flex: 0 0 7px; margin: 0 -3px; z-index: 2;
+  cursor: col-resize; position: relative;
+}
+.gd-split::after {
+  content: ""; position: absolute; inset: 0 3px; background: transparent;
+  transition: background 120ms ease;
+}
+.gd-split:hover::after { background: var(--accent); }
+body.git-resizing .gd-split::after { background: var(--accent); }

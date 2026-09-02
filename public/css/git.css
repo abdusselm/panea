@@ -4,20 +4,18 @@
   position: fixed; inset: 0; z-index: 2050; display: none;
   background: rgba(0, 0, 0, 0.42);
   align-items: flex-start; justify-content: center;
-  padding-top: 8vh; -webkit-app-region: no-drag;
+  padding: 28px 24px; -webkit-app-region: no-drag;
 }
 #git-panel.open { display: flex; }
 
 .git-box {
-  width: 900px; max-width: calc(100vw - 48px);
-  height: 76vh; max-height: 820px;
+  position: relative;
+  width: var(--git-w, min(1500px, calc(100vw - 56px)));
+  height: var(--git-h, 86vh);
   background: #2f343d; border: 1px solid var(--border-strong);
   border-radius: 12px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.55);
-  overflow: hidden; display: flex; flex-direction: column;
+  display: flex; flex-direction: column;
 }
-
-@media (min-width: 1800px) { .git-box { width: 1040px; } }
-@media (min-width: 2400px) { .git-box { width: 1200px; } }
 
 .git-head {
   display: flex; align-items: center; justify-content: space-between;
@@ -31,14 +29,16 @@
 }
 .git-actions button:hover { color: var(--text); border-color: var(--accent); }
 
-.git-body { flex: 1 1 auto; display: flex; min-height: 0; }
+.git-body {
+  flex: 1 1 auto; display: flex; min-height: 0;
+  overflow: hidden; border-radius: 0 0 11px 11px;
+}
 
 .gd-files {
-  flex: 0 0 320px; min-width: 220px; overflow-y: auto;
+  flex: 0 0 var(--gd-files-w, 340px); overflow-y: auto;
   border-right: 1px solid var(--border); padding: 8px;
   display: flex; flex-direction: column; gap: 2px;
 }
-@media (min-width: 1800px) { .gd-files { flex-basis: 380px; } }
 
 .gd-file {
   display: flex; align-items: center; gap: 9px;

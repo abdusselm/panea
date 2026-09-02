@@ -3,6 +3,7 @@
 import { state, focusedPane } from "./state.js";
 import { firstLeaf } from "./util.js";
 import { wsSend } from "./ws.js";
+import { initGitResize, applyGitPanelSize } from "./git-resize.js";
 
 let panelEl = null, headEl = null, filesEl = null, diffEl = null;
 
@@ -41,6 +42,7 @@ function ensureDom() {
   panelEl.querySelector(".git-refresh").onclick = () => request();
   panelEl.addEventListener("keydown", onKey);
   panelEl.tabIndex = -1;
+  initGitResize(panelEl);
 }
 
 function request() {
@@ -188,6 +190,7 @@ export function isOpen() { return panelEl && panelEl.classList.contains("open");
 
 export function openGit() {
   ensureDom();
+  applyGitPanelSize();
   curCwd = activeCwd();
   curBranch = "";
   files = [];

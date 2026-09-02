@@ -12,6 +12,7 @@ export const state = {
 export const runtime = {
   fontSize: DEFAULT_FONT_SIZE,
   sidebarWidth: 280,
+  gitPanel: null,
   renaming: false,
   windowFocused: typeof document !== "undefined" ? document.hasFocus() : true,
 };

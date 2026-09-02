@@ -4,6 +4,26 @@ Notable changes per release. Versions follow [semver](https://semver.org);
 installed copies update themselves on their next launch, so anything listed here
 reaches users without them asking for it.
 
+## [0.4.9] - 2026-09-02
+
+### Added
+
+- The git diff panel (`Cmd-G`) can be resized. Reviewing what an agent changed
+  meant reading a real diff through a fixed 900px window: long lines ran off the
+  side and the file list on the left cut every path down to its last few
+  characters, so two files in the same directory were told apart by scrolling.
+  The panel now takes a drag on any side or bottom corner, and the divider
+  between the file list and the diff moves independently — widen the list to
+  read full paths without giving up diff width. Double-click a grip to go back
+  to the default size, or the divider to reset just the file list. Both sizes
+  are remembered with the rest of the session and are pulled back inside the
+  window if it is smaller next time.
+
+### Changed
+
+- The git diff panel opens much larger — near the full window instead of a fixed
+  900px box, so a first look at a diff usually needs no resizing at all.
+
 ## [0.4.8] - 2026-09-01
 
 ### Fixed

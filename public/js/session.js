@@ -7,6 +7,7 @@ import { wsSend } from "./ws.js";
 import { newTab, createTabPaneEl, activateTab, renderTabList, instantiateTree } from "./tabs.js";
 import { renderTab } from "./panes.js";
 import { applySidebarWidth } from "./sidebar.js";
+import { restoreGitPanel } from "./git-resize.js";
 
 const SCROLL_LINES = 800;
 const SCROLL_MAX_CHARS = 200000;
@@ -47,7 +48,7 @@ function serializeTree(node) {
 export function serialize() {
   return {
     activeTabId: state.activeTabId,
-    settings: { fontSize: runtime.fontSize, sidebarWidth: runtime.sidebarWidth },
+    settings: { fontSize: runtime.fontSize, sidebarWidth: runtime.sidebarWidth, gitPanel: runtime.gitPanel },
     tabs: state.tabs.map((t) => ({ id: t.id, name: t.name, cwd: t.cwd, tree: serializeTree(t.tree), customName: !!t.customName })),
   };
 }
@@ -66,6 +67,7 @@ export function restoreSession(layout) {
   if (layout && layout.settings && layout.settings.sidebarWidth) {
     applySidebarWidth(layout.settings.sidebarWidth);
   }
+  if (layout && layout.settings) restoreGitPanel(layout.settings.gitPanel);
   if (!layout || !layout.tabs || !layout.tabs.length) { newTab(); return; }
   for (const t of layout.tabs) {
     const tab = { id: t.id || uid(), name: t.name || "shell", cwd: t.cwd, tree: t.tree, customName: !!t.customName };
