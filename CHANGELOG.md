@@ -4,6 +4,16 @@ Notable changes per release. Versions follow [semver](https://semver.org);
 installed copies update themselves on their next launch, so anything listed here
 reaches users without them asking for it.
 
+## [0.4.11] - 2026-09-04
+
+### Added
+
+- Cmd+click a `.md` filename mentioned in a pane's output (for example, a line
+  an AI agent prints after writing a report) to open it in a rendered Markdown
+  preview, in the same panel style as the git diff view (`Cmd-G`). Previously
+  the filename was just text with no way to see the file's contents without
+  leaving the terminal.
+
 ## [0.4.10] - 2026-09-02
 
 ### Changed

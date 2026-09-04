@@ -11,6 +11,7 @@ import { openNotifications, toggleNotifications } from "./notifications.js";
 import { reopenClosedTab, saveCurrentLayout, openLayout, saveLayoutInteractive, openLayoutInteractive, deleteLayoutPick } from "./layouts.js";
 import { splitPane, closePane } from "./panes.js";
 import { openGit, toggleGit } from "./git.js";
+import { openMdPreview, closeMdPreview } from "./md-preview.js";
 import { openFind, toggleFind } from "./find.js";
 import { openSettings } from "./settings.js";
 import { chordFromEvent, chordFor } from "./shortcuts.js";
@@ -20,7 +21,7 @@ import { initSidebarResize, applySidebarWidth } from "./sidebar.js";
 import { startPaneRename, setPaneColor, openPaneMenuForPane } from "./pane-identity.js";
 import { hidePane, showPane, togglePaneHidden, revealAllPanes } from "./pane-visibility.js";
 
-window.panea = { hidePane, showPane, togglePaneHidden, revealAllPanes, state, runtime, newTab, openPalette, togglePalette, openNotifications, toggleNotifications, reopenClosedTab, saveCurrentLayout, openLayout, saveLayoutInteractive, openLayoutInteractive, deleteLayoutPick, openGit, toggleGit, openFind, toggleFind, openSettings, splitPane, closePane, handleActivity, setAgents, mountResumeBar, persist, applySidebarWidth, startPaneRename, setPaneColor, openPaneMenuForPane };
+window.panea = { hidePane, showPane, togglePaneHidden, revealAllPanes, state, runtime, newTab, openPalette, togglePalette, openNotifications, toggleNotifications, reopenClosedTab, saveCurrentLayout, openLayout, saveLayoutInteractive, openLayoutInteractive, deleteLayoutPick, openGit, toggleGit, openMdPreview, closeMdPreview, openFind, toggleFind, openSettings, splitPane, closePane, handleActivity, setAgents, mountResumeBar, persist, applySidebarWidth, startPaneRename, setPaneColor, openPaneMenuForPane };
 
 document.getElementById("new-tab").onclick = () => newTab();
 document.getElementById("empty-new").onclick = () => newTab();

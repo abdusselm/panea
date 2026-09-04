@@ -9,6 +9,7 @@ import { loadSettings, saveSettings } from "./settings-store.js";
 import { loadAgents } from "./agents-store.js";
 import { computeMetaBatch, cwdOfBridge } from "./meta.js";
 import { gitStatus, gitDiff } from "./git.js";
+import { readCwdFile } from "./file-read.js";
 import { getUpdateStatus } from "./update.js";
 
 const META_POLL_MS = 3500;
@@ -158,6 +159,12 @@ export function handleConnection(ws) {
       case "getGitDiff": {
         gitDiff(msg.cwd, msg.path, msg.mode).then((res) =>
           send({ type: "gitDiff", cwd: msg.cwd, path: msg.path, ...res })
+        );
+        break;
+      }
+      case "getFileContent": {
+        readCwdFile(msg.cwd, msg.path).then((res) =>
+          send({ type: "fileContent", cwd: msg.cwd, path: msg.path, ...res })
         );
         break;
       }

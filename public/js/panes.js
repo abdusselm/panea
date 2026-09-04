@@ -17,6 +17,7 @@ import { wireScrollAnchor, closeScrollAnchorFor } from "./scroll-anchor.js";
 import { wirePaneBoot, markPaneBooting, noteBootInput, closePaneBootFor } from "./pane-boot.js";
 import { requestPaneCwd, forgetPaneCwd } from "./pane-cwd.js";
 import { closeTranscriptFor } from "./transcript.js";
+import { wireMdLinks, closeMdLinksFor } from "./pane-md-links.js";
 
 const { Terminal } = window;
 const FitAddon = window.FitAddon;
@@ -111,6 +112,7 @@ export function createPane(paneId, tabId, cwd, restore, opts) {
   wirePaneVisibility(pane);
   wireScrollAnchor(pane);
   wirePaneBoot(pane);
+  wireMdLinks(pane);
   applyPaneIdentity(pane, restore);
   applyPaneHidden(pane, restore);
 
@@ -214,6 +216,7 @@ export function destroyPane(paneId) {
   closeScrollAnchorFor(paneId);
   closePaneBootFor(paneId);
   closeTranscriptFor(paneId);
+  closeMdLinksFor(paneId);
   forgetPaneCwd(paneId);
   for (const x of p.exchanges) { try { x.marker.dispose(); } catch (_) {} }
   p.exchanges.length = 0;
