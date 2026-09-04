@@ -28,6 +28,14 @@ const SCROLLBACK = 5000;
 
 const RESTORE_MARKER = "──── restored session ────";
 
+function handlePaneKey(e, paneId, term) {
+  if (e.type === "keydown" && e.metaKey && !e.altKey && !e.ctrlKey && !e.shiftKey) {
+    if (e.key === "ArrowLeft") { e.preventDefault(); term.input("\x01"); return false; }
+    if (e.key === "ArrowRight") { e.preventDefault(); term.input("\x05"); return false; }
+  }
+  return handleGlobalKey(e, paneId);
+}
+
 function scheduleRefit(paneId) {
   const p = state.panes.get(paneId);
   if (!p || p.refitRAF) return;
@@ -100,7 +108,7 @@ export function createPane(paneId, tabId, cwd, restore, opts) {
     noteBootInput(paneId);
     trackAgentPrompt(p, d);
   });
-  term.attachCustomKeyEventHandler((e) => handleGlobalKey(e, paneId));
+  term.attachCustomKeyEventHandler((e) => handlePaneKey(e, paneId, term));
 
   const ro = new ResizeObserver(() => scheduleRefit(paneId));
   ro.observe(termEl);

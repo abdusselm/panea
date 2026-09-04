@@ -4,6 +4,16 @@ Notable changes per release. Versions follow [semver](https://semver.org);
 installed copies update themselves on their next launch, so anything listed here
 reaches users without them asking for it.
 
+## [0.4.12] - 2026-09-04
+
+### Added
+
+- `Cmd-Left`/`Cmd-Right` now jump the cursor to the start/end of the current
+  shell line, matching the macOS text-editing convention. Previously the
+  arrow keys only moved the cursor one character at a time, so getting back
+  to the front of a long command meant holding the key down or reaching for
+  the mouse.
+
 ## [0.4.11] - 2026-09-04
 
 ### Added
