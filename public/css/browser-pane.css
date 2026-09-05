@@ -1,0 +1,78 @@
+
+
+.browser-leaf { background: var(--bg); }
+
+.browser-bar {
+  flex: 0 0 32px; height: 32px; display: flex; align-items: center; gap: 4px;
+  padding: 0 6px; background: var(--bg-elev); border-bottom: 1px solid var(--border);
+}
+.browser-bar .browser-nav {
+  flex: 0 0 24px; width: 24px; height: 24px; padding: 0; border: none; border-radius: 5px;
+  background: transparent; color: var(--text-dim); cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.browser-bar .browser-nav svg { width: 15px; height: 15px; }
+.browser-bar .browser-nav:hover:not(:disabled) { color: var(--text); background: var(--bg); }
+.browser-bar .browser-nav:disabled { opacity: 0.3; cursor: default; }
+
+.browser-address {
+  flex: 1; min-width: 0; height: 24px; padding: 0 9px;
+  background: var(--bg); border: 1px solid var(--border); border-radius: 6px;
+  color: var(--text); font-family: inherit; font-size: var(--fs-sm); outline: none;
+}
+.browser-address:focus { border-color: var(--focus-border); }
+.browser-address::placeholder { color: var(--text-dim); }
+
+.browser-notice {
+  flex: 0 0 auto; display: flex; align-items: center; gap: 8px;
+  padding: 5px 6px 5px 10px; background: rgba(229, 192, 123, 0.12);
+  border-bottom: 1px solid rgba(229, 192, 123, 0.45);
+  font-size: var(--fs-xs); color: var(--text);
+}
+.browser-notice .bn-text { flex: 1; min-width: 0; line-height: 1.4; }
+.browser-notice code {
+  font-family: inherit; padding: 0 3px; border-radius: 3px;
+  background: rgba(0, 0, 0, 0.25); color: var(--text);
+}
+.browser-notice .bn-open {
+  flex: 0 0 auto; background: transparent; border: 1px solid rgba(229, 192, 123, 0.6);
+  color: var(--text); font-family: inherit; font-size: var(--fs-xs);
+  padding: 3px 9px; border-radius: 6px; cursor: pointer; white-space: nowrap;
+}
+.browser-notice .bn-open:hover { background: rgba(229, 192, 123, 0.18); }
+.browser-notice .bn-x {
+  flex: 0 0 auto; background: transparent; border: none; color: var(--text-dim);
+  font-family: inherit; font-size: var(--fs-sm); cursor: pointer; padding: 2px 4px;
+}
+.browser-notice .bn-x:hover { color: var(--text); }
+
+.browser-view { position: relative; flex: 1; min-height: 0; display: flex; background: #fff; }
+.browser-view webview, .browser-view .browser-frame {
+  flex: 1; width: 100%; height: 100%; border: none; background: #fff;
+}
+body.resizing-split .browser-view { pointer-events: none; }
+.hidden-pane .browser-view, .hidden-pane .browser-bar, .hidden-pane .browser-notice { display: none; }
+
+.browser-leaf.browser-loading .browser-bar::after {
+  content: ""; position: absolute; left: 0; right: 0; height: 2px;
+  margin-top: 30px; background: var(--accent); animation: browser-progress 1.1s ease-in-out infinite;
+}
+
+.browser-error, .browser-placeholder {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  padding: 20px; text-align: center; background: var(--term-bg);
+  color: var(--text-dim); font-size: var(--fs-sm);
+}
+.browser-placeholder { flex-direction: column; gap: 8px; }
+.browser-placeholder strong { color: var(--text); font-weight: 600; }
+.browser-placeholder span { max-width: 42ch; line-height: 1.5; }
+.browser-placeholder code {
+  font-family: inherit; padding: 0 3px; border-radius: 3px;
+  background: var(--bg-elev); color: var(--text);
+}
+
+@keyframes browser-progress {
+  0% { opacity: 0.25; }
+  50% { opacity: 1; }
+  100% { opacity: 0.25; }
+}

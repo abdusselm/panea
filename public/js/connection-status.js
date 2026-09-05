@@ -45,7 +45,7 @@ function hide() {
 function setPanesLive(live) {
   document.body.classList.toggle("disconnected", !live);
   for (const p of state.panes.values()) {
-    try { p.term.options.cursorBlink = live; } catch (_) {}
+    if (p.term) p.term.options.cursorBlink = live;
   }
 }
 

@@ -134,7 +134,7 @@ function gotoSection(section) {
 
 export function openTranscript() {
   const p = focusedPane();
-  if (!p) return;
+  if (!p || !p.term) return;
   ensureDom();
   if (boxEl.parentNode !== p.el) {
     if (boxEl.parentNode) boxEl.parentNode.removeChild(boxEl);

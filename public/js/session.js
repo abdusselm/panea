@@ -8,6 +8,7 @@ import { newTab, createTabPaneEl, activateTab, renderTabList, instantiateTree } 
 import { renderTab } from "./panes.js";
 import { applySidebarWidth } from "./sidebar.js";
 import { restoreGitPanel } from "./git-resize.js";
+import { isBrowserPane, browserPaneUrl } from "./browser-pane.js";
 
 const SCROLL_LINES = 800;
 const SCROLL_MAX_CHARS = 200000;
@@ -30,6 +31,14 @@ function serializeTree(node) {
   }
   const leaf = { kind: "leaf", id: node.id };
   const p = state.panes.get(node.id);
+  if (p && isBrowserPane(p)) {
+    leaf.paneKind = "browser";
+    leaf.url = browserPaneUrl(p);
+    if (p.customTitle) leaf.name = p.customTitle;
+    if (p.color) leaf.color = p.color;
+    if (p.hidden) leaf.hidden = true;
+    return leaf;
+  }
   if (p) {
     const cwd = (p.meta && p.meta.cwd) || p.cwd || "";
     if (cwd) leaf.cwd = cwd;

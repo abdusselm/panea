@@ -18,6 +18,7 @@ import { wirePaneBoot, markPaneBooting, noteBootInput, closePaneBootFor } from "
 import { requestPaneCwd, forgetPaneCwd } from "./pane-cwd.js";
 import { closeTranscriptFor } from "./transcript.js";
 import { wireMdLinks, closeMdLinksFor } from "./pane-md-links.js";
+import { isBrowserPane, createBrowserPane, focusBrowserPane, destroyBrowserPane } from "./browser-pane.js";
 
 const { Terminal } = window;
 const FitAddon = window.FitAddon;
@@ -166,7 +167,7 @@ function openShell(pane, cwd) {
 
 export function reattachPanes() {
   for (const p of state.panes.values()) {
-    if (p.exited) continue;
+    if (p.exited || isBrowserPane(p)) continue;
     let dims = null;
     if (!p.hidden) { try { dims = p.fit.proposeDimensions(); } catch (_) {} }
     wsSend({
@@ -180,7 +181,7 @@ export function reattachPanes() {
 
 export function setFontSize(n) {
   runtime.fontSize = Math.max(MIN_FONT_SIZE, Math.min(MAX_FONT_SIZE, n));
-  for (const p of state.panes.values()) p.term.options.fontSize = runtime.fontSize;
+  for (const p of state.panes.values()) if (!isBrowserPane(p)) p.term.options.fontSize = runtime.fontSize;
   const tab = state.tabs.find((t) => t.id === state.activeTabId);
   if (tab) refitTab(tab);
   persist();
@@ -188,7 +189,7 @@ export function setFontSize(n) {
 
 export function refit(paneId) {
   const p = state.panes.get(paneId);
-  if (!p || p.hidden) return;
+  if (!p || p.hidden || isBrowserPane(p)) return;
   const tab = state.tabs.find((t) => t.id === p.tabId);
   if (!tab || tab.id !== state.activeTabId) return;
   try {
@@ -211,7 +212,8 @@ export function focusPane(paneId) {
   if (!p) return;
   state.focusedPaneId = paneId;
   p.el.classList.add("focused");
-  p.term.focus();
+  if (isBrowserPane(p)) focusBrowserPane(p);
+  else p.term.focus();
   clearPaneAttention(p);
   const tab = state.tabs.find((t) => t.id === p.tabId);
   if (tab) { updateTabName(tab); refreshTabMeta(tab); }
@@ -220,6 +222,11 @@ export function focusPane(paneId) {
 export function destroyPane(paneId) {
   const p = state.panes.get(paneId);
   if (!p) return;
+  if (isBrowserPane(p)) {
+    destroyBrowserPane(p);
+    state.panes.delete(paneId);
+    return;
+  }
   closeFindFor(paneId);
   closeScrollAnchorFor(paneId);
   closePaneBootFor(paneId);
@@ -238,7 +245,7 @@ export function destroyPane(paneId) {
 
 export function restartPane(paneId) {
   const p = state.panes.get(paneId);
-  if (!p) return;
+  if (!p || isBrowserPane(p)) return;
   p.exited = false; p.el.classList.remove("exited");
   p.term.reset();
   const dims = p.fit.proposeDimensions();
@@ -281,7 +288,7 @@ function markExchange(p, text) {
   }
 }
 
-export function splitPane(paneId, dir) {
+export function splitPane(paneId, dir, opts) {
   const src = state.panes.get(paneId);
   if (!src) return;
   const tab = state.tabs.find((t) => t.id === src.tabId);
@@ -296,7 +303,12 @@ export function splitPane(paneId, dir) {
   } else {
     tab.tree = split;
   }
-  createPane(newId, tab.id, (src.meta && src.meta.cwd) || src.cwd || tab.cwd, null, { inheritFrom: paneId });
+  if (opts && opts.browser) {
+    createBrowserPane(newId, tab.id, opts.url || "", null);
+  } else {
+    const cwd = (src.meta && src.meta.cwd) || src.cwd || tab.cwd;
+    createPane(newId, tab.id, cwd, null, isBrowserPane(src) ? undefined : { inheritFrom: paneId });
+  }
   renderTab(tab);
   focusPane(newId);
   refitTab(tab);

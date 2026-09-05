@@ -15,6 +15,7 @@ import { openSettings } from "./settings.js";
 import { chordFor, prettyChord } from "./shortcuts.js";
 import { startPaneRename, openPaneMenuForPane } from "./pane-identity.js";
 import { hidePane, revealAllPanes, countHiddenPanes } from "./pane-visibility.js";
+import { isBrowserPane, focusBrowserAddress } from "./browser-pane.js";
 
 const hk = (id) => prettyChord(chordFor(id));
 
@@ -82,10 +83,10 @@ function renameActiveTab() {
 
 function clearFocusedTerminal() {
   const p = focusedPane();
-  if (p) p.term.clear();
+  if (p && p.term) p.term.clear();
 }
 
-const GROUP_ORDER = ["Tabs", "Panes", "Layouts", "Git", "View", "Notifications", "Switch tab", "Custom"];
+const GROUP_ORDER = ["Tabs", "Panes", "Browser", "Layouts", "Git", "View", "Notifications", "Switch tab", "Custom"];
 
 function buildPaletteCommands() {
   const cmds = [];
@@ -110,6 +111,11 @@ function buildPaletteCommands() {
   add("Panes", "Pane color…", "", () => { const p = focusedPane(); if (p) openPaneMenuForPane(p); });
   add("Panes", "Find in terminal", hk("find"), () => openFind());
   add("Panes", "Clear terminal", "", clearFocusedTerminal);
+
+  add("Browser", "New browser pane", hk("browser-pane"), () => { const p = focusedPane(); if (p) splitPane(p.id, "h", { browser: true }); });
+  if (isBrowserPane(focusedPane())) {
+    add("Browser", "Focus address bar", hk("browser-address"), () => focusBrowserAddress(focusedPane()));
+  }
 
   add("Layouts", "Save this tab as layout…", "", () => saveLayoutInteractive());
   if (layoutNames().length) {
@@ -190,7 +196,8 @@ export function closePalette() {
   if (!paletteEl) return;
   paletteEl.classList.remove("open");
   const p = focusedPane();
-  if (p) p.term.focus();
+  const surface = p && (p.term || p.view);
+  if (surface) surface.focus();
 }
 
 export function togglePalette() { paletteIsOpen() ? closePalette() : openPalette(); }

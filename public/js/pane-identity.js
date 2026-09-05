@@ -72,7 +72,8 @@ export function startPaneRename(p) {
     setPaneDraggable(p, true);
     if (save) { setPaneName(p, value); persist(); }
     else refreshPaneLabel(p);
-    p.term.focus();
+    const surface = p.term || p.view;
+    if (surface) surface.focus();
   };
   input.onkeydown = (e) => {
     e.stopPropagation();

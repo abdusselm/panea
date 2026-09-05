@@ -33,7 +33,15 @@ function createWindow() {
     titleBarStyle: "hiddenInset",
     trafficLightPosition: { x: 14, y: 18 },
     title: "Panea",
-    webPreferences: { contextIsolation: true, nodeIntegration: false },
+    webPreferences: { contextIsolation: true, nodeIntegration: false, webviewTag: true },
+  });
+
+  win.webContents.on("will-attach-webview", (_event, webPreferences, params) => {
+    delete webPreferences.preload;
+    webPreferences.nodeIntegration = false;
+    webPreferences.contextIsolation = true;
+    webPreferences.sandbox = true;
+    params.allowpopups = false;
   });
   win.webContents.session.clearCache().catch(() => {});
   win.loadURL(`http://${HOST}:${PORT}`);
@@ -74,6 +82,15 @@ function createWindow() {
     });
   }
 }
+
+app.on("web-contents-created", (_event, contents) => {
+  if (contents.getType() !== "webview") return;
+  contents.setWindowOpenHandler(({ url }) => {
+    if (/^https?:\/\//i.test(url)) shell.openExternal(url);
+    return { action: "deny" };
+  });
+  contents.session.setPermissionRequestHandler((_wc, _permission, callback) => callback(false));
+});
 
 app.whenReady().then(async () => {
   try {

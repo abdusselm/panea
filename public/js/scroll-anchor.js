@@ -64,7 +64,7 @@ function refocus(pane) {
 
 export function jumpToBottom(paneId) {
   const pane = state.panes.get(paneId);
-  if (!pane) return;
+  if (!pane || !pane.term) return;
   const a = anchors.get(paneId);
   const from = pane.term.buffer.active.viewportY;
   const behind = linesBehind(pane);

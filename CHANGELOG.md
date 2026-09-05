@@ -4,6 +4,28 @@ Notable changes per release. Versions follow [semver](https://semver.org);
 installed copies update themselves on their next launch, so anything listed here
 reaches users without them asking for it.
 
+## [0.4.13] - 2026-09-05
+
+### Added
+
+- Panes can now hold a web page instead of a shell. `Cmd-B` opens a browser
+  pane beside the focused one, with an address bar, back/forward/reload, and
+  `Cmd-L` to jump to the address bar. It behaves like any other pane: split it,
+  fold it to the rail, drag it onto another pane's edge, rename and colour it,
+  and it comes back at its last URL after a restart. Checking a dev server or a
+  doc page no longer means leaving the window.
+- Typing in the address bar accepts what you actually type: `localhost:5173`
+  stays on http so a dev server loads, a bare hostname gets https, and anything
+  that is not a URL becomes a search instead of a failed navigation.
+
+### Changed
+
+- In browser mode (`panea` without `--app`), a browser pane runs in an iframe,
+  so any site sending `X-Frame-Options` refuses to load and the pane stays
+  blank. The pane now says so up front and offers to open the page in the
+  system browser; local dev servers are unaffected. The desktop window
+  (`panea --app`) has no such limit and loads every site.
+
 ## [0.4.12] - 2026-09-04
 
 ### Added
