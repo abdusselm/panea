@@ -10,7 +10,7 @@ import { wirePaneIdentity, applyPaneIdentity } from "./pane-identity.js";
 import { wirePaneVisibility, applyPaneHidden } from "./pane-visibility.js";
 import { normalizeUrl, hostLabel, BLANK_URL } from "./browser-url.js";
 
-export const HOME_URL = "https://duckduckgo.com";
+export const HOME_URL = "https://www.google.com";
 
 export function isDesktopRuntime() {
   return typeof navigator !== "undefined" && /\bElectron\//.test(navigator.userAgent || "");
@@ -26,7 +26,7 @@ export function browserPaneUrl(pane) {
 
 export function createBrowserPane(paneId, tabId, url, restore) {
   const desktop = isDesktopRuntime();
-  const startUrl = normalizeUrl(url || (desktop ? HOME_URL : "")) || BLANK_URL;
+  const startUrl = normalizeUrl(url || HOME_URL) || BLANK_URL;
 
   const el = document.createElement("div");
   el.className = "leaf node browser-leaf";
@@ -37,6 +37,7 @@ export function createBrowserPane(paneId, tabId, url, restore) {
       <span class="attn-dot"></span>
       <span class="title"></span>
       <div class="actions">
+        <button data-act="new-browser" title="Open browser pane">${ICON.globe}</button>
         <button data-act="split-h" title="Split right (Cmd-D)">${ICON.splitH}</button>
         <button data-act="split-v" title="Split down (Cmd-Shift-D)">${ICON.splitV}</button>
         <button data-act="hide" title="Hide pane (keeps it running)">${ICON.eyeOff}</button>
@@ -93,6 +94,7 @@ export function createBrowserPane(paneId, tabId, url, restore) {
   viewEl.appendChild(pane.view);
   if (startUrl === BLANK_URL) showPlaceholder(pane);
 
+  el.querySelector('[data-act="new-browser"]').onclick = (e) => { e.stopPropagation(); splitPane(paneId, "h", { browser: true }); };
   el.querySelector('[data-act="split-h"]').onclick = (e) => { e.stopPropagation(); splitPane(paneId, "h"); };
   el.querySelector('[data-act="split-v"]').onclick = (e) => { e.stopPropagation(); splitPane(paneId, "v"); };
   el.querySelector('[data-act="close"]').onclick = (e) => { e.stopPropagation(); closePane(paneId); };

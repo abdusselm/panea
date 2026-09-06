@@ -75,6 +75,7 @@ export function createPane(paneId, tabId, cwd, restore, opts) {
       <span class="attn-dot"></span>
       <span class="title"></span>
       <div class="actions">
+        <button data-act="new-browser" title="Open browser pane">${ICON.globe}</button>
         <button data-act="split-h" title="Split right (Cmd-D)">${ICON.splitH}</button>
         <button data-act="split-v" title="Split down (Cmd-Shift-D)">${ICON.splitV}</button>
         <button data-act="hide" title="Hide pane (keeps it running)">${ICON.eyeOff}</button>
@@ -96,6 +97,7 @@ export function createPane(paneId, tabId, cwd, restore, opts) {
     return true;
   });
 
+  el.querySelector('[data-act="new-browser"]').onclick = (e) => { e.stopPropagation(); splitPane(paneId, "h", { browser: true }); };
   el.querySelector('[data-act="split-h"]').onclick = (e) => { e.stopPropagation(); splitPane(paneId, "h"); };
   el.querySelector('[data-act="split-v"]').onclick = (e) => { e.stopPropagation(); splitPane(paneId, "v"); };
   el.querySelector('[data-act="close"]').onclick = (e) => { e.stopPropagation(); closePane(paneId); };

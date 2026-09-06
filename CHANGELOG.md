@@ -4,6 +4,18 @@ Notable changes per release. Versions follow [semver](https://semver.org);
 installed copies update themselves on their next launch, so anything listed here
 reaches users without them asking for it.
 
+## [0.4.15] - 2026-09-06
+
+### Added
+
+- Every pane's header now has a globe icon next to Split/Hide/Close, so
+  opening a browser pane doesn't require knowing `Cmd-B` exists.
+
+### Changed
+
+- A new browser pane now opens to Google by default (was DuckDuckGo, and
+  blank in browser-mode/non-Electron sessions).
+
 ## [0.4.14] - 2026-09-06
 
 ### Fixed
