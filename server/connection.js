@@ -163,8 +163,9 @@ export function handleConnection(ws) {
         break;
       }
       case "getFileContent": {
-        readCwdFile(msg.cwd, msg.path).then((res) =>
-          send({ type: "fileContent", cwd: msg.cwd, path: msg.path, ...res })
+        readCwdFile(msg.cwd, msg.path).then(
+          (res) => send({ type: "fileContent", cwd: msg.cwd, path: msg.path, ...res }),
+          () => send({ type: "fileContent", cwd: msg.cwd, path: msg.path, ok: false, error: "read failed" })
         );
         break;
       }

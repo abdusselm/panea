@@ -4,6 +4,20 @@ Notable changes per release. Versions follow [semver](https://semver.org);
 installed copies update themselves on their next launch, so anything listed here
 reaches users without them asking for it.
 
+## [0.4.14] - 2026-09-06
+
+### Fixed
+
+- Cmd-clicking a `.md` filename that a long absolute path had soft-wrapped
+  across two terminal columns opened the preview to a truncated, wrong
+  filename (e.g. `scratchpad/report.md` read as `chpad/report.md`), which the
+  server then couldn't find. The link detector now joins wrapped terminal
+  rows back into one logical line before matching, so the full path is
+  captured regardless of where the line happened to wrap.
+- If a Markdown preview request ever failed unexpectedly on the server, the
+  panel had no fallback and stayed on "Loading…" forever. It now always
+  answers, showing an error instead of hanging.
+
 ## [0.4.13] - 2026-09-05
 
 ### Added
