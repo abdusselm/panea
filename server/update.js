@@ -185,9 +185,7 @@ async function runUpdate({ latest, broadcast }) {
   broadcast(status);
 }
 
-export async function watchForUpdates(broadcast) {
-  if (process.env.PANEA_NO_UPDATE === "1") return;
-
+async function checkOnce(broadcast) {
   const kind = detectInstall(ROOT);
   if (!kind) return;
   if (checkedRecently()) return;
@@ -203,4 +201,11 @@ export async function watchForUpdates(broadcast) {
   if (!latest || !isNewer(latest, pkg.version)) return;
 
   await runUpdate({ latest, broadcast });
+}
+
+export async function watchForUpdates(broadcast) {
+  if (process.env.PANEA_NO_UPDATE === "1") return;
+
+  await checkOnce(broadcast);
+  setInterval(() => { checkOnce(broadcast); }, CHECK_INTERVAL_MS).unref();
 }

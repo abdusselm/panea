@@ -4,6 +4,15 @@ Notable changes per release. Versions follow [semver](https://semver.org);
 installed copies update themselves on their next launch, so anything listed here
 reaches users without them asking for it.
 
+## [0.4.16] - 2026-09-06
+
+### Fixed
+
+- The update check only ran once, at startup, so a session left running past
+  6 hours (browser mode, or a desktop window nobody quit) never learned about
+  a release published later — only a restart triggered the next check. It now
+  reschedules itself every 6 hours for as long as the process stays up.
+
 ## [0.4.15] - 2026-09-06
 
 ### Added
