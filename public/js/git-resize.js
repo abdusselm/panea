@@ -103,7 +103,7 @@ export function initGitResize(panelEl) {
   split.title = "Drag to resize the file list — double-click to reset";
   split.addEventListener("pointerdown", onSplitDown);
   split.addEventListener("dblclick", resetFilesWidth);
-  panelEl.querySelector(".git-body").insertBefore(split, panelEl.querySelector(".gd-diff"));
+  panelEl.querySelector(".git-body").insertBefore(split, panelEl.querySelector(".gd-right"));
 
   for (const [edge, cursor] of GRIPS) {
     const grip = document.createElement("div");

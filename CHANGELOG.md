@@ -4,6 +4,29 @@ Notable changes per release. Versions follow [semver](https://semver.org);
 installed copies update themselves on their next launch, so anything listed here
 reaches users without them asking for it.
 
+## [0.4.17] - 2026-09-07
+
+### Added
+
+- A pane header only showed the last folder name, so two panes in different
+  checkouts of the same project looked identical. The header now carries the
+  working directory next to the title (`panea - ~/Desktop/Fork/panea`),
+  shortened to its last segments with the full path on hover, and it follows
+  the pane as you `cd`.
+- The git panel can commit. The bottom right of the diff view has a commit
+  message box (⌘⏎ commits), an "Amend last commit" toggle that pre-fills the
+  previous message, a "Stage all" button, and a staged/unstaged count;
+  individual files stage and unstage from the `+` / `−` button on their row.
+  With nothing staged the button offers to stage everything and commit in one
+  go, and git's own error text is shown inline when a commit is refused.
+
+### Fixed
+
+- Editing a file in another editor left the git panel showing a stale diff
+  until you pressed Refresh. The panel now watches the repository and reloads
+  itself when anything changes on disk — including commits and staging done
+  from a terminal — while keeping the selected file and your scroll position.
+
 ## [0.4.16] - 2026-09-06
 
 ### Fixed

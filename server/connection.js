@@ -1,5 +1,6 @@
 
 
+import { homedir } from "node:os";
 import { openPane, attachPane, detachPane, livePane, closePane } from "./pane-registry.js";
 import { keepAlive } from "./keepalive.js";
 import { loadSession, saveSession } from "./session-store.js";
@@ -9,6 +10,8 @@ import { loadSettings, saveSettings } from "./settings-store.js";
 import { loadAgents } from "./agents-store.js";
 import { computeMetaBatch, cwdOfBridge } from "./meta.js";
 import { gitStatus, gitDiff } from "./git.js";
+import { gitStage, gitUnstage, gitStageAll, gitCommit, gitLastCommitMessage } from "./git-commit.js";
+import { startGitWatch } from "./git-watch.js";
 import { readCwdFile } from "./file-read.js";
 import { getUpdateStatus } from "./update.js";
 
@@ -20,6 +23,7 @@ export function handleConnection(ws) {
   const lastMeta = new Map();
 
   const agents = loadAgents();
+  let stopGitWatch = () => {};
 
   const send = (obj) => {
     if (ws.readyState === ws.OPEN) ws.send(JSON.stringify(obj));
@@ -62,6 +66,7 @@ export function handleConnection(ws) {
   };
   const metaTimer = process.env.PANEA_NO_META_POLL ? null : setInterval(pollMeta, META_POLL_MS);
 
+  send({ type: "env", home: homedir() });
   send({ type: "session", layout: loadSession() });
   send({ type: "commands", commands: loadCommands() });
   send({ type: "layouts", layouts: loadLayouts() });
@@ -162,6 +167,39 @@ export function handleConnection(ws) {
         );
         break;
       }
+      case "watchGit": {
+        stopGitWatch();
+        if (!msg.cwd) break;
+        stopGitWatch = startGitWatch(msg.cwd, () => send({ type: "gitChanged", cwd: msg.cwd }));
+        break;
+      }
+      case "unwatchGit": {
+        stopGitWatch();
+        stopGitWatch = () => {};
+        break;
+      }
+      case "stageFiles": {
+        gitStage(msg.cwd, msg.paths).then((res) => send({ type: "gitOp", action: "stage", cwd: msg.cwd, ...res }));
+        break;
+      }
+      case "unstageFiles": {
+        gitUnstage(msg.cwd, msg.paths).then((res) => send({ type: "gitOp", action: "unstage", cwd: msg.cwd, ...res }));
+        break;
+      }
+      case "stageAll": {
+        gitStageAll(msg.cwd).then((res) => send({ type: "gitOp", action: "stageAll", cwd: msg.cwd, ...res }));
+        break;
+      }
+      case "gitCommit": {
+        gitCommit(msg.cwd, { message: msg.message, amend: msg.amend, stageAll: msg.stageAll }).then((res) =>
+          send({ type: "gitOp", action: "commit", cwd: msg.cwd, ...res })
+        );
+        break;
+      }
+      case "getLastCommitMessage": {
+        gitLastCommitMessage(msg.cwd).then((res) => send({ type: "lastCommitMessage", cwd: msg.cwd, ...res }));
+        break;
+      }
       case "getFileContent": {
         readCwdFile(msg.cwd, msg.path).then(
           (res) => send({ type: "fileContent", cwd: msg.cwd, path: msg.path, ...res }),
@@ -176,6 +214,7 @@ export function handleConnection(ws) {
 
   ws.on("close", () => {
     stopKeepAlive();
+    stopGitWatch();
     if (metaTimer) clearInterval(metaTimer);
     for (const [id, sink] of attached) detachPane(id, sink);
     attached.clear();

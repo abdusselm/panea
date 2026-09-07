@@ -66,6 +66,7 @@
 .gd-count[data-kind="new"] { color: #b5bd68; }
 .gd-file.sel .gd-count { color: rgba(255, 255, 255, 0.8); }
 
+.gd-right { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; }
 .gd-diff { flex: 1 1 auto; overflow: auto; min-width: 0; background: var(--bg); }
 .gd-diffbody {
   font-family: ui-monospace, "SF Mono", Menlo, monospace;

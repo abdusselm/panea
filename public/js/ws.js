@@ -7,7 +7,7 @@ import { restoreSession } from "./session.js";
 import { refreshTabMeta } from "./tabs.js";
 import { setCustomCommands, refreshOpenPalette } from "./palette.js";
 import { setLayouts } from "./layouts.js";
-import { setGitStatus, setGitDiff } from "./git.js";
+import { setGitStatus, setGitDiff, setGitOp, setLastCommit, gitChanged } from "./git.js";
 import { setMdContent } from "./md-preview.js";
 import { setShortcutOverrides } from "./shortcuts.js";
 import { refreshOpenSettings } from "./settings.js";
@@ -16,6 +16,7 @@ import { reattachPanes } from "./panes.js";
 import { setConnectionState } from "./connection-status.js";
 import { applyUpdateStatus } from "./update-status.js";
 import { deliverPaneCwd } from "./pane-cwd.js";
+import { setHomeDir, refreshPanePath } from "./pane-path.js";
 import { markPaneReady } from "./pane-boot.js";
 
 const RECONNECT_MS = 1000;
@@ -115,6 +116,9 @@ export function connect() {
         }
         break;
       }
+      case "env":
+        setHomeDir(msg.home || "");
+        break;
       case "session":
         restoreSession(msg.layout);
         break;
@@ -129,6 +133,7 @@ export function connect() {
         const p = state.panes.get(msg.paneId);
         if (p) {
           p.meta = { cwd: msg.cwd || "", branch: msg.branch || "", ports: msg.ports || [], agent: msg.agent || "" };
+          refreshPanePath(p);
           const tab = state.tabs.find((t) => t.id === p.tabId);
           if (tab) refreshTabMeta(tab);
         }
@@ -142,6 +147,15 @@ export function connect() {
         break;
       case "gitDiff":
         setGitDiff(msg);
+        break;
+      case "gitOp":
+        setGitOp(msg);
+        break;
+      case "lastCommitMessage":
+        setLastCommit(msg);
+        break;
+      case "gitChanged":
+        gitChanged(msg);
         break;
       case "fileContent":
         setMdContent(msg);

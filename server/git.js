@@ -2,13 +2,19 @@
 
 import { execFile } from "node:child_process";
 
-function git(args, cwd, timeoutMs = 5000) {
+export function runGit(args, cwd, timeoutMs = 5000) {
   return new Promise((resolve) => {
-    execFile("git", ["-C", cwd, ...args], { timeout: timeoutMs, maxBuffer: 16 << 20 }, (err, stdout) => {
-      resolve({ code: err && typeof err.code === "number" ? err.code : err ? 1 : 0, out: String(stdout || "") });
+    execFile("git", ["-C", cwd, ...args], { timeout: timeoutMs, maxBuffer: 16 << 20 }, (err, stdout, stderr) => {
+      resolve({
+        code: err && typeof err.code === "number" ? err.code : err ? 1 : 0,
+        out: String(stdout || ""),
+        err: String(stderr || (err && err.message) || ""),
+      });
     });
   });
 }
+
+const git = runGit;
 
 function parseNumstat(out) {
   const map = new Map();

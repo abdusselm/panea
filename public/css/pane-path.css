@@ -1,0 +1,14 @@
+
+
+.leaf-bar .title { flex: 0 1 auto; }
+.leaf-bar .actions { margin-left: auto; }
+
+.leaf-bar .pane-path {
+  flex: 1 1 auto; min-width: 0;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  color: var(--text-dim); font-size: var(--fs-xs);
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+}
+
+.leaf.hidden-pane .leaf-bar .pane-path { display: none !important; }
+.leaf.hidden-pane.rail-col .leaf-bar .actions { margin-left: 0; }

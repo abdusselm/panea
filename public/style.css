@@ -8,6 +8,7 @@
 @import url("/css/tabs.css");
 @import url("/css/panes.css");
 @import url("/css/pane-arrange.css");
+@import url("/css/pane-path.css");
 @import url("/css/pane-identity.css");
 @import url("/css/pane-visibility.css");
 @import url("/css/pane-boot.css");
@@ -18,6 +19,7 @@
 @import url("/css/palette.css");
 @import url("/css/notifications.css");
 @import url("/css/git.css");
+@import url("/css/git-commit.css");
 @import url("/css/git-resize.css");
 @import url("/css/md-preview.css");
 @import url("/css/settings.css");

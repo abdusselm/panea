@@ -16,6 +16,7 @@ import { wirePaneVisibility, applyPaneHidden, firstVisiblePaneId, ensureVisibleP
 import { wireScrollAnchor, closeScrollAnchorFor } from "./scroll-anchor.js";
 import { wirePaneBoot, markPaneBooting, noteBootInput, closePaneBootFor } from "./pane-boot.js";
 import { requestPaneCwd, forgetPaneCwd } from "./pane-cwd.js";
+import { wirePanePath, refreshPanePath } from "./pane-path.js";
 import { closeTranscriptFor } from "./transcript.js";
 import { wireMdLinks, closeMdLinksFor } from "./pane-md-links.js";
 import { isBrowserPane, createBrowserPane, focusBrowserPane, destroyBrowserPane } from "./browser-pane.js";
@@ -74,6 +75,7 @@ export function createPane(paneId, tabId, cwd, restore, opts) {
       <span class="ico">${ICON.folder}</span>
       <span class="attn-dot"></span>
       <span class="title"></span>
+      <span class="pane-path"></span>
       <div class="actions">
         <button data-act="new-browser" title="Open browser pane">${ICON.globe}</button>
         <button data-act="split-h" title="Split right (Cmd-D)">${ICON.splitH}</button>
@@ -119,6 +121,7 @@ export function createPane(paneId, tabId, cwd, restore, opts) {
   const pane = { id: paneId, term, fit, search, serialize, tabId, cwd, exited: false, hidden: false, opened: false, queuedInput: [], exchanges: [], el, termEl, ro, titleEl, title: titleText, customTitle: "", color: "", renaming: false, attention: false, attnReason: "", attnMessage: "", idleTimer: null, burstStart: 0, burstBytes: 0, refitRAF: 0, restoreAgent: (restore && restore.agent) || "", promptBuf: "", lastPrompt: "", meta: { cwd: cwd || "", branch: "", ports: [], agent: "" } };
   state.panes.set(paneId, pane);
   wirePaneArrange(pane);
+  wirePanePath(pane);
   wirePaneIdentity(pane);
   wirePaneVisibility(pane);
   wireScrollAnchor(pane);
@@ -156,6 +159,7 @@ function openShell(pane, cwd) {
     pane.cwd = cwd;
     pane.meta.cwd = cwd;
     setPaneTitle(pane.id, cwd.split("/").filter(Boolean).pop() || "shell");
+    refreshPanePath(pane);
   }
   wsSend({ type: "open", paneId: pane.id, cwd: cwd || undefined, cols: dims ? dims.cols : 80, rows: dims ? dims.rows : 24 });
   markPaneBooting(pane.id);

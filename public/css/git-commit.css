@@ -1,0 +1,57 @@
+
+
+.gd-file .gd-stage {
+  flex: 0 0 auto; width: 20px; height: 20px; padding: 0; margin-left: 2px;
+  background: transparent; border: 1px solid var(--border-strong); border-radius: 5px;
+  color: var(--text-dim); font-family: inherit; font-size: var(--fs-sm); line-height: 1;
+  cursor: pointer; opacity: 0; transition: opacity 0.12s;
+}
+.gd-file:hover .gd-stage, .gd-file.sel .gd-stage { opacity: 1; }
+.gd-file .gd-stage:hover { color: var(--text); border-color: var(--accent); }
+.gd-file.sel .gd-stage { color: #fff; border-color: rgba(255, 255, 255, 0.5); }
+
+.git-commit {
+  flex: 0 0 auto; display: flex; flex-direction: column; gap: 8px;
+  padding: 10px 12px; border-top: 1px solid var(--border); background: #2f343d;
+  border-radius: 0 0 11px 0;
+}
+.git-commit.disabled { display: none; }
+
+.gc-head {
+  display: flex; align-items: center; gap: 10px;
+  font-size: var(--fs-xs); color: var(--text-dim);
+}
+.gc-count { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gc-amend { display: flex; align-items: center; gap: 5px; cursor: pointer; }
+.gc-amend input { margin: 0; accent-color: var(--accent); }
+
+.gc-stage-all {
+  background: transparent; border: 1px solid var(--border-strong); color: var(--text-dim);
+  font-family: inherit; font-size: var(--fs-xs); padding: 3px 10px; border-radius: 6px; cursor: pointer;
+}
+.gc-stage-all:hover:not(:disabled) { color: var(--text); border-color: var(--accent); }
+.gc-stage-all:disabled { opacity: 0.4; cursor: default; }
+
+.gc-msg {
+  width: 100%; resize: vertical; min-height: 56px; max-height: 40vh;
+  background: var(--bg); border: 1px solid var(--border-strong); border-radius: 7px;
+  color: var(--text); font-family: inherit; font-size: var(--fs-md); line-height: 1.5;
+  padding: 8px 10px; outline: none;
+}
+.gc-msg:focus { border-color: var(--accent); }
+
+.gc-foot { display: flex; align-items: center; gap: 10px; }
+.gc-status {
+  flex: 1 1 auto; min-width: 0; font-size: var(--fs-xs); color: var(--text-dim);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.gc-status[data-kind="error"] { color: var(--danger); }
+.gc-status[data-kind="ok"] { color: #b5bd68; }
+
+.gc-commit {
+  flex: 0 0 auto; background: var(--accent); border: 1px solid var(--accent); color: #fff;
+  font-family: inherit; font-size: var(--fs-xs); font-weight: 600;
+  padding: 6px 16px; border-radius: 6px; cursor: pointer;
+}
+.gc-commit:disabled { opacity: 0.45; cursor: default; }
+.gc-commit:hover:not(:disabled) { filter: brightness(1.1); }
