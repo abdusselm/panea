@@ -51,7 +51,11 @@
   flex: 1; width: 100%; height: 100%; border: none; background: #fff;
 }
 body.resizing-split .browser-view { pointer-events: none; }
-.hidden-pane .browser-view, .hidden-pane .browser-bar, .hidden-pane .browser-notice { display: none; }
+.hidden-pane .browser-bar, .hidden-pane .browser-notice { display: none; }
+.leaf.hidden-pane > .browser-view {
+  display: flex; position: fixed; left: 0; top: 0; z-index: -1;
+  visibility: hidden; pointer-events: none;
+}
 
 .browser-leaf.browser-loading .browser-bar::after {
   content: ""; position: absolute; left: 0; right: 0; height: 2px;

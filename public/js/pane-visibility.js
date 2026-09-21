@@ -3,11 +3,12 @@
 import { state } from "./state.js";
 import { eachLeaf, findLeaf } from "./util.js";
 import { ICON } from "./theme.js";
-import { renderTab, refitTab, focusPane } from "./panes.js";
+import { resyncTabLayout, refitTab, focusPane } from "./panes.js";
 import { refreshTabMeta } from "./tabs.js";
 import { setPaneDraggable } from "./pane-arrange.js";
 import { railLayout } from "./pane-rail.js";
 import { persist } from "./session.js";
+import { parkBrowserView } from "./browser-pane.js";
 
 export function isPaneHidden(p) { return !!(p && p.hidden); }
 
@@ -50,8 +51,10 @@ export function ensureVisiblePane(tab) {
 }
 
 function markHidden(p, on) {
+  if (on) parkBrowserView(p, true);
   p.hidden = on;
   p.el.classList.toggle("hidden-pane", on);
+  if (!on) parkBrowserView(p, false);
   if (!on) {
     p.el.classList.remove("rail-col", "rail-row");
     try { p.term.resize(Math.max(2, p.term.cols - 1), p.term.rows); } catch (_) {}
@@ -73,7 +76,7 @@ export function hidePane(paneId) {
   if (!found || !found.parent) return;
   if (visiblePaneCount(tab) < 2) return;
   markHidden(p, true);
-  renderTab(tab);
+  resyncTabLayout(tab);
   if (state.focusedPaneId === paneId) {
     const next = firstVisiblePane(tab);
     if (next) focusPane(next.id);
@@ -88,7 +91,7 @@ export function showPane(paneId) {
   if (!p || !p.hidden) return;
   const tab = tabOf(p);
   markHidden(p, false);
-  if (tab) { renderTab(tab); refitTab(tab); refreshTabMeta(tab); }
+  if (tab) { resyncTabLayout(tab); refitTab(tab); refreshTabMeta(tab); }
   focusPane(paneId);
   persist();
 }
@@ -106,7 +109,7 @@ export function revealAllPanes(tab) {
     const q = state.panes.get(l.id);
     if (q && q.hidden) markHidden(q, false);
   });
-  renderTab(tab);
+  resyncTabLayout(tab);
   refitTab(tab);
   refreshTabMeta(tab);
   persist();

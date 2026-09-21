@@ -350,6 +350,34 @@ export function renderTab(tab) {
   tab.el.appendChild(renderNode(tab.tree));
 }
 
+const splitEls = new WeakMap();
+
+function nodeEl(node) {
+  if (node.kind === "leaf") {
+    const p = state.panes.get(node.id);
+    return p ? p.el : null;
+  }
+  const rendered = splitEls.get(node);
+  return rendered ? rendered.split : null;
+}
+
+export function resyncTabLayout(tab) {
+  if (!tab || !tab.tree) return false;
+  const walk = (node) => {
+    if (node.kind === "leaf") return !!nodeEl(node);
+    if (!walk(node.children[0]) || !walk(node.children[1])) return false;
+    const a = nodeEl(node.children[0]);
+    const b = nodeEl(node.children[1]);
+    const rendered = splitEls.get(node);
+    if (!rendered || !rendered.split.isConnected) return false;
+    syncSplitLayout(node, rendered.split, rendered.gutter, a, b);
+    return true;
+  };
+  if (walk(tab.tree)) return true;
+  renderTab(tab);
+  return false;
+}
+
 const MIN_RATIO = 0.08;
 function clampRatio(r) { return Math.max(MIN_RATIO, Math.min(1 - MIN_RATIO, r)); }
 function applyRatio(a, b, r) { a.style.flexGrow = String(r); b.style.flexGrow = String(1 - r); }
@@ -367,6 +395,7 @@ function renderNode(node) {
   const gutter = document.createElement("div");
   gutter.className = "split-gutter";
   split.append(a, gutter, b);
+  splitEls.set(node, { split, gutter });
   const r = clampRatio(typeof node.ratio === "number" ? node.ratio : 0.5);
   node.ratio = r;
   syncSplitLayout(node, split, gutter, a, b);

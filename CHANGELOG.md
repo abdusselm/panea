@@ -4,6 +4,15 @@ Notable changes per release. Versions follow [semver](https://semver.org);
 installed copies update themselves on their next launch, so anything listed here
 reaches users without them asking for it.
 
+## [0.4.18] - 2026-09-21
+
+### Fixed
+
+- Hiding a browser pane and revealing it again reloaded the site from scratch,
+  losing scroll position, form input and anything signed in behind a redirect.
+  Hiding no longer detaches the page: the pane is parked at its current size
+  while folded and comes back exactly as you left it.
+
 ## [0.4.17] - 2026-09-07
 
 ### Added

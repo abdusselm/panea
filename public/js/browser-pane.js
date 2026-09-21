@@ -242,6 +242,16 @@ function showPlaceholder(pane) {
   pane.viewEl.appendChild(hint);
 }
 
+export function parkBrowserView(pane, on) {
+  if (!isBrowserPane(pane) || !pane.viewEl) return;
+  const style = pane.viewEl.style;
+  if (!on) { style.width = ""; style.height = ""; return; }
+  const rect = pane.viewEl.getBoundingClientRect();
+  if (rect.width < 2 || rect.height < 2) return;
+  style.width = `${Math.round(rect.width)}px`;
+  style.height = `${Math.round(rect.height)}px`;
+}
+
 export function focusBrowserPane(pane) {
   if (!isBrowserPane(pane)) return;
   try { pane.view.focus(); } catch (_) {}

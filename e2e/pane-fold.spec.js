@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { bootWorkspace, splitPane, typeInPane, expectPaneText, activePanes, quoted } from "./helpers.js";
+import { BASE_URL } from "./paths.js";
 
 test("folding a pane parks it on the rail and keeps the same shell running", async ({ page }) => {
   const keep = await bootWorkspace(page);
@@ -33,6 +34,40 @@ test("a folded pane survives a vertical split as a rail row", async ({ page }) =
 
   await expect(foldedEl).toHaveClass(/rail-row/);
   await expect(page.locator("#workspace .tabpane.active .split-gutter.locked")).toHaveCount(1);
+});
+
+test("folding a browser pane keeps the loaded page alive", async ({ page }) => {
+  const keep = await bootWorkspace(page);
+  const browserId = await page.evaluate((url) => {
+    const { state, splitPane } = window.panea;
+    const before = new Set(state.panes.keys());
+    splitPane(state.focusedPaneId, "h", { browser: true, url });
+    return [...state.panes.keys()].find((id) => !before.has(id));
+  }, `${BASE_URL}/css/tokens.css`);
+
+  await page.waitForFunction((id) => {
+    const p = window.panea.state.panes.get(id);
+    return !!(p && p.view && p.view.contentDocument && p.view.contentDocument.readyState === "complete");
+  }, browserId);
+  const viewHandle = await page.evaluateHandle((id) => window.panea.state.panes.get(id).view, browserId);
+  await page.evaluate((id) => {
+    window.panea.state.panes.get(id).view.contentWindow.paneaAlive = "kept";
+  }, browserId);
+
+  const browserEl = page.locator(`.leaf[data-pane-id="${browserId}"]`);
+  await browserEl.locator('[data-act="hide"]').click();
+  await expect(browserEl).toHaveClass(/hidden-pane/);
+  await browserEl.locator('[data-act="hide"]').click();
+  await expect(browserEl).not.toHaveClass(/hidden-pane/);
+
+  const alive = await page.evaluate((id) => {
+    const view = window.panea.state.panes.get(id).view;
+    try { return view.contentWindow.paneaAlive || "reloaded"; } catch { return "unreachable"; }
+  }, browserId);
+  expect(alive).toBe("kept");
+  expect(await page.evaluate((el) => el === window.panea.state.panes.get(el.closest(".leaf").dataset.paneId).view, viewHandle)).toBe(true);
+  await typeInPane(page, keep, `echo ${quoted("still-here")}`);
+  await expectPaneText(page, keep, "still-here");
 });
 
 test("the last visible pane refuses to fold", async ({ page }) => {
