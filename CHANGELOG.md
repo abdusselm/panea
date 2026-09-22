@@ -4,6 +4,18 @@ Notable changes per release. Versions follow [semver](https://semver.org);
 installed copies update themselves on their next launch, so anything listed here
 reaches users without them asking for it.
 
+## [0.4.19] - 2026-09-22
+
+### Fixed
+
+- Hiding one half of a split threw the other pane's scroll position away: the
+  surviving pane grew taller, the terminal re-laid out, and the view jumped far
+  back in the scrollback, so getting back to the prompt meant scrolling for a
+  while or hitting the jump-to-bottom button. Any resize — folding a pane,
+  revealing it, dragging a gutter, changing the font size — now lands where you
+  were: at the bottom if you were following output, on the same top line if you
+  were reading back.
+
 ## [0.4.18] - 2026-09-21
 
 ### Fixed

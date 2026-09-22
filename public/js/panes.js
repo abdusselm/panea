@@ -14,6 +14,7 @@ import { wirePaneArrange } from "./pane-arrange.js";
 import { wirePaneIdentity, applyPaneIdentity } from "./pane-identity.js";
 import { wirePaneVisibility, applyPaneHidden, firstVisiblePaneId, ensureVisiblePane, syncSplitLayout } from "./pane-visibility.js";
 import { wireScrollAnchor, closeScrollAnchorFor } from "./scroll-anchor.js";
+import { captureScroll, restoreScroll } from "./pane-scroll-keep.js";
 import { wirePaneBoot, markPaneBooting, noteBootInput, closePaneBootFor } from "./pane-boot.js";
 import { requestPaneCwd, forgetPaneCwd } from "./pane-cwd.js";
 import { wirePanePath, refreshPanePath } from "./pane-path.js";
@@ -199,7 +200,9 @@ export function refit(paneId) {
   const tab = state.tabs.find((t) => t.id === p.tabId);
   if (!tab || tab.id !== state.activeTabId) return;
   try {
+    const snap = captureScroll(p.term);
     p.fit.fit();
+    restoreScroll(p.term, snap);
     wsSend({ type: "resize", paneId, cols: p.term.cols, rows: p.term.rows });
   } catch (_) {}
 }

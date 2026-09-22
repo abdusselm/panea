@@ -7,6 +7,7 @@ import { resyncTabLayout, refitTab, focusPane } from "./panes.js";
 import { refreshTabMeta } from "./tabs.js";
 import { setPaneDraggable } from "./pane-arrange.js";
 import { railLayout } from "./pane-rail.js";
+import { captureScroll, restoreScroll } from "./pane-scroll-keep.js";
 import { persist } from "./session.js";
 import { parkBrowserView } from "./browser-pane.js";
 
@@ -57,7 +58,11 @@ function markHidden(p, on) {
   if (!on) parkBrowserView(p, false);
   if (!on) {
     p.el.classList.remove("rail-col", "rail-row");
-    try { p.term.resize(Math.max(2, p.term.cols - 1), p.term.rows); } catch (_) {}
+    try {
+      const snap = captureScroll(p.term);
+      p.term.resize(Math.max(2, p.term.cols - 1), p.term.rows);
+      restoreScroll(p.term, snap);
+    } catch (_) {}
   }
   setPaneDraggable(p, !on);
   const btn = p.el.querySelector('[data-act="hide"]');
