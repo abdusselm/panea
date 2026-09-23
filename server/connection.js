@@ -9,10 +9,11 @@ import { loadLayouts, saveLayout, deleteLayout } from "./layouts-store.js";
 import { loadSettings, saveSettings } from "./settings-store.js";
 import { loadAgents } from "./agents-store.js";
 import { computeMetaBatch, cwdOfBridge } from "./meta.js";
-import { gitStatus, gitDiff } from "./git.js";
+import { gitStatus, gitDiff, gitStatusFiles } from "./git.js";
 import { gitStage, gitUnstage, gitStageAll, gitCommit, gitLastCommitMessage } from "./git-commit.js";
 import { startGitWatch } from "./git-watch.js";
 import { readCwdFile } from "./file-read.js";
+import { resolveTreeRoot, listDirs, revealPath } from "./fs-tree.js";
 import { getUpdateStatus } from "./update.js";
 
 const META_POLL_MS = 3500;
@@ -24,6 +25,7 @@ export function handleConnection(ws) {
 
   const agents = loadAgents();
   let stopGitWatch = () => {};
+  let stopTreeWatch = () => {};
 
   const send = (obj) => {
     if (ws.readyState === ws.OPEN) ws.send(JSON.stringify(obj));
@@ -200,6 +202,35 @@ export function handleConnection(ws) {
         gitLastCommitMessage(msg.cwd).then((res) => send({ type: "lastCommitMessage", cwd: msg.cwd, ...res }));
         break;
       }
+      case "getTreeRoot": {
+        resolveTreeRoot(msg.cwd).then((res) => send({ type: "treeRoot", cwd: msg.cwd, ...res }));
+        break;
+      }
+      case "listTree": {
+        listDirs(msg.root, msg.dirs, { repo: msg.repo !== false }).then(
+          (dirs) => send({ type: "treeEntries", root: msg.root, dirs }),
+          () => send({ type: "treeEntries", root: msg.root, dirs: {} })
+        );
+        break;
+      }
+      case "getTreeStatus": {
+        gitStatusFiles(msg.root).then((res) => send({ type: "treeStatus", root: msg.root, ...res }));
+        break;
+      }
+      case "watchTree": {
+        stopTreeWatch();
+        stopTreeWatch = msg.root ? startGitWatch(msg.root, () => send({ type: "treeChanged", root: msg.root })) : () => {};
+        break;
+      }
+      case "unwatchTree": {
+        stopTreeWatch();
+        stopTreeWatch = () => {};
+        break;
+      }
+      case "revealPath": {
+        revealPath(msg.root, msg.path).catch(() => {});
+        break;
+      }
       case "getFileContent": {
         readCwdFile(msg.cwd, msg.path).then(
           (res) => send({ type: "fileContent", cwd: msg.cwd, path: msg.path, ...res }),
@@ -215,6 +246,7 @@ export function handleConnection(ws) {
   ws.on("close", () => {
     stopKeepAlive();
     stopGitWatch();
+    stopTreeWatch();
     if (metaTimer) clearInterval(metaTimer);
     for (const [id, sink] of attached) detachPane(id, sink);
     attached.clear();

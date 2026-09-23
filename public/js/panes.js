@@ -21,6 +21,7 @@ import { wirePanePath, refreshPanePath } from "./pane-path.js";
 import { closeTranscriptFor } from "./transcript.js";
 import { wireMdLinks, closeMdLinksFor } from "./pane-md-links.js";
 import { isBrowserPane, createBrowserPane, focusBrowserPane, destroyBrowserPane } from "./browser-pane.js";
+import { syncTreeRoot } from "./file-tree.js";
 
 const { Terminal } = window;
 const FitAddon = window.FitAddon;
@@ -226,6 +227,7 @@ export function focusPane(paneId) {
   clearPaneAttention(p);
   const tab = state.tabs.find((t) => t.id === p.tabId);
   if (tab) { updateTabName(tab); refreshTabMeta(tab); }
+  syncTreeRoot();
 }
 
 export function destroyPane(paneId) {
@@ -315,8 +317,9 @@ export function splitPane(paneId, dir, opts) {
   if (opts && opts.browser) {
     createBrowserPane(newId, tab.id, opts.url || "", null);
   } else {
-    const cwd = (src.meta && src.meta.cwd) || src.cwd || tab.cwd;
-    createPane(newId, tab.id, cwd, null, isBrowserPane(src) ? undefined : { inheritFrom: paneId });
+    const cwd = (opts && opts.cwd) || (src.meta && src.meta.cwd) || src.cwd || tab.cwd;
+    const inherit = !(opts && opts.cwd) && !isBrowserPane(src);
+    createPane(newId, tab.id, cwd, null, inherit ? { inheritFrom: paneId } : undefined);
   }
   renderTab(tab);
   focusPane(newId);

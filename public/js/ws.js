@@ -18,6 +18,7 @@ import { applyUpdateStatus } from "./update-status.js";
 import { deliverPaneCwd } from "./pane-cwd.js";
 import { setHomeDir, refreshPanePath } from "./pane-path.js";
 import { markPaneReady } from "./pane-boot.js";
+import { setTreeRoot, setTreeEntries, setTreeStatus, treeChanged, syncTreeRoot, fileTreeReconnected } from "./file-tree.js";
 
 const RECONNECT_MS = 1000;
 const PROBE_TIMEOUT_MS = 3000;
@@ -78,7 +79,7 @@ export function connect() {
     everOpened = true;
     wsReady = true;
     while (pendingOpens.length) sock.send(pendingOpens.shift());
-    if (resumed) reattachPanes();
+    if (resumed) { reattachPanes(); fileTreeReconnected(); }
     setConnectionState(resumed ? "restored" : "online");
   };
   ws.onclose = () => {
@@ -136,6 +137,7 @@ export function connect() {
           refreshPanePath(p);
           const tab = state.tabs.find((t) => t.id === p.tabId);
           if (tab) refreshTabMeta(tab);
+          if (p.id === state.focusedPaneId) syncTreeRoot();
         }
         break;
       }
@@ -156,6 +158,18 @@ export function connect() {
         break;
       case "gitChanged":
         gitChanged(msg);
+        break;
+      case "treeRoot":
+        setTreeRoot(msg);
+        break;
+      case "treeEntries":
+        setTreeEntries(msg);
+        break;
+      case "treeStatus":
+        setTreeStatus(msg);
+        break;
+      case "treeChanged":
+        treeChanged(msg);
         break;
       case "fileContent":
         setMdContent(msg);

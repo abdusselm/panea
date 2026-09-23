@@ -92,6 +92,13 @@ export async function gitStatus(cwd) {
   return { repo: true, branch: branchRes.out.trim(), files };
 }
 
+export async function gitStatusFiles(cwd) {
+  if (!cwd) return { repo: false, files: [] };
+  const res = await git(["status", "--porcelain=v1", "-z", "--untracked-files=all"], cwd);
+  if (res.code !== 0) return { repo: false, files: [] };
+  return { repo: true, files: parseStatus(res.out) };
+}
+
 export async function gitDiff(cwd, path, mode) {
   if (!cwd || !path) return { patch: "" };
   let res;

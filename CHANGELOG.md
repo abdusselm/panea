@@ -4,6 +4,20 @@ Notable changes per release. Versions follow [semver](https://semver.org);
 installed copies update themselves on their next launch, so anything listed here
 reaches users without them asking for it.
 
+## [0.4.21] - 2026-09-23
+
+### Added
+
+- A files panel. `Cmd-Shift-E` (or **Files** in the palette) opens a file tree
+  between the sidebar and the terminals, rooted at the git repo of the focused
+  pane and following it as you switch panes or `cd` elsewhere. Changed files
+  are colored like in the git panel, folders with changes get a dot, and
+  gitignored entries are dimmed. Double-click a file, press `Enter`, or drag it
+  onto a pane to type its path there (shell-quoted, no `Enter` sent). The
+  right-click menu adds New pane here, Preview for Markdown, Show diff, Copy
+  path and Reveal in Finder. The tree refreshes itself when files change, and
+  its width and open state come back with your session.
+
 ## [0.4.20] - 2026-09-23
 
 ### Fixed

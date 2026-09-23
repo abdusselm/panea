@@ -1,7 +1,6 @@
 
 
-import { state, focusedPane } from "./state.js";
-import { firstLeaf } from "./util.js";
+import { activeCwd } from "./state.js";
 import { wsSend } from "./ws.js";
 import { initGitResize, applyGitPanelSize } from "./git-resize.js";
 import {
@@ -16,16 +15,7 @@ let curBranch = "";
 let files = [];
 let selected = null;
 let softRefresh = false;
-
-function activeCwd() {
-  const tab = state.tabs.find((t) => t.id === state.activeTabId);
-  if (!tab) return "";
-  const fp = focusedPane();
-  if (fp && fp.tabId === tab.id && fp.meta && fp.meta.cwd) return fp.meta.cwd;
-  const leaf = firstLeaf(tab.tree);
-  const p = leaf && state.panes.get(leaf.id);
-  return (p && p.meta && p.meta.cwd) || "";
-}
+let pendingSelect = null;
 
 function ensureDom() {
   if (panelEl) return;
@@ -67,7 +57,8 @@ export function setGitStatus(msg) {
   if (!panelEl || msg.cwd !== curCwd) return;
   const soft = softRefresh;
   softRefresh = false;
-  const keep = soft ? selected : null;
+  const keep = soft ? selected : pendingSelect;
+  pendingSelect = null;
   curBranch = msg.branch || "";
   files = msg.repo ? (msg.files || []) : null;
   updateGitCommitCounts(files);
@@ -232,10 +223,11 @@ function onKey(e) {
 
 export function isOpen() { return panelEl && panelEl.classList.contains("open"); }
 
-export function openGit() {
+export function openGit({ cwd, select } = {}) {
   ensureDom();
   applyGitPanelSize();
-  curCwd = activeCwd();
+  curCwd = cwd || activeCwd();
+  pendingSelect = select || null;
   curBranch = "";
   files = [];
   selected = null;

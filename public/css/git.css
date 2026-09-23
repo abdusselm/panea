@@ -50,7 +50,7 @@
 
 .gd-dot[data-kind="new"]      { background: #b5bd68; }
 .gd-dot[data-kind="deleted"]  { background: var(--danger); }
-.gd-dot[data-kind="renamed"]  { background: #81a2be; }
+.gd-dot[data-kind="renamed"]  { background: var(--renamed); }
 .gd-dot[data-kind="modified"] { background: var(--attention); }
 .gd-dot[data-kind="staged"]   { background: #b294bb; }
 

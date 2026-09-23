@@ -10,6 +10,7 @@ import { toggleFind } from "./find.js";
 import { toggleScrollAnchor } from "./scroll-anchor.js";
 import { toggleTranscript } from "./transcript.js";
 import { toggleGit } from "./git.js";
+import { toggleFileTree } from "./file-tree.js";
 import { togglePalette } from "./palette.js";
 import { focusBrowserAddress } from "./browser-pane.js";
 import { wsSend } from "./ws.js";
@@ -28,6 +29,7 @@ export const SHORTCUTS = [
   { id: "browser-pane", label: "New browser pane", category: "Browser", def: "Cmd-B", run: (pid) => splitPane(state.focusedPaneId || pid, "h", { browser: true }) },
   { id: "browser-address", label: "Focus address bar", category: "Browser", def: "Cmd-L", run: (pid) => focusBrowserAddress(state.panes.get(state.focusedPaneId || pid)) },
   { id: "git-diff", label: "Git diff", category: "View", def: "Cmd-G", run: () => toggleGit() },
+  { id: "files", label: "Files", category: "View", def: "Cmd-Shift-E", run: () => toggleFileTree() },
   { id: "notifications", label: "Notifications", category: "View", def: "Cmd-Shift-N", run: () => toggleNotifications() },
 ];
 

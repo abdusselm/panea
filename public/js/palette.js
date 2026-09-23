@@ -10,6 +10,7 @@ import { splitPane, closePane, restartPane, setFontSize, focusPane } from "./pan
 import { openNotifications } from "./notifications.js";
 import { reopenClosedTab, hasClosedTabs, saveLayoutInteractive, openLayoutInteractive, deleteLayoutPick, layoutNames } from "./layouts.js";
 import { openGit } from "./git.js";
+import { toggleFileTree } from "./file-tree.js";
 import { openFind } from "./find.js";
 import { openSettings } from "./settings.js";
 import { chordFor, prettyChord } from "./shortcuts.js";
@@ -125,6 +126,7 @@ function buildPaletteCommands() {
 
   add("Git", "Git diff…", hk("git-diff"), () => openGit());
 
+  add("View", "Files", hk("files"), () => toggleFileTree());
   add("View", "Keyboard shortcuts…", "", () => openSettings());
   add("View", "Increase font size", "⌘+", () => setFontSize(runtime.fontSize + 1));
   add("View", "Decrease font size", "⌘−", () => setFontSize(runtime.fontSize - 1));
