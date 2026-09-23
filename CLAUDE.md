@@ -94,7 +94,9 @@ not append it to an existing file.**
   per repo root, shared across sockets, so the git panel refreshes when another
   editor writes), `fs-tree` (files-panel listing: tree root, lazy
   `readdir`, one `git check-ignore` per refresh, `realpath` confinement to the
-  root, Reveal in Finder), `update` (self-update against GitHub
+  root, Reveal in Finder), `file-view` (viewer file reads: path resolution from
+  a pane cwd or the tree root, `realpath` confinement to the project, size and
+  binary limits, plus the git line marks), `update` (self-update against GitHub
   releases), `electron` (where the Electron bundle lives).
 
   **A pane must outlive its WebSocket.** PTYs live in `server/pane-registry.js`,
@@ -152,7 +154,14 @@ not append it to an existing file.**
   controls), `file-tree` (the files panel between the sidebar and the
   workspace: root follows the focused pane, lazy folders, path hand-off),
   `file-tree-model` (pure row/decoration/quoting math — importable by
-  `node --test`), `main`.
+  `node --test`), `file-view` (the read-only viewer pane: one per tab, reused;
+  highlight.js is lazy-loaded from `/vendor/highlight.js` on first open),
+  `file-view-model` (pure line splitting with span repair, gutter marks, find),
+  `file-links` (pure path + `:line[:col]` detection in terminal text),
+  `pane-file-links` (the xterm link provider: `Cmd`-click opens the viewer, a
+  plain click on `.md` opens the preview), `pane-kind` (`isTerminalPane` /
+  `isBrowserPane` / `isViewerPane` — guard terminal-only code with
+  `isTerminalPane`, not `!isBrowserPane`), `main`.
   Loaded via `<script type="module" src="/js/main.js">`. `main.js` exposes a
   `window.panea` debug bridge (ES modules don't leak globals).
 - `public/index.html` — markup (single `<link>` to `style.css`).
@@ -163,7 +172,7 @@ not append it to an existing file.**
   `connection-status`, `tabs`, `panes`, `pane-arrange`, `pane-path`,
   `pane-identity`,
   `pane-visibility`, `palette`, `notifications`, `git`, `git-commit`,
-  `file-tree`, `modals`.
+  `file-tree`, `file-view`, `modals`.
   **When adding a
   feature's styles, put them in the matching partial (or a new one); never let
   `style.css` grow rules of its own.**

@@ -142,7 +142,7 @@ one: `killall Dock` refreshes it.
 | Key | Action |
 |-----|--------|
 | `Cmd-K` | command palette |
-| `Cmd-F` | find in terminal |
+| `Cmd-F` | find in the focused pane (terminal or file viewer) |
 | `Cmd-G` | git diff panel |
 | `Cmd-Shift-E` | files panel |
 | `Shift-Cmd-N` | notification panel |
@@ -310,13 +310,15 @@ it. Folders load only when you open them. Changed files carry the same state
 colors as the git panel, folders with changes underneath get a dot, and
 gitignored entries are dimmed.
 
-It is a hand-off to the terminal, not an editor:
+It is for finding your way and handing files on, not for editing:
 
-- **Double-click** a file (or select it and press `Enter`) to type its path into
-  the focused pane — relative when it is under that pane's directory, absolute
+- **Double-click** a file (or select it and press `Enter`) to open it in the
+  [file viewer](#file-viewer).
+- **Option-double-click** (or `Option-Enter`) types its path into the focused
+  pane instead — relative when it is under that pane's directory, absolute
   otherwise, shell-quoted, with no `Enter` sent.
 - **Drag** a file or folder onto any terminal pane to type its path there.
-- **Right-click** for Insert path, New pane here / New tab here (folders),
+- **Right-click** for Open, Insert path, New pane here / New tab here (folders),
   Preview (`.md`), Show diff (changed files), Copy relative path, Copy path, and
   Reveal in Finder.
 - `↑`/`↓` move, `→`/`←` open and close folders, `Esc` returns to the terminal.
@@ -325,6 +327,32 @@ The tree refreshes itself when files change on disk (it shares the git panel's
 watcher, and only while the panel is open). Outside a git repo there is no
 watcher — use the refresh button. The panel's width and whether it is open are
 restored with your session.
+
+## File viewer
+
+A read-only code viewer, so reading a file — or checking what an AI agent just
+changed in it — does not mean opening an editor. It opens as a pane next to your
+terminal, from:
+
+- a **double-click** in the files panel, or
+- **`Cmd`-click on a path in terminal output**. Paths with a line number, like
+  `server/git.js:42` or `src/app.ts:10:5`, jump to that line and highlight it.
+  A plain click on a `.md` path still opens the Markdown preview.
+
+Each tab keeps one viewer and reuses it, so opening another file replaces the
+one on screen instead of piling up panes. The viewer shows the whole file with
+syntax highlighting and line numbers, and marks every line that differs from the
+last commit in the gutter — green for added, yellow for changed, a red edge
+where lines were deleted — with the count in the header. **Changes** opens that
+file's diff in the git panel. `Cmd-F` searches the file, **Wrap** toggles long
+lines, and the view reloads by itself when the file changes on disk, keeping
+your scroll position.
+
+Only files inside the project open — the git root of the pane's directory, or
+that directory outside a repo — so a path pointing elsewhere shows "outside this
+project". Files over 1 MB and binary files are not shown; files over 300 KB are
+shown without highlighting. The viewer, its file and scroll position come back
+with your session.
 
 ## Session restore
 

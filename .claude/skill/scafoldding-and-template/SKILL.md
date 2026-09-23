@@ -49,6 +49,11 @@ Frontend (`public/js/`):
 | `git.js` | git diff panel: changed-file list + per-file unified diff |
 | `file-tree.js` | files panel: root follows the focused pane, lazy folders, path insert / drag / context menu |
 | `file-tree-model.js` | pure files-panel math: decorations, shell quoting, row flattening |
+| `file-view.js` | read-only viewer pane: open/reuse per tab, render, gutter marks, find, live reload |
+| `file-view-model.js` | pure viewer math: language by name, highlighted-line splitting, marks, find |
+| `file-links.js` | pure path + `:line[:col]` detection in terminal text |
+| `pane-file-links.js` | xterm link provider: `Cmd`-click → viewer, plain click on `.md` → preview |
+| `pane-kind.js` | `isTerminalPane` / `isBrowserPane` / `isViewerPane` |
 | `find.js` | in-terminal find box (⌘F) driving xterm's search addon |
 | `agents.js` | AI-agent resume registry + the restored-pane "Resume" bar |
 | `sidebar.js` | draggable sidebar rail width (`--sidebar-w`), persisted |
@@ -72,6 +77,7 @@ Backend (`server/`):
 | `meta.js` | sidebar context (cwd / git branch / ports) + AI-agent detection via ps/lsof/git |
 | `git.js` | on-demand git status + per-file diff for the diff panel |
 | `fs-tree.js` | files-panel host side: tree root, lazy listing, ignore flags, root confinement, reveal |
+| `file-view.js` | viewer reads: path resolution, project confinement, size/binary limits, git line marks |
 | `pane.js` | the `Pane` class (one PTY) |
 | `pane-registry.js` | pane lifetime across sockets: open/attach/detach, detached-output buffer |
 | `keepalive.js` | per-socket ping/pong liveness so a dead connection is detected, not hung on |
@@ -93,6 +99,7 @@ partials in cascade order; each owns one UI area and mirrors its JS module:
 | `notifications.css` | notification panel + reason-tinted rows |
 | `git.css` | git diff panel: file list + color-coded unified diff |
 | `file-tree.css` | files panel column, tree rows, status colors, pane drop highlight |
+| `file-view.css` | viewer pane: header, find bar, gutter marks, syntax colors (via `--syn-*` tokens) |
 | `settings.css` | settings panel: grouped shortcut rows + chord chips |
 | `modals.css` | name prompt, confirm modal, layout picker (shared `.np-*`) |
 
@@ -139,10 +146,11 @@ partials in cascade order; each owns one UI area and mirrors its JS module:
 Client → server: `open`, `input`, `resize`, `close`, `session`, `getCommands`,
 `getLayouts`, `saveLayout`, `deleteLayout`, `getGitStatus`, `getGitDiff`,
 `getSettings`, `saveSettings`, `getTreeRoot`, `listTree`, `getTreeStatus`,
-`watchTree`, `unwatchTree`, `revealPath`.
+`watchTree`, `unwatchTree`, `revealPath`, `getFileView`, `watchView`,
+`unwatchView`.
 Server → client: `output`, `exit`, `session`, `commands`, `meta`, `layouts`,
 `gitStatus`, `gitDiff`, `settings`, `agents`, `treeRoot`, `treeEntries`,
-`treeStatus`, `treeChanged`. (`meta` now also carries a
+`treeStatus`, `treeChanged`, `fileView`, `viewChanged`. (`meta` now also carries a
 detected `agent` name per pane.)
 
 Add a feature that needs the host by defining a new message type on both ends;
