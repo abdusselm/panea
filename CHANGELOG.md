@@ -4,6 +4,16 @@ Notable changes per release. Versions follow [semver](https://semver.org);
 installed copies update themselves on their next launch, so anything listed here
 reaches users without them asking for it.
 
+## [0.4.23] - 2026-09-23
+
+### Fixed
+
+- A line opened in the file viewer from a `path:line` link lost its highlight
+  as soon as the viewer reloaded the file without changes — which happens on
+  any git activity in the repo, such as staging or committing — so the line you
+  jumped to was no longer marked. The highlight now stays until you open
+  another line.
+
 ## [0.4.22] - 2026-09-23
 
 ### Added

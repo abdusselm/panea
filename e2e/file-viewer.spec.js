@@ -56,6 +56,21 @@ test("double-clicking a file opens a highlighted viewer that marks the changed l
   }
 });
 
+test("a line opened from a path:line link stays highlighted when the file reloads unchanged", async ({ page }) => {
+  const dir = demoRepo();
+  try {
+    await openTreeOn(page, dir);
+    await page.evaluate((d) => window.panea.openInViewer({ root: d, path: "src/app.js", line: 3 }), dir);
+    const hl = page.locator(".viewer-leaf .vl.hl .vl-n");
+    await expect(hl).toHaveText("3");
+    await page.locator('.viewer-leaf [data-act="reload"]').click();
+    await page.waitForTimeout(400);
+    await expect(hl).toHaveText("3");
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
 test("alt-double-click still types the file's path into the terminal", async ({ page }) => {
   const dir = demoRepo();
   try {

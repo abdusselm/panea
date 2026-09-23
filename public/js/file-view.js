@@ -146,6 +146,7 @@ export function createViewerPane(paneId, tabId, spec = {}, restore) {
     lines: [],
     matches: [],
     matchIdx: -1,
+    hlLine: 0,
     stale: false,
     lastLoad: 0,
     reloadTimer: null,
@@ -344,7 +345,7 @@ async function show(p, res, { line = 0, keepScroll = false, scroll = 0 } = {}) {
 
   p.data = res;
   p.lines = lines;
-  p.linesEl.innerHTML = buildHtml(htmlLines, kinds, dels);
+  p.linesEl.innerHTML = buildHtml(htmlLines, kinds, dels, clampLine(p.hlLine, lines.length));
   if (findPane === p && !p.findEl.hidden) runFind(p, false);
 
   requestAnimationFrame(() => {
@@ -355,8 +356,8 @@ async function show(p, res, { line = 0, keepScroll = false, scroll = 0 } = {}) {
   });
 }
 
-function lineClass(n, kinds, dels) {
-  let cls = "vl";
+function lineClass(n, kinds, dels, hlLine) {
+  let cls = n === hlLine ? "vl hl" : "vl";
   const k = kinds.get(n);
   if (k) cls += " " + k;
   const d = dels.get(n);
@@ -364,14 +365,14 @@ function lineClass(n, kinds, dels) {
   return cls;
 }
 
-function buildHtml(htmlLines, kinds, dels) {
+function buildHtml(htmlLines, kinds, dels, hlLine) {
   const out = [];
   for (let i = 0; i < htmlLines.length; i += CHUNK) {
     const end = Math.min(htmlLines.length, i + CHUNK);
     out.push(`<div class="vchunk" style="contain-intrinsic-size:auto ${(end - i) * 1.5}em">`);
     for (let j = i; j < end; j++) {
       const n = j + 1;
-      out.push(`<div class="${lineClass(n, kinds, dels)}"><span class="vl-n">${n}</span><span class="vl-c">${htmlLines[j] || " "}</span></div>`);
+      out.push(`<div class="${lineClass(n, kinds, dels, hlLine)}"><span class="vl-n">${n}</span><span class="vl-c">${htmlLines[j] || " "}</span></div>`);
     }
     out.push("</div>");
   }
@@ -387,7 +388,7 @@ function applyMarks(p, kinds, dels) {
   for (let n = 1; n <= p.lines.length; n++) {
     const el = lineEl(p, n);
     if (!el) break;
-    const cls = lineClass(n, kinds, dels);
+    const cls = lineClass(n, kinds, dels, p.hlLine);
     if (el.className !== cls) el.className = cls;
   }
 }
@@ -395,6 +396,7 @@ function applyMarks(p, kinds, dels) {
 function revealLine(p, line) {
   const n = clampLine(line, p.lines.length);
   if (!n) return;
+  p.hlLine = n;
   const prev = p.linesEl.querySelector(".vl.hl");
   if (prev) prev.classList.remove("hl");
   const el = lineEl(p, n);
