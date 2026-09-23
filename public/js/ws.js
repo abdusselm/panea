@@ -19,6 +19,7 @@ import { deliverPaneCwd } from "./pane-cwd.js";
 import { setHomeDir, refreshPanePath } from "./pane-path.js";
 import { markPaneReady } from "./pane-boot.js";
 import { setTreeRoot, setTreeEntries, setTreeStatus, treeChanged, syncTreeRoot, fileTreeReconnected } from "./file-tree.js";
+import { setFileView, viewChanged, viewerReconnected } from "./file-view.js";
 
 const RECONNECT_MS = 1000;
 const PROBE_TIMEOUT_MS = 3000;
@@ -79,7 +80,7 @@ export function connect() {
     everOpened = true;
     wsReady = true;
     while (pendingOpens.length) sock.send(pendingOpens.shift());
-    if (resumed) { reattachPanes(); fileTreeReconnected(); }
+    if (resumed) { reattachPanes(); fileTreeReconnected(); viewerReconnected(); }
     setConnectionState(resumed ? "restored" : "online");
   };
   ws.onclose = () => {
@@ -170,6 +171,12 @@ export function connect() {
         break;
       case "treeChanged":
         treeChanged(msg);
+        break;
+      case "fileView":
+        setFileView(msg);
+        break;
+      case "viewChanged":
+        viewChanged(msg);
         break;
       case "fileContent":
         setMdContent(msg);

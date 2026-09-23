@@ -5,9 +5,10 @@ import { wsSend } from "./ws.js";
 import { persist } from "./session.js";
 import { focusPane, splitPane } from "./panes.js";
 import { newTab } from "./tabs.js";
-import { isBrowserPane } from "./browser-pane.js";
+import { isTerminalPane } from "./pane-kind.js";
 import { openMdPreview } from "./md-preview.js";
 import { openGit } from "./git.js";
+import { openInViewer } from "./file-view.js";
 import {
   parentRel, decorate, shellQuote, absPath, pathForPane, flattenTree,
   openDirs, pruneExpanded, clampPanelWidth, baseName,
@@ -359,7 +360,7 @@ function collapseAll() {
 
 function insertPath(rel, paneId) {
   const p = state.panes.get(paneId || state.focusedPaneId);
-  if (!p || isBrowserPane(p) || p.exited || !cur.root) return;
+  if (!isTerminalPane(p) || p.exited || !cur.root) return;
   const text = shellQuote(pathForPane(cur.root, rel, p.meta && p.meta.cwd)) + " ";
   wsSend({ type: "input", paneId: p.id, data: u8ToB64(enc.encode(text)) });
   focusPane(p.id);
@@ -382,9 +383,15 @@ function onClick(e) {
   if (row.dir) toggleDir(row);
 }
 
+function openFile(rel) {
+  openInViewer({ root: cur.root, path: rel });
+}
+
 function onDblClick(e) {
   const row = rowFromEvent(e);
-  if (row && !row.dir) insertPath(row.rel);
+  if (!row || row.dir) return;
+  if (e.altKey) insertPath(row.rel);
+  else openFile(row.rel);
 }
 
 function moveSel(i, step) {
@@ -394,7 +401,7 @@ function moveSel(i, step) {
 }
 
 function onKey(e) {
-  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  if (e.metaKey || e.ctrlKey) return;
   const i = rows.findIndex((r) => r.rel === selectedRel);
   const row = i === -1 ? null : rows[i];
   switch (e.key) {
@@ -411,7 +418,8 @@ function onKey(e) {
       break;
     case "Enter":
       if (row && row.dir) toggleDir(row);
-      else if (row) insertPath(row.rel);
+      else if (row && e.altKey) insertPath(row.rel);
+      else if (row) openFile(row.rel);
       break;
     case "Escape":
       if (state.focusedPaneId) focusPane(state.focusedPaneId);
@@ -430,6 +438,7 @@ function menuItems(row) {
     items.push(["New tab here", () => newTab(abs)]);
   }
   if (!row.dir) {
+    items.push(["Open", () => openFile(row.rel)]);
     items.push(["Insert path", () => insertPath(row.rel)]);
     if (/\.md$/i.test(row.name)) items.push(["Preview", () => openMdPreview(row.rel, cur.root)]);
     if (deco.files.has(row.rel)) items.push(["Show diff", () => openGit({ cwd: cur.root, select: row.rel })]);
@@ -484,7 +493,7 @@ function dropPane(e) {
   if (!e.dataTransfer || ![...e.dataTransfer.types].includes(DRAG_TYPE)) return null;
   const leaf = e.target.closest && e.target.closest(".leaf");
   const p = leaf && state.panes.get(leaf.dataset.paneId);
-  return p && !isBrowserPane(p) && !p.exited ? p : null;
+  return isTerminalPane(p) && !p.exited ? p : null;
 }
 
 function setDropTarget(el) {

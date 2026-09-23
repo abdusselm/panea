@@ -10,6 +10,7 @@ import { recordClosedTab } from "./layouts.js";
 import { paneLabel } from "./pane-identity.js";
 import { countHiddenPanes } from "./pane-visibility.js";
 import { createBrowserPane } from "./browser-pane.js";
+import { createViewerPane } from "./file-view.js";
 
 export function newTab(cwd) {
   const paneId = uid();
@@ -85,6 +86,7 @@ export function instantiateTree(tab, node) {
       ? { agent: node.agent || "", scroll: node.scroll || "", name: node.name || "", color: node.color || "", hidden: !!node.hidden }
       : undefined;
     if (node.paneKind === "browser") createBrowserPane(node.id, tab.id, node.url || "", restore);
+    else if (node.paneKind === "viewer") createViewerPane(node.id, tab.id, { root: node.root, rel: node.rel, scroll: node.viewScroll, wrap: node.wrap }, restore);
     else createPane(node.id, tab.id, node.cwd || tab.cwd, restore);
   } else {
     instantiateTree(tab, node.children[0]);

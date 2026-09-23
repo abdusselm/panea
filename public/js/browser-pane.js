@@ -9,6 +9,7 @@ import { wirePaneArrange } from "./pane-arrange.js";
 import { wirePaneIdentity, applyPaneIdentity } from "./pane-identity.js";
 import { wirePaneVisibility, applyPaneHidden } from "./pane-visibility.js";
 import { normalizeUrl, hostLabel, BLANK_URL } from "./browser-url.js";
+import { isBrowserPane } from "./pane-kind.js";
 
 export const HOME_URL = "https://www.google.com";
 
@@ -16,9 +17,7 @@ export function isDesktopRuntime() {
   return typeof navigator !== "undefined" && /\bElectron\//.test(navigator.userAgent || "");
 }
 
-export function isBrowserPane(pane) {
-  return !!pane && pane.kind === "browser";
-}
+export { isBrowserPane };
 
 export function browserPaneUrl(pane) {
   return isBrowserPane(pane) ? pane.url || "" : "";

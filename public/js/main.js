@@ -21,8 +21,9 @@ import { initSidebarResize, applySidebarWidth } from "./sidebar.js";
 import { startPaneRename, setPaneColor, openPaneMenuForPane } from "./pane-identity.js";
 import { hidePane, showPane, togglePaneHidden, revealAllPanes } from "./pane-visibility.js";
 import { openFileTree, closeFileTree, toggleFileTree } from "./file-tree.js";
+import { openInViewer } from "./file-view.js";
 
-window.panea = { hidePane, showPane, togglePaneHidden, revealAllPanes, state, runtime, newTab, openPalette, togglePalette, openNotifications, toggleNotifications, reopenClosedTab, saveCurrentLayout, openLayout, saveLayoutInteractive, openLayoutInteractive, deleteLayoutPick, openGit, toggleGit, openMdPreview, closeMdPreview, openFind, toggleFind, openSettings, splitPane, closePane, handleActivity, setAgents, mountResumeBar, persist, applySidebarWidth, startPaneRename, setPaneColor, openPaneMenuForPane, openFileTree, closeFileTree, toggleFileTree };
+window.panea = { hidePane, showPane, togglePaneHidden, revealAllPanes, state, runtime, newTab, openPalette, togglePalette, openNotifications, toggleNotifications, reopenClosedTab, saveCurrentLayout, openLayout, saveLayoutInteractive, openLayoutInteractive, deleteLayoutPick, openGit, toggleGit, openMdPreview, closeMdPreview, openFind, toggleFind, openSettings, splitPane, closePane, handleActivity, setAgents, mountResumeBar, persist, applySidebarWidth, startPaneRename, setPaneColor, openPaneMenuForPane, openFileTree, closeFileTree, toggleFileTree, openInViewer };
 
 document.getElementById("new-tab").onclick = () => newTab();
 document.getElementById("empty-new").onclick = () => newTab();

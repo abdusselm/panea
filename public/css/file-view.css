@@ -1,0 +1,85 @@
+.viewer-leaf { background: var(--bg); }
+
+.viewer-sub {
+  flex: 0 0 auto; display: flex; align-items: baseline; gap: 10px;
+  padding: 3px 10px 4px; border-bottom: 1px solid var(--border);
+  font-size: var(--fs-xs); color: var(--text-dim); white-space: nowrap; overflow: hidden;
+}
+.viewer-path { min-width: 0; overflow: hidden; text-overflow: ellipsis; color: var(--text); opacity: 0.85; }
+.viewer-info { flex: 0 0 auto; }
+
+.viewer-find {
+  flex: 0 0 auto; display: flex; align-items: center; gap: 4px;
+  padding: 4px 6px; background: var(--bg-elev); border-bottom: 1px solid var(--border);
+}
+.viewer-find[hidden] { display: none; }
+.viewer-find-input {
+  flex: 1; min-width: 0; height: 24px; padding: 0 8px;
+  background: var(--bg); border: 1px solid var(--border); border-radius: 6px;
+  color: var(--text); font-family: inherit; font-size: var(--fs-sm); outline: none;
+}
+.viewer-find-input:focus { border-color: var(--focus-border); }
+.viewer-find-count { flex: 0 0 auto; min-width: 44px; text-align: right; font-size: var(--fs-xs); color: var(--text-dim); }
+.viewer-find button {
+  flex: 0 0 22px; width: 22px; height: 22px; padding: 0; border: none; border-radius: 5px;
+  background: transparent; color: var(--text-dim); cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.viewer-find button svg { width: 14px; height: 14px; }
+.viewer-find button:hover { color: var(--text); background: var(--bg); }
+
+.leaf-bar .actions button:disabled { opacity: 0.3; cursor: default; }
+.leaf-bar .actions button:disabled:hover { background: transparent; color: var(--text-dim); }
+
+.viewer-body {
+  position: relative; flex: 1; min-height: 0; overflow: auto; outline: none;
+  font-family: "SF Mono", "JetBrains Mono", "Fira Code", Menlo, Monaco, monospace;
+  font-size: var(--viewer-font, 14px); line-height: 1.5; color: var(--text);
+  tab-size: 4;
+}
+body.resizing-split .viewer-body { pointer-events: none; }
+
+.viewer-lines { display: inline-block; min-width: 100%; padding: 4px 0 24px; }
+.viewer-body.wrap .viewer-lines { display: block; }
+.vchunk { content-visibility: auto; }
+
+.vl { display: flex; min-height: 1.5em; }
+.vl-n {
+  position: sticky; left: 0; z-index: 1; flex: 0 0 auto; min-width: 4.5ch;
+  padding: 0 10px 0 8px; text-align: right; color: var(--text-dim); opacity: 0.55;
+  background: var(--bg); border-right: 2px solid transparent; user-select: none;
+}
+.vl-c { flex: 1 1 auto; padding: 0 16px 0 10px; white-space: pre; }
+.viewer-body.wrap .vl-c { white-space: pre-wrap; overflow-wrap: anywhere; }
+
+.vl.add .vl-n { border-right-color: var(--ok); }
+.vl.mod .vl-n { border-right-color: var(--attention); }
+.vl.del-above { box-shadow: inset 0 1px 0 0 color-mix(in srgb, var(--danger) 70%, transparent); }
+.vl.del-below { box-shadow: inset 0 -1px 0 0 color-mix(in srgb, var(--danger) 70%, transparent); }
+.vl.del-above .vl-n::before, .vl.del-below .vl-n::after {
+  content: ""; position: absolute; right: -2px; width: 0; height: 0;
+  border-top: 4px solid transparent; border-bottom: 4px solid transparent;
+  border-right: 5px solid var(--danger);
+}
+.vl.del-above .vl-n::before { top: -4px; }
+.vl.del-below .vl-n::after { bottom: -4px; }
+.vl.add .vl-c { background: color-mix(in srgb, var(--ok) 6%, transparent); }
+.vl.mod .vl-c { background: color-mix(in srgb, var(--attention) 6%, transparent); }
+.vl.hl .vl-c { background: rgba(47, 111, 235, 0.22); }
+.vl.hl .vl-n { color: var(--text); opacity: 1; }
+
+.viewer-empty { padding: 18px 16px; color: var(--text-dim); font-family: -apple-system, BlinkMacSystemFont, sans-serif; font-size: var(--fs-sm); }
+
+::highlight(viewer-find) { background-color: rgba(240, 198, 116, 0.28); }
+::highlight(viewer-find-current) { background-color: rgba(240, 198, 116, 0.75); color: #1d1f21; }
+
+.vl-c .hljs-comment, .vl-c .hljs-quote { color: var(--syn-comment); font-style: italic; }
+.vl-c .hljs-keyword, .vl-c .hljs-selector-tag, .vl-c .hljs-doctag, .vl-c .hljs-meta .hljs-keyword { color: var(--syn-keyword); }
+.vl-c .hljs-string, .vl-c .hljs-regexp, .vl-c .hljs-addition, .vl-c .hljs-template-tag { color: var(--ok); }
+.vl-c .hljs-number, .vl-c .hljs-literal, .vl-c .hljs-built_in, .vl-c .hljs-params, .vl-c .hljs-meta, .vl-c .hljs-type { color: var(--syn-number); }
+.vl-c .hljs-title, .vl-c .hljs-section, .vl-c .hljs-title.function_ { color: var(--renamed); }
+.vl-c .hljs-attr, .vl-c .hljs-attribute, .vl-c .hljs-variable, .vl-c .hljs-template-variable,
+.vl-c .hljs-tag, .vl-c .hljs-name, .vl-c .hljs-selector-id, .vl-c .hljs-selector-class, .vl-c .hljs-deletion { color: var(--danger); }
+.vl-c .hljs-symbol, .vl-c .hljs-bullet, .vl-c .hljs-link, .vl-c .hljs-subst, .vl-c .hljs-property { color: var(--syn-aqua); }
+.vl-c .hljs-emphasis { font-style: italic; }
+.vl-c .hljs-strong { font-weight: 600; }

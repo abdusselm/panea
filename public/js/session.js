@@ -9,7 +9,9 @@ import { renderTab } from "./panes.js";
 import { applySidebarWidth } from "./sidebar.js";
 import { restoreGitPanel } from "./git-resize.js";
 import { restoreFileTree } from "./file-tree.js";
-import { isBrowserPane, browserPaneUrl } from "./browser-pane.js";
+import { browserPaneUrl } from "./browser-pane.js";
+import { isBrowserPane, isViewerPane } from "./pane-kind.js";
+import { viewerSnapshot } from "./file-view.js";
 
 const SCROLL_LINES = 800;
 const SCROLL_MAX_CHARS = 200000;
@@ -35,6 +37,14 @@ function serializeTree(node) {
   if (p && isBrowserPane(p)) {
     leaf.paneKind = "browser";
     leaf.url = browserPaneUrl(p);
+    if (p.customTitle) leaf.name = p.customTitle;
+    if (p.color) leaf.color = p.color;
+    if (p.hidden) leaf.hidden = true;
+    return leaf;
+  }
+  if (p && isViewerPane(p)) {
+    leaf.paneKind = "viewer";
+    Object.assign(leaf, viewerSnapshot(p));
     if (p.customTitle) leaf.name = p.customTitle;
     if (p.color) leaf.color = p.color;
     if (p.hidden) leaf.hidden = true;

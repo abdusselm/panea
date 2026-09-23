@@ -11,6 +11,8 @@ import { toggleScrollAnchor } from "./scroll-anchor.js";
 import { toggleTranscript } from "./transcript.js";
 import { toggleGit } from "./git.js";
 import { toggleFileTree } from "./file-tree.js";
+import { toggleViewerFind } from "./file-view.js";
+import { isViewerPane } from "./pane-kind.js";
 import { togglePalette } from "./palette.js";
 import { focusBrowserAddress } from "./browser-pane.js";
 import { wsSend } from "./ws.js";
@@ -23,7 +25,11 @@ export const SHORTCUTS = [
   { id: "split-down", label: "Split down", category: "Panes", def: "Cmd-Shift-D", run: (pid) => splitPane(state.focusedPaneId || pid, "v") },
   { id: "close-pane", label: "Close pane", category: "Panes", def: "Cmd-W", run: (pid) => closePane(state.focusedPaneId || pid) },
   { id: "hide-pane", label: "Hide pane", category: "Panes", def: "Cmd-Shift-H", run: (pid) => hidePane(state.focusedPaneId || pid) },
-  { id: "find", label: "Find in terminal", category: "Panes", def: "Cmd-F", run: () => toggleFind() },
+  { id: "find", label: "Find in pane", category: "Panes", def: "Cmd-F", run: (pid) => {
+    const p = state.panes.get(state.focusedPaneId || pid);
+    if (isViewerPane(p)) toggleViewerFind(p);
+    else toggleFind();
+  } },
   { id: "jump-latest", label: "Jump to latest / back", category: "Panes", def: "Cmd-J", run: (pid) => toggleScrollAnchor(state.focusedPaneId || pid) },
   { id: "transcript", label: "Transcript (fold exchanges)", category: "Panes", def: "Cmd-E", run: () => toggleTranscript() },
   { id: "browser-pane", label: "New browser pane", category: "Browser", def: "Cmd-B", run: (pid) => splitPane(state.focusedPaneId || pid, "h", { browser: true }) },

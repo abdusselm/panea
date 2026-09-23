@@ -19,8 +19,10 @@ import { wirePaneBoot, markPaneBooting, noteBootInput, closePaneBootFor } from "
 import { requestPaneCwd, forgetPaneCwd } from "./pane-cwd.js";
 import { wirePanePath, refreshPanePath } from "./pane-path.js";
 import { closeTranscriptFor } from "./transcript.js";
-import { wireMdLinks, closeMdLinksFor } from "./pane-md-links.js";
-import { isBrowserPane, createBrowserPane, focusBrowserPane, destroyBrowserPane } from "./browser-pane.js";
+import { wireFileLinks, closeFileLinksFor } from "./pane-file-links.js";
+import { createBrowserPane, focusBrowserPane, destroyBrowserPane } from "./browser-pane.js";
+import { isTerminalPane, isBrowserPane, isViewerPane } from "./pane-kind.js";
+import { createViewerPane, focusViewerPane, destroyViewerPane } from "./file-view.js";
 import { syncTreeRoot } from "./file-tree.js";
 
 const { Terminal } = window;
@@ -128,7 +130,7 @@ export function createPane(paneId, tabId, cwd, restore, opts) {
   wirePaneVisibility(pane);
   wireScrollAnchor(pane);
   wirePaneBoot(pane);
-  wireMdLinks(pane);
+  wireFileLinks(pane);
   applyPaneIdentity(pane, restore);
   applyPaneHidden(pane, restore);
 
@@ -175,7 +177,7 @@ function openShell(pane, cwd) {
 
 export function reattachPanes() {
   for (const p of state.panes.values()) {
-    if (p.exited || isBrowserPane(p)) continue;
+    if (p.exited || !isTerminalPane(p)) continue;
     let dims = null;
     if (!p.hidden) { try { dims = p.fit.proposeDimensions(); } catch (_) {} }
     wsSend({
@@ -189,7 +191,10 @@ export function reattachPanes() {
 
 export function setFontSize(n) {
   runtime.fontSize = Math.max(MIN_FONT_SIZE, Math.min(MAX_FONT_SIZE, n));
-  for (const p of state.panes.values()) if (!isBrowserPane(p)) p.term.options.fontSize = runtime.fontSize;
+  for (const p of state.panes.values()) {
+    if (isTerminalPane(p)) p.term.options.fontSize = runtime.fontSize;
+    else if (isViewerPane(p)) p.el.style.setProperty("--viewer-font", runtime.fontSize + "px");
+  }
   const tab = state.tabs.find((t) => t.id === state.activeTabId);
   if (tab) refitTab(tab);
   persist();
@@ -197,7 +202,7 @@ export function setFontSize(n) {
 
 export function refit(paneId) {
   const p = state.panes.get(paneId);
-  if (!p || p.hidden || isBrowserPane(p)) return;
+  if (!p || p.hidden || !isTerminalPane(p)) return;
   const tab = state.tabs.find((t) => t.id === p.tabId);
   if (!tab || tab.id !== state.activeTabId) return;
   try {
@@ -223,6 +228,7 @@ export function focusPane(paneId) {
   state.focusedPaneId = paneId;
   p.el.classList.add("focused");
   if (isBrowserPane(p)) focusBrowserPane(p);
+  else if (isViewerPane(p)) focusViewerPane(p);
   else p.term.focus();
   clearPaneAttention(p);
   const tab = state.tabs.find((t) => t.id === p.tabId);
@@ -238,11 +244,16 @@ export function destroyPane(paneId) {
     state.panes.delete(paneId);
     return;
   }
+  if (isViewerPane(p)) {
+    destroyViewerPane(p);
+    state.panes.delete(paneId);
+    return;
+  }
   closeFindFor(paneId);
   closeScrollAnchorFor(paneId);
   closePaneBootFor(paneId);
   closeTranscriptFor(paneId);
-  closeMdLinksFor(paneId);
+  closeFileLinksFor(paneId);
   forgetPaneCwd(paneId);
   for (const x of p.exchanges) { try { x.marker.dispose(); } catch (_) {} }
   p.exchanges.length = 0;
@@ -256,7 +267,7 @@ export function destroyPane(paneId) {
 
 export function restartPane(paneId) {
   const p = state.panes.get(paneId);
-  if (!p || isBrowserPane(p)) return;
+  if (!p || !isTerminalPane(p)) return;
   p.exited = false; p.el.classList.remove("exited");
   p.term.reset();
   const dims = p.fit.proposeDimensions();
@@ -316,9 +327,11 @@ export function splitPane(paneId, dir, opts) {
   }
   if (opts && opts.browser) {
     createBrowserPane(newId, tab.id, opts.url || "", null);
+  } else if (opts && opts.viewer) {
+    createViewerPane(newId, tab.id, opts.viewer, null);
   } else {
     const cwd = (opts && opts.cwd) || (src.meta && src.meta.cwd) || src.cwd || tab.cwd;
-    const inherit = !(opts && opts.cwd) && !isBrowserPane(src);
+    const inherit = !(opts && opts.cwd) && isTerminalPane(src);
     createPane(newId, tab.id, cwd, null, inherit ? { inheritFrom: paneId } : undefined);
   }
   renderTab(tab);

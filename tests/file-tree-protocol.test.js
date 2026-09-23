@@ -1,54 +1,13 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { once } from "node:events";
 import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import http from "node:http";
-import { WebSocketServer, WebSocket } from "ws";
 
-import { handleConnection } from "../server/connection.js";
+import { listen, client } from "./ws-harness.js";
 
 process.env.PANEA_NO_META_POLL = "1";
-
-async function listen(t) {
-  const server = http.createServer();
-  const wss = new WebSocketServer({ server });
-  wss.on("connection", handleConnection);
-  server.listen(0, "127.0.0.1");
-  await once(server, "listening");
-  t.after(() => {
-    for (const c of wss.clients) c.terminate();
-    wss.close();
-    if (server.closeAllConnections) server.closeAllConnections();
-    server.close();
-  });
-  return server.address().port;
-}
-
-async function client(t, port) {
-  const ws = new WebSocket(`ws://127.0.0.1:${port}`);
-  await once(ws, "open");
-  t.after(() => ws.terminate());
-  const waiters = [];
-  const seen = [];
-  ws.on("message", (raw) => {
-    let msg;
-    try { msg = JSON.parse(raw); } catch { return; }
-    seen.push(msg);
-    for (const w of [...waiters]) if (w.match(msg)) { waiters.splice(waiters.indexOf(w), 1); w.resolve(msg); }
-  });
-  return {
-    send: (obj) => ws.send(JSON.stringify(obj)),
-    next: (type, ms = 4000) => new Promise((resolve, reject) => {
-      const found = seen.find((m) => m.type === type);
-      if (found) { seen.splice(seen.indexOf(found), 1); return resolve(found); }
-      const timer = setTimeout(() => reject(new Error("no " + type)), ms);
-      waiters.push({ match: (m) => m.type === type, resolve: (m) => { clearTimeout(timer); seen.splice(seen.indexOf(m), 1); resolve(m); } });
-    }),
-  };
-}
 
 function repo(t) {
   const dir = fs.realpathSync(fs.mkdtempSync(path.join(fs.realpathSync(os.tmpdir()), "panea-treews-")));

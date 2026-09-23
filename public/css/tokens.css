@@ -18,6 +18,10 @@
   --ok: #b5bd68;
   --danger: #cc6666;
   --renamed: #81a2be;
+  --syn-comment: #969896;
+  --syn-keyword: #b294bb;
+  --syn-number: #de935f;
+  --syn-aqua: #8abeb7;
   --active: #2f6feb;
   --radius: 8px;
   --sidebar-w: 280px;

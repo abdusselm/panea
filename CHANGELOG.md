@@ -4,6 +4,29 @@ Notable changes per release. Versions follow [semver](https://semver.org);
 installed copies update themselves on their next launch, so anything listed here
 reaches users without them asking for it.
 
+## [0.4.22] - 2026-09-23
+
+### Added
+
+- A read-only file viewer, so reading a file or checking what an AI agent just
+  changed no longer means opening an editor. It opens as a pane next to your
+  terminal and shows the whole file with syntax highlighting and line numbers,
+  with every line that differs from the last commit marked in the gutter (green
+  added, yellow changed, a red edge where lines were deleted). `Cmd-F` searches
+  the file, **Wrap** toggles long lines, **Changes** opens the file's diff in
+  the git panel, and the view reloads by itself when the file changes on disk.
+  Each tab keeps one viewer and reuses it; it comes back with your session.
+- `Cmd`-click a file path in terminal output to open it in the viewer. Paths
+  with a line number, such as `server/git.js:42`, jump to that line. Only files
+  inside the project open; files over 1 MB and binary files are not shown.
+
+### Changed
+
+- Double-clicking a file in the files panel (or pressing `Enter`) now opens it
+  in the viewer instead of typing its path into the terminal. To type the path,
+  Option-double-click it, press `Option-Enter`, drag it onto a pane, or use
+  **Insert path** in the right-click menu.
+
 ## [0.4.21] - 2026-09-23
 
 ### Added

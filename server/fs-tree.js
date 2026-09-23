@@ -7,11 +7,11 @@ export const MAX_ENTRIES = 2000;
 
 const HIDDEN = new Set([".git", ".DS_Store"]);
 
-function inside(root, abs) {
+export function isInside(root, abs) {
   return abs === root || abs.startsWith(root + path.sep);
 }
 
-async function real(p) {
+export async function realOrEmpty(p) {
   try { return await realpath(p); } catch { return ""; }
 }
 
@@ -27,10 +27,10 @@ export function sortEntries(entries) {
 }
 
 export async function resolveTreeRoot(cwd) {
-  const base = cwd ? await real(cwd) : "";
+  const base = cwd ? await realOrEmpty(cwd) : "";
   if (!base) return { root: "", repo: false };
   const res = await runGit(["rev-parse", "--show-toplevel"], base);
-  const top = res.code === 0 ? await real(res.out.trim()) : "";
+  const top = res.code === 0 ? await realOrEmpty(res.out.trim()) : "";
   return top ? { root: top, repo: true } : { root: base, repo: false };
 }
 
@@ -59,15 +59,15 @@ async function describe(root, dirAbs, dirent) {
     return { name: dirent.name, type: "link-file" };
   }
   const entry = { name: dirent.name, type: "link-dir" };
-  if (!inside(root, await real(abs))) entry.outside = true;
+  if (!isInside(root, await realOrEmpty(abs))) entry.outside = true;
   return entry;
 }
 
 async function listOne(root, rel) {
   const abs = path.resolve(root, rel || ".");
-  const target = await real(abs);
+  const target = await realOrEmpty(abs);
   if (!target) return { error: "not found" };
-  if (!inside(root, target)) return { error: "outside" };
+  if (!isInside(root, target)) return { error: "outside" };
   let dirents;
   try {
     dirents = await readdir(target, { withFileTypes: true });
@@ -96,7 +96,7 @@ async function markIgnored(root, dirs) {
 }
 
 export async function listDirs(root, rels, { repo = true } = {}) {
-  const realRoot = root ? await real(root) : "";
+  const realRoot = root ? await realOrEmpty(root) : "";
   const wanted = [...new Set((Array.isArray(rels) ? rels : []).map((r) => String(r || "")))];
   const dirs = {};
   if (!realRoot) {
@@ -111,11 +111,11 @@ export async function listDirs(root, rels, { repo = true } = {}) {
 }
 
 export async function revealPath(root, rel) {
-  const realRoot = root ? await real(root) : "";
+  const realRoot = root ? await realOrEmpty(root) : "";
   if (!realRoot) return { ok: false, error: "no root" };
   const abs = path.resolve(realRoot, rel || ".");
-  if (!inside(realRoot, abs)) return { ok: false, error: "outside" };
-  if (abs !== realRoot && !inside(realRoot, await real(path.dirname(abs)))) return { ok: false, error: "outside" };
+  if (!isInside(realRoot, abs)) return { ok: false, error: "outside" };
+  if (abs !== realRoot && !isInside(realRoot, await realOrEmpty(path.dirname(abs)))) return { ok: false, error: "outside" };
   return new Promise((resolve) => {
     execFile("open", ["-R", abs], { timeout: 5000 }, (err) => resolve(err ? { ok: false, error: "open failed" } : { ok: true }));
   });

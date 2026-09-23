@@ -14,6 +14,7 @@ import { gitStage, gitUnstage, gitStageAll, gitCommit, gitLastCommitMessage } fr
 import { startGitWatch } from "./git-watch.js";
 import { readCwdFile } from "./file-read.js";
 import { resolveTreeRoot, listDirs, revealPath } from "./fs-tree.js";
+import { loadFileView } from "./file-view.js";
 import { getUpdateStatus } from "./update.js";
 
 const META_POLL_MS = 3500;
@@ -26,6 +27,7 @@ export function handleConnection(ws) {
   const agents = loadAgents();
   let stopGitWatch = () => {};
   let stopTreeWatch = () => {};
+  let stopViewWatch = () => {};
 
   const send = (obj) => {
     if (ws.readyState === ws.OPEN) ws.send(JSON.stringify(obj));
@@ -231,6 +233,23 @@ export function handleConnection(ws) {
         revealPath(msg.root, msg.path).catch(() => {});
         break;
       }
+      case "getFileView": {
+        loadFileView(msg).then(
+          (res) => send({ type: "fileView", reqId: msg.reqId, ...res }),
+          () => send({ type: "fileView", reqId: msg.reqId, error: "read failed" })
+        );
+        break;
+      }
+      case "watchView": {
+        stopViewWatch();
+        stopViewWatch = msg.root ? startGitWatch(msg.root, () => send({ type: "viewChanged", root: msg.root })) : () => {};
+        break;
+      }
+      case "unwatchView": {
+        stopViewWatch();
+        stopViewWatch = () => {};
+        break;
+      }
       case "getFileContent": {
         readCwdFile(msg.cwd, msg.path).then(
           (res) => send({ type: "fileContent", cwd: msg.cwd, path: msg.path, ...res }),
@@ -247,6 +266,7 @@ export function handleConnection(ws) {
     stopKeepAlive();
     stopGitWatch();
     stopTreeWatch();
+    stopViewWatch();
     if (metaTimer) clearInterval(metaTimer);
     for (const [id, sink] of attached) detachPane(id, sink);
     attached.clear();

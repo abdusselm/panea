@@ -99,6 +99,35 @@ export async function gitStatusFiles(cwd) {
   return { repo: true, files: parseStatus(res.out) };
 }
 
+const HUNK_RE = /^@@ -\d+(?:,(\d+))? \+(\d+)(?:,(\d+))? @@/gm;
+
+export function parseLineMarks(diffOut) {
+  const marks = [];
+  HUNK_RE.lastIndex = 0;
+  let m;
+  while ((m = HUNK_RE.exec(String(diffOut || "")))) {
+    const oldCount = m[1] === undefined ? 1 : Number(m[1]);
+    const newStart = Number(m[2]);
+    const newCount = m[3] === undefined ? 1 : Number(m[3]);
+    if (newCount === 0) marks.push({ start: newStart + 1, count: 0, kind: "del" });
+    else marks.push({ start: newStart, count: newCount, kind: oldCount === 0 ? "add" : "mod" });
+  }
+  return marks;
+}
+
+export async function gitLineMarks(root, rel) {
+  const none = { allAdded: false, marks: [] };
+  if (!root || !rel) return none;
+  const spec = rootPathspec(rel);
+  const status = await git(["status", "--porcelain=v1", "-z", "--untracked-files=all", "--", spec], root);
+  if (status.code !== 0) return none;
+  const row = parseStatus(status.out)[0];
+  if (!row) return none;
+  if (row.kind === "untracked" || row.x === "A") return { allAdded: true, marks: [] };
+  const diff = await git(["diff", "-U0", "--no-color", "--no-ext-diff", "HEAD", "--", spec], root);
+  return diff.code === 0 ? { allAdded: false, marks: parseLineMarks(diff.out) } : none;
+}
+
 export async function gitDiff(cwd, path, mode) {
   if (!cwd || !path) return { patch: "" };
   let res;

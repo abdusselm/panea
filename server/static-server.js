@@ -23,6 +23,7 @@ const VENDOR = {
   "/vendor/addon-fit.js": "@xterm/addon-fit/lib/addon-fit.js",
   "/vendor/addon-search.js": "@xterm/addon-search/lib/addon-search.js",
   "/vendor/addon-serialize.js": "@xterm/addon-serialize/lib/addon-serialize.js",
+  "/vendor/highlight.js": "@highlightjs/cdn-assets/highlight.min.js",
 };
 
 function sendFile(res, filePath, mime) {
