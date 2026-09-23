@@ -144,6 +144,7 @@ one: `killall Dock` refreshes it.
 | `Cmd-K` | command palette |
 | `Cmd-F` | find in terminal |
 | `Cmd-G` | git diff panel |
+| `Cmd-Shift-E` | files panel |
 | `Shift-Cmd-N` | notification panel |
 | `Cmd-T` | new tab |
 | `Shift-Cmd-T` | reopen last closed tab |
@@ -298,6 +299,32 @@ additions. **Refresh** re-reads the tree; `Esc` or **Close** dismisses it.
 Read-only by design — panea never stages, commits, or edits the tree; it's a
 fast glance at what changed without leaving the terminal. Git runs only when you
 open or refresh the panel or click a file, never on a timer.
+
+## Files
+
+`Cmd-Shift-E` (or **Files** in the palette's View group) opens a file tree
+between the sidebar and the terminals. Its root is the **git root of the focused
+pane's working directory** (or that directory itself outside a repo), and it
+follows focus: switch panes or `cd` into another repo and the tree switches with
+it. Folders load only when you open them. Changed files carry the same state
+colors as the git panel, folders with changes underneath get a dot, and
+gitignored entries are dimmed.
+
+It is a hand-off to the terminal, not an editor:
+
+- **Double-click** a file (or select it and press `Enter`) to type its path into
+  the focused pane — relative when it is under that pane's directory, absolute
+  otherwise, shell-quoted, with no `Enter` sent.
+- **Drag** a file or folder onto any terminal pane to type its path there.
+- **Right-click** for Insert path, New pane here / New tab here (folders),
+  Preview (`.md`), Show diff (changed files), Copy relative path, Copy path, and
+  Reveal in Finder.
+- `↑`/`↓` move, `→`/`←` open and close folders, `Esc` returns to the terminal.
+
+The tree refreshes itself when files change on disk (it shares the git panel's
+watcher, and only while the panel is open). Outside a git repo there is no
+watcher — use the refresh button. The panel's width and whether it is open are
+restored with your session.
 
 ## Session restore
 

@@ -92,7 +92,9 @@ not append it to an existing file.**
   `connection` (per-socket wiring), `git` (status/diff), `git-commit`
   (stage/unstage/commit/amend), `git-watch` (one debounced recursive `fs.watch`
   per repo root, shared across sockets, so the git panel refreshes when another
-  editor writes), `update` (self-update against GitHub
+  editor writes), `fs-tree` (files-panel listing: tree root, lazy
+  `readdir`, one `git check-ignore` per refresh, `realpath` confinement to the
+  root, Reveal in Finder), `update` (self-update against GitHub
   releases), `electron` (where the Electron bundle lives).
 
   **A pane must outlive its WebSocket.** PTYs live in `server/pane-registry.js`,
@@ -147,7 +149,10 @@ not append it to an existing file.**
   `attention`,
   `attention-signals`, `notifications`, `layouts`, `keyboard`, `palette`,
   `git` (panel, file list, diff), `git-commit` (message box, stage/amend
-  controls), `main`.
+  controls), `file-tree` (the files panel between the sidebar and the
+  workspace: root follows the focused pane, lazy folders, path hand-off),
+  `file-tree-model` (pure row/decoration/quoting math — importable by
+  `node --test`), `main`.
   Loaded via `<script type="module" src="/js/main.js">`. `main.js` exposes a
   `window.panea` debug bridge (ES modules don't leak globals).
 - `public/index.html` — markup (single `<link>` to `style.css`).
@@ -157,7 +162,8 @@ not append it to an existing file.**
   `tokens` (`:root` design tokens), `base` (reset + shared motion), `sidebar`,
   `connection-status`, `tabs`, `panes`, `pane-arrange`, `pane-path`,
   `pane-identity`,
-  `pane-visibility`, `palette`, `notifications`, `git`, `git-commit`, `modals`.
+  `pane-visibility`, `palette`, `notifications`, `git`, `git-commit`,
+  `file-tree`, `modals`.
   **When adding a
   feature's styles, put them in the matching partial (or a new one); never let
   `style.css` grow rules of its own.**
