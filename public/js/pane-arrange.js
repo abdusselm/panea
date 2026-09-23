@@ -4,6 +4,7 @@ import { state } from "./state.js";
 import { swapLeaves, moveLeaf } from "./pane-tree.js";
 import { renderTab, refitTab, focusPane } from "./panes.js";
 import { persist } from "./session.js";
+import { noteFeatureUsed } from "./feature-use.js";
 
 const EDGE = 0.26;
 
@@ -55,6 +56,7 @@ function applyDrop(target, side, dragId) {
   tab.tree = side === "center"
     ? swapLeaves(tab.tree, drag.id, target.id)
     : moveLeaf(tab.tree, drag.id, target.id, side);
+  noteFeatureUsed("pane-arrange");
   renderTab(tab);
   focusPane(drag.id);
   refitTab(tab);

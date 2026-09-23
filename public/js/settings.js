@@ -4,6 +4,7 @@ import {
   shortcutList, prettyChord, chordFromEvent,
   rebindShortcut, resetShortcut, resetAllShortcuts,
 } from "./shortcuts.js";
+import { tipsEnabled, setTipsEnabled, hasTipHistory, resetTips } from "./tips.js";
 
 const CATEGORY_ORDER = ["General", "Tabs", "Panes", "View"];
 
@@ -18,7 +19,7 @@ function ensureDom() {
   panelEl.id = "settings-panel";
   panelEl.innerHTML =
     '<div class="settings-box">' +
-    '<div class="settings-head"><span class="settings-title">Keyboard shortcuts</span>' +
+    '<div class="settings-head"><span class="settings-title">Shortcuts &amp; tips</span>' +
     '<span class="settings-actions"><button class="settings-reset">Reset all</button>' +
     '<button class="settings-close">Close</button></span></div>' +
     '<div class="settings-list"></div>' +
@@ -34,6 +35,7 @@ function ensureDom() {
 function render() {
   if (!listEl) return;
   listEl.innerHTML = "";
+  renderTipsGroup();
   const rows = shortcutList();
   const byCat = new Map();
   for (const r of rows) { if (!byCat.has(r.category)) byCat.set(r.category, []); byCat.get(r.category).push(r); }
@@ -48,6 +50,26 @@ function render() {
     listEl.appendChild(head);
     for (const r of arr) listEl.appendChild(renderRow(r));
   }
+}
+
+function renderTipsGroup() {
+  const head = document.createElement("div");
+  head.className = "settings-group";
+  head.textContent = "Tips";
+  listEl.appendChild(head);
+  const on = tipsEnabled();
+  const row = document.createElement("div");
+  row.className = "settings-row";
+  row.innerHTML =
+    '<span class="sr-label">Show a tip when a terminal opens</span>' +
+    (hasTipHistory() ? '<button class="sr-reset" title="Show dismissed and learned tips again">show all again</button>' : "") +
+    '<button class="sr-chord sr-toggle' + (on ? " on" : "") + '"></button>';
+  const toggle = row.querySelector(".sr-toggle");
+  toggle.textContent = on ? "On" : "Off";
+  toggle.onclick = () => { setTipsEnabled(!tipsEnabled()); render(); };
+  const again = row.querySelector(".sr-reset");
+  if (again) again.onclick = () => { resetTips(); render(); };
+  listEl.appendChild(row);
 }
 
 function renderRow(r) {

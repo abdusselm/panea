@@ -24,6 +24,8 @@ import { createBrowserPane, focusBrowserPane, destroyBrowserPane } from "./brows
 import { isTerminalPane, isBrowserPane, isViewerPane } from "./pane-kind.js";
 import { createViewerPane, focusViewerPane, destroyViewerPane } from "./file-view.js";
 import { syncTreeRoot } from "./file-tree.js";
+import { noteFeatureUsed } from "./feature-use.js";
+import { offerTip, closeTipFor } from "./tips.js";
 
 const { Terminal } = window;
 const FitAddon = window.FitAddon;
@@ -252,6 +254,7 @@ export function destroyPane(paneId) {
   closeFindFor(paneId);
   closeScrollAnchorFor(paneId);
   closePaneBootFor(paneId);
+  closeTipFor(paneId);
   closeTranscriptFor(paneId);
   closeFileLinksFor(paneId);
   forgetPaneCwd(paneId);
@@ -326,18 +329,21 @@ export function splitPane(paneId, dir, opts) {
     tab.tree = split;
   }
   if (opts && opts.browser) {
+    noteFeatureUsed("browser-pane");
     createBrowserPane(newId, tab.id, opts.url || "", null);
   } else if (opts && opts.viewer) {
     createViewerPane(newId, tab.id, opts.viewer, null);
   } else {
     const cwd = (opts && opts.cwd) || (src.meta && src.meta.cwd) || src.cwd || tab.cwd;
     const inherit = !(opts && opts.cwd) && isTerminalPane(src);
+    noteFeatureUsed(dir === "v" ? "split-down" : "split-right");
     createPane(newId, tab.id, cwd, null, inherit ? { inheritFrom: paneId } : undefined);
   }
   renderTab(tab);
   focusPane(newId);
   refitTab(tab);
   persist();
+  offerTip(newId);
 }
 
 export function closePane(paneId) {

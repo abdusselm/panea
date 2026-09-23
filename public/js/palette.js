@@ -18,6 +18,8 @@ import { chordFor, prettyChord } from "./shortcuts.js";
 import { startPaneRename, openPaneMenuForPane } from "./pane-identity.js";
 import { hidePane, revealAllPanes, countHiddenPanes } from "./pane-visibility.js";
 import { isBrowserPane, focusBrowserAddress } from "./browser-pane.js";
+import { noteFeatureUsed } from "./feature-use.js";
+import { tipsEnabled, setTipsEnabled } from "./tips.js";
 
 const hk = (id) => prettyChord(chordFor(id));
 
@@ -130,6 +132,7 @@ function buildPaletteCommands() {
   add("View", "Files", hk("files"), () => toggleFileTree());
   add("View", "Go to file…", hk("quick-open"), () => openQuickOpen());
   add("View", "Keyboard shortcuts…", "", () => openSettings());
+  add("View", tipsEnabled() ? "Hide tips" : "Show tips", "", () => setTipsEnabled(!tipsEnabled()));
   add("View", "Increase font size", "⌘+", () => setFontSize(runtime.fontSize + 1));
   add("View", "Decrease font size", "⌘−", () => setFontSize(runtime.fontSize - 1));
   add("View", "Reset font size", "⌘0", () => setFontSize(DEFAULT_FONT_SIZE));
@@ -187,6 +190,7 @@ export function paletteIsOpen() { return paletteEl && paletteEl.classList.contai
 
 export function openPalette() {
   ensurePaletteDom();
+  noteFeatureUsed("command-palette");
   wsSend({ type: "getCommands" });
   wsSend({ type: "getLayouts" });
   paletteCmds = buildPaletteCommands();

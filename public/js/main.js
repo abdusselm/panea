@@ -23,8 +23,10 @@ import { hidePane, showPane, togglePaneHidden, revealAllPanes } from "./pane-vis
 import { openFileTree, closeFileTree, toggleFileTree } from "./file-tree.js";
 import { openInViewer } from "./file-view.js";
 import { openQuickOpen, closeQuickOpen } from "./quick-open.js";
+import { retireTipsForFeature, offerTip, resetTips, setTipsEnabled } from "./tips.js";
+import { onFeatureUsed } from "./feature-use.js";
 
-window.panea = { hidePane, showPane, togglePaneHidden, revealAllPanes, state, runtime, newTab, openPalette, togglePalette, openNotifications, toggleNotifications, reopenClosedTab, saveCurrentLayout, openLayout, saveLayoutInteractive, openLayoutInteractive, deleteLayoutPick, openGit, toggleGit, openMdPreview, closeMdPreview, openFind, toggleFind, openSettings, splitPane, closePane, handleActivity, setAgents, mountResumeBar, persist, applySidebarWidth, startPaneRename, setPaneColor, openPaneMenuForPane, openFileTree, closeFileTree, toggleFileTree, openInViewer, openQuickOpen, closeQuickOpen };
+window.panea = { hidePane, showPane, togglePaneHidden, revealAllPanes, state, runtime, newTab, openPalette, togglePalette, openNotifications, toggleNotifications, reopenClosedTab, saveCurrentLayout, openLayout, saveLayoutInteractive, openLayoutInteractive, deleteLayoutPick, openGit, toggleGit, openMdPreview, closeMdPreview, openFind, toggleFind, openSettings, splitPane, closePane, handleActivity, setAgents, mountResumeBar, persist, applySidebarWidth, startPaneRename, setPaneColor, openPaneMenuForPane, openFileTree, closeFileTree, toggleFileTree, openInViewer, openQuickOpen, closeQuickOpen, offerTip, resetTips, setTipsEnabled };
 
 document.getElementById("new-tab").onclick = () => newTab();
 document.getElementById("empty-new").onclick = () => newTab();
@@ -33,6 +35,7 @@ document.getElementById("bell").onclick = () => toggleNotifications();
 document.getElementById("settings-btn").onclick = () => openSettings();
 
 initSidebarResize();
+onFeatureUsed(retireTipsForFeature);
 
 document.addEventListener("keydown", (e) => {
   const chord = chordFromEvent(e);

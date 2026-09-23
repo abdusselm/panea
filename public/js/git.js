@@ -7,6 +7,7 @@ import {
   mountGitCommit, resetGitCommit, updateGitCommitCounts, handleGitOp,
   setLastCommitMessage, commitBoxHasFocus,
 } from "./git-commit.js";
+import { noteFeatureUsed } from "./feature-use.js";
 
 let panelEl = null, headEl = null, filesEl = null, diffEl = null;
 
@@ -225,6 +226,7 @@ export function isOpen() { return panelEl && panelEl.classList.contains("open");
 
 export function openGit({ cwd, select } = {}) {
   ensureDom();
+  noteFeatureUsed("git-diff");
   applyGitPanelSize();
   curCwd = cwd || activeCwd();
   pendingSelect = select || null;

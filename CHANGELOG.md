@@ -4,6 +4,19 @@ Notable changes per release. Versions follow [semver](https://semver.org);
 installed copies update themselves on their next launch, so anything listed here
 reaches users without them asking for it.
 
+## [0.4.25] - 2026-09-23
+
+### Added
+
+- Tips. Opening a terminal or splitting a pane can show a one-line tip at the
+  bottom of the new pane — a feature and its shortcut, such as `⌘G` for the
+  diff panel in a git repo or `⌘B` next to a running server. It fades after a
+  few seconds or as soon as you type, and clicking the shortcut runs it. A
+  tip stops appearing once you use its feature, dismiss it with ✕, or have
+  seen it three times; at most one shows every 10 minutes. Turn tips off, or
+  bring retired ones back, in the settings panel or with **Hide tips** in the
+  palette.
+
 ## [0.4.24] - 2026-09-23
 
 ### Added

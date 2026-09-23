@@ -3,6 +3,7 @@ import { wsSend } from "./ws.js";
 import { openInViewer, recentFiles } from "./file-view.js";
 import { typePath } from "./file-tree.js";
 import { prepare, rankFiles, parseQuery, splitHighlight, baseStart } from "./quick-open-model.js";
+import { noteFeatureUsed } from "./feature-use.js";
 
 const MAX_CACHED_ROOTS = 5;
 
@@ -46,6 +47,7 @@ export function isQuickOpenOpen() {
 
 export function openQuickOpen() {
   ensureDom();
+  noteFeatureUsed("quick-open");
   const cwd = activeCwd();
   const known = rootByCwd.get(cwd);
   const cached = known && cache.get(known);

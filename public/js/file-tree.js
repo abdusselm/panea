@@ -13,6 +13,7 @@ import {
   parentRel, decorate, shellQuote, absPath, pathForPane, flattenTree,
   openDirs, pruneExpanded, clampPanelWidth, baseName,
 } from "./file-tree-model.js";
+import { noteFeatureUsed } from "./feature-use.js";
 
 const DRAG_TYPE = "application/x-panea-path";
 const REFRESH_MIN_MS = 1000;
@@ -98,6 +99,7 @@ export function isFileTreeOpen() {
 
 export function openFileTree({ focus = true } = {}) {
   ensureDom();
+  noteFeatureUsed("files");
   applyWidth(runtime.filesPanel.w);
   panelEl.hidden = false;
   resizerEl.hidden = false;

@@ -60,6 +60,8 @@
 }
 .sr-chord:hover { border-color: var(--accent); }
 .sr-chord.custom { border-color: var(--accent); color: #fff; }
+.sr-toggle { color: var(--text-dim); }
+.sr-toggle.on { border-color: var(--accent); color: #fff; }
 .sr-chord.capturing {
   border-color: var(--attention); color: var(--attention);
   background: rgba(240, 198, 116, 0.08);

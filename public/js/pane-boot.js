@@ -61,6 +61,11 @@ export function markPaneBooting(paneId) {
   startTicker();
 }
 
+export function isPaneBooting(paneId) {
+  const entry = boots.get(paneId);
+  return !!(entry && entry.booting);
+}
+
 export function noteBootInput(paneId) {
   const entry = boots.get(paneId);
   if (entry && entry.booting) entry.typed = true;

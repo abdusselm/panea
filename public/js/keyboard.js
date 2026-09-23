@@ -5,6 +5,7 @@ import { DEFAULT_FONT_SIZE } from "./theme.js";
 import { activateTab } from "./tabs.js";
 import { setFontSize } from "./panes.js";
 import { runShortcut } from "./shortcuts.js";
+import { noteFeatureUsed } from "./feature-use.js";
 
 export function handleGlobalKey(e, paneId) {
   if (e.type !== "keydown") return true;
@@ -18,7 +19,7 @@ export function handleGlobalKey(e, paneId) {
   if (k === "0") { e.preventDefault(); setFontSize(DEFAULT_FONT_SIZE); return false; }
   if (k >= "1" && k <= "9") {
     const idx = Number(k) - 1;
-    if (state.tabs[idx]) { e.preventDefault(); activateTab(state.tabs[idx].id); return false; }
+    if (state.tabs[idx]) { e.preventDefault(); noteFeatureUsed("switch-tab"); activateTab(state.tabs[idx].id); return false; }
   }
   return true;
 }

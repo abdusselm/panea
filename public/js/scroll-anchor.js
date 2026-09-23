@@ -1,6 +1,7 @@
 
 
 import { state } from "./state.js";
+import { noteFeatureUsed } from "./feature-use.js";
 
 const BOTTOM_EPSILON = 2;
 const MARK_TIMEOUT = 12000;
@@ -88,6 +89,7 @@ export function jumpToMark(paneId) {
 }
 
 export function toggleScrollAnchor(paneId) {
+  noteFeatureUsed("jump-latest");
   const a = anchors.get(paneId);
   if (a && a.mode === "back") jumpToMark(paneId);
   else jumpToBottom(paneId);

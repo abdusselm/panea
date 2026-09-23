@@ -21,6 +21,7 @@ import { markPaneReady } from "./pane-boot.js";
 import { setTreeRoot, setTreeEntries, setTreeStatus, treeChanged, syncTreeRoot, fileTreeReconnected } from "./file-tree.js";
 import { setFileView, viewChanged, viewerReconnected } from "./file-view.js";
 import { setFileList } from "./quick-open.js";
+import { setTipsSettings } from "./tips.js";
 
 const RECONNECT_MS = 1000;
 const PROBE_TIMEOUT_MS = 3000;
@@ -187,6 +188,7 @@ export function connect() {
         break;
       case "settings":
         setShortcutOverrides(msg.settings && msg.settings.shortcuts);
+        setTipsSettings(msg.settings && msg.settings.tips);
         refreshOpenSettings();
         break;
       case "agents":

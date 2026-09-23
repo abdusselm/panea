@@ -3,6 +3,7 @@
 import { state } from "./state.js";
 import { openTabFromSpec, serializeTab } from "./tabs.js";
 import { wsSend } from "./ws.js";
+import { noteFeatureUsed } from "./feature-use.js";
 
 const CLOSED_CAP = 15;
 const closedStack = [];
@@ -16,7 +17,9 @@ export function hasClosedTabs() { return closedStack.length > 0; }
 
 export function reopenClosedTab() {
   const spec = closedStack.pop();
-  if (spec) openTabFromSpec(spec);
+  if (!spec) return;
+  noteFeatureUsed("reopen-tab");
+  openTabFromSpec(spec);
 }
 
 let savedLayouts = {};
@@ -96,6 +99,7 @@ export function promptName(title, initial, onOk) {
 }
 
 export function saveLayoutInteractive() {
+  noteFeatureUsed("layouts");
   promptName("Save this tab as layout", "", (name) => saveCurrentLayout(name));
 }
 

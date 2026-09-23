@@ -11,6 +11,7 @@ import { paneLabel } from "./pane-identity.js";
 import { countHiddenPanes } from "./pane-visibility.js";
 import { createBrowserPane } from "./browser-pane.js";
 import { createViewerPane } from "./file-view.js";
+import { offerTip } from "./tips.js";
 
 export function newTab(cwd) {
   const paneId = uid();
@@ -22,6 +23,7 @@ export function newTab(cwd) {
   activateTab(tab.id);
   renderTabList();
   persist();
+  offerTip(paneId);
 }
 
 export function createTabPaneEl(tab) {

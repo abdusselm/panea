@@ -6,6 +6,7 @@ import { closePane } from "./panes.js";
 import { persist } from "./session.js";
 import { setPaneDraggable } from "./pane-arrange.js";
 import { togglePaneHidden } from "./pane-visibility.js";
+import { noteFeatureUsed } from "./feature-use.js";
 
 export const PANE_COLORS = [
   { id: "red", label: "Red", hex: "#cc6666" },
@@ -40,6 +41,7 @@ export function setPaneColor(p, color) {
   const hex = colorHex(color);
   p.color = hex ? color : "";
   p.el.classList.toggle("tinted", !!hex);
+  if (hex) noteFeatureUsed("pane-identity");
   if (hex) p.el.style.setProperty("--pane-color", hex);
   else p.el.style.removeProperty("--pane-color");
 }
@@ -52,6 +54,7 @@ export function applyPaneIdentity(p, restore) {
 
 export function startPaneRename(p) {
   if (!p || !p.titleEl || p.renaming) return;
+  noteFeatureUsed("pane-identity");
   p.renaming = true;
   const titleEl = p.titleEl;
   const input = document.createElement("input");

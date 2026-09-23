@@ -1,6 +1,7 @@
 
 
 import { state, focusedPane } from "./state.js";
+import { noteFeatureUsed } from "./feature-use.js";
 
 const DECOR = {
   matchBackground: "#5c531e",
@@ -66,6 +67,7 @@ function search(mode) {
 export function openFind() {
   const p = focusedPane();
   if (!p || !p.search) return;
+  noteFeatureUsed("find");
   ensureDom();
 
   if (curPaneId !== p.id) {

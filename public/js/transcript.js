@@ -4,6 +4,7 @@ import { state, focusedPane } from "./state.js";
 import { TERM_THEME } from "./theme.js";
 import { splitSections } from "./transcript-model.js";
 import { linesToHtml } from "./buffer-html.js";
+import { noteFeatureUsed } from "./feature-use.js";
 
 const ANSI = [
   TERM_THEME.black, TERM_THEME.red, TERM_THEME.green, TERM_THEME.yellow,
@@ -135,6 +136,7 @@ function gotoSection(section) {
 export function openTranscript() {
   const p = focusedPane();
   if (!p || !p.term) return;
+  noteFeatureUsed("transcript");
   ensureDom();
   if (boxEl.parentNode !== p.el) {
     if (boxEl.parentNode) boxEl.parentNode.removeChild(boxEl);

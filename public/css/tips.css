@@ -1,0 +1,46 @@
+.pane-tip {
+  position: absolute; left: 50%; bottom: 12px; transform: translateX(-50%);
+  z-index: 5; width: max-content; max-width: calc(100% - 32px);
+  display: flex; align-items: center; gap: 8px;
+  padding: 5px 6px 5px 11px; border-radius: 14px;
+  background: var(--bg-elev); border: 1px solid var(--border-strong);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+  color: var(--text); font-size: var(--fs-sm); line-height: 1.45;
+  animation: pane-tip-in 220ms ease-out;
+  transition: opacity 180ms ease, transform 180ms ease;
+}
+.pane-boot.open ~ .pane-tip { bottom: 46px; }
+.pane-tip.leaving { opacity: 0; transform: translate(-50%, 4px); }
+
+.pane-tip-badge {
+  flex: 0 0 auto; align-self: flex-start; padding-top: 2px;
+  font-size: var(--fs-2xs); font-weight: 700; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--attention);
+}
+.pane-tip-text { flex: 1 1 auto; min-width: 0; }
+
+.pane-tip-key {
+  display: inline-block; margin: 0 1px; padding: 0 5px;
+  font-family: inherit; font-size: 11px; line-height: 16px; vertical-align: 1px;
+  color: var(--text); background: var(--bg);
+  border: 1px solid var(--border-strong); border-radius: 4px;
+}
+.pane-tip-key.runnable { cursor: pointer; }
+.pane-tip-key.runnable:hover { border-color: var(--accent); color: #fff; }
+
+.pane-tip-close {
+  flex: 0 0 auto; align-self: flex-start; width: 18px; height: 18px; padding: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: transparent; border: none; border-radius: 50%;
+  color: var(--text-dim); cursor: pointer; opacity: 0.7;
+}
+.pane-tip-close:hover { opacity: 1; color: var(--text); background: var(--bg); }
+.pane-tip-close svg { width: 12px; height: 12px; }
+
+@keyframes pane-tip-in {
+  from { opacity: 0; transform: translate(-50%, 6px); }
+  to   { opacity: 1; transform: translate(-50%, 0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pane-tip { animation: none; transition: none; }
+}

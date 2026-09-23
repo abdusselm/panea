@@ -10,6 +10,7 @@ import { railLayout } from "./pane-rail.js";
 import { captureScroll, restoreScroll } from "./pane-scroll-keep.js";
 import { persist } from "./session.js";
 import { parkBrowserView } from "./browser-pane.js";
+import { noteFeatureUsed } from "./feature-use.js";
 
 export function isPaneHidden(p) { return !!(p && p.hidden); }
 
@@ -80,6 +81,7 @@ export function hidePane(paneId) {
   const found = findLeaf(tab.tree, paneId, null);
   if (!found || !found.parent) return;
   if (visiblePaneCount(tab) < 2) return;
+  noteFeatureUsed("hide-pane");
   markHidden(p, true);
   resyncTabLayout(tab);
   if (state.focusedPaneId === paneId) {
