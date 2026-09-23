@@ -4,6 +4,19 @@ Notable changes per release. Versions follow [semver](https://semver.org);
 installed copies update themselves on their next launch, so anything listed here
 reaches users without them asking for it.
 
+## [0.4.20] - 2026-09-23
+
+### Fixed
+
+- The git panel (`Cmd-G`) showed an empty diff for every file when the focused
+  pane was in a subfolder of the repo, and staging or unstaging a file from
+  there failed. Paths were read relative to the pane's folder while git reports
+  them relative to the repo root. Diffs, staging and unstaging now work from any
+  folder in the repo.
+- Staging a file whose name contains `[`, `*` or `?` also staged other files
+  the name happened to match as a pattern: staging `a[1].txt` picked up
+  `a1.txt` too. File names are now matched exactly.
+
 ## [0.4.19] - 2026-09-22
 
 ### Fixed

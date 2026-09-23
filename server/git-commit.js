@@ -1,12 +1,13 @@
 
 
-import { runGit } from "./git.js";
+import { runGit, rootPathspec } from "./git.js";
 
 function safePaths(paths) {
   if (!Array.isArray(paths)) return [];
   return paths
     .map((p) => String(p || ""))
-    .filter((p) => p && !p.startsWith("/") && !p.split("/").includes(".."));
+    .filter((p) => p && !p.startsWith("/") && !p.split("/").includes(".."))
+    .map(rootPathspec);
 }
 
 function fail(res, fallback) {

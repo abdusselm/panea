@@ -16,6 +16,15 @@ export function runGit(args, cwd, timeoutMs = 5000) {
 
 const git = runGit;
 
+export function rootPathspec(p) {
+  return ":(top,literal)" + p;
+}
+
+async function topLevel(cwd) {
+  const res = await git(["rev-parse", "--show-toplevel"], cwd);
+  return res.code === 0 && res.out.trim() ? res.out.trim() : cwd;
+}
+
 function parseNumstat(out) {
   const map = new Map();
   for (const line of out.split("\n")) {
@@ -86,8 +95,8 @@ export async function gitStatus(cwd) {
 export async function gitDiff(cwd, path, mode) {
   if (!cwd || !path) return { patch: "" };
   let res;
-  if (mode === "untracked") res = await git(["diff", "--no-index", "--", "/dev/null", path], cwd);
-  else if (mode === "staged") res = await git(["diff", "--cached", "--", path], cwd);
-  else res = await git(["diff", "--", path], cwd);
+  if (mode === "untracked") res = await git(["diff", "--no-index", "--", "/dev/null", path], await topLevel(cwd));
+  else if (mode === "staged") res = await git(["diff", "--cached", "--", rootPathspec(path)], cwd);
+  else res = await git(["diff", "--", rootPathspec(path)], cwd);
   return { patch: res.out };
 }
