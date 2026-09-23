@@ -164,7 +164,11 @@ not append it to an existing file.**
   `isBrowserPane` / `isViewerPane` — guard terminal-only code with
   `isTerminalPane`, not `!isBrowserPane`), `quick-open` (`Cmd-P` go-to-file
   box; reuses the palette's classes), `quick-open-model` (pure fuzzy ranking and
-  `path:line` parsing), `main`.
+  `path:line` parsing), `tips` (the one-line tip in a new pane: picks by
+  context, retires what the user has learned, persists to the `tips` section
+  of `settings.json`), `tips-model` (pure tip catalog and picking — importable
+  by `node --test`), `feature-use` (the import-free hook feature modules call
+  to report a use; keeps them loadable in `node --test`), `main`.
   Loaded via `<script type="module" src="/js/main.js">`. `main.js` exposes a
   `window.panea` debug bridge (ES modules don't leak globals).
 - `public/index.html` — markup (single `<link>` to `style.css`).
@@ -175,7 +179,7 @@ not append it to an existing file.**
   `connection-status`, `tabs`, `panes`, `pane-arrange`, `pane-path`,
   `pane-identity`,
   `pane-visibility`, `palette`, `notifications`, `git`, `git-commit`,
-  `file-tree`, `file-view`, `quick-open`, `modals`.
+  `file-tree`, `file-view`, `quick-open`, `tips`, `modals`.
   **When adding a
   feature's styles, put them in the matching partial (or a new one); never let
   `style.css` grow rules of its own.**

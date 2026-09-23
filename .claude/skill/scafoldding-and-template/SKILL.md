@@ -60,7 +60,10 @@ Frontend (`public/js/`):
 | `agents.js` | AI-agent resume registry + the restored-pane "Resume" bar |
 | `sidebar.js` | draggable sidebar rail width (`--sidebar-w`), persisted |
 | `shortcuts.js` | shortcut registry: ids, defaults, overrides, chord parse, dispatch |
-| `settings.js` | settings panel: rebind shortcuts (capture, conflict, reset) |
+| `settings.js` | settings panel: rebind shortcuts (capture, conflict, reset), tips switch |
+| `tips.js` | the tip in a new pane: context pick, dismissal, retiring learned tips, persistence |
+| `tips-model.js` | pure tip catalog, context, picking, memory merge |
+| `feature-use.js` | import-free `noteFeatureUsed(id)` hook; `main.js` routes it to `tips.js` |
 | `keyboard.js` | global ⌘ shortcuts (dispatches through `shortcuts.js`) |
 | `palette.js` | ⌘K command palette + custom commands |
 | `main.js` | entry: DOM wiring, global listeners, `window.panea` debug bridge, `connect()` |
@@ -74,7 +77,7 @@ Backend (`server/`):
 | `session-store.js` | `~/.panea/session.json` |
 | `commands-store.js` | `~/.panea/commands.json` |
 | `layouts-store.js` | `~/.panea/layouts.json` (named saved layouts) |
-| `settings-store.js` | `~/.panea/settings.json` (shortcut overrides, validated) |
+| `settings-store.js` | `~/.panea/settings.json` (shortcut overrides + tips memory, validated, merged per section) |
 | `agents-store.js` | `~/.panea/agents.json` (agent detect + resume-command registry) |
 | `meta.js` | sidebar context (cwd / git branch / ports) + AI-agent detection via ps/lsof/git |
 | `git.js` | on-demand git status + per-file diff for the diff panel |
@@ -105,6 +108,7 @@ partials in cascade order; each owns one UI area and mirrors its JS module:
 | `file-view.css` | viewer pane: header, find bar, gutter marks, syntax colors (via `--syn-*` tokens) |
 | `quick-open.css` | `Cmd-P` overlay, status line, match highlighting (rows reuse `palette.css`) |
 | `settings.css` | settings panel: grouped shortcut rows + chord chips |
+| `tips.css` | the tip pill at the bottom of a new pane, key chips, fade |
 | `modals.css` | name prompt, confirm modal, layout picker (shared `.np-*`) |
 
 ### Module rules

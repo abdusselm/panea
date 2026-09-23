@@ -268,7 +268,8 @@ patterns or the long-task threshold there.
 ## Settings
 
 The gear in the sidebar header (or **Keyboard shortcuts…** in the palette) opens
-a settings panel for **rebinding keyboard shortcuts**. Click a shortcut's chip,
+a settings panel for **rebinding keyboard shortcuts** and switching [tips](#tips)
+on or off. Click a shortcut's chip,
 press the new combo (⌘ + a letter, optionally with ⇧/⌥/⌃), and it's saved. A
 combo already in use is rejected with which action holds it; **reset** returns
 one binding to its default, **Reset all** clears every override. `⌘1–9`
@@ -277,6 +278,29 @@ one binding to its default, **Reset all** clears every override. `⌘1–9`
 Overrides persist to `~/.panea/settings.json` as a sparse diff (only the ones
 you changed); defaults live in `public/js/shortcuts.js`, the single registry
 both the key handler and the palette read, so a rebind updates every surface.
+
+## Tips
+
+When you open a terminal or split a pane, a one-line tip can appear at the
+bottom of the new pane while the shell starts — a feature and its shortcut,
+like "`⌘G` opens the changed files and their diffs". It fades after a few
+seconds, or as soon as you type.
+
+- **It fits the moment.** In a git repo you hear about `⌘G`, next to a running
+  server about `⌘B`, with an AI agent about `⌘E`/`⌘J`, with three panes about
+  folding and rearranging them. Otherwise it's a general tip (`⌘K`, `⌘P`,
+  splits, Files, `⌘`-click on a path).
+- **It stops once you know.** Using a feature — by shortcut, palette or button
+  — retires its tip for good. So does ✕, and so does being shown three times
+  without being used. When every tip is retired, tips simply stop.
+- **It stays out of the way.** At most one tip every 10 minutes, never on a
+  restored session, never in a pane narrower than 360px.
+- **It's live.** The shortcut chip shows your own binding and runs the action
+  when clicked.
+
+Turn tips off (or bring every retired tip back with **show all again**) in the
+settings panel, or with **Hide tips** / **Show tips** in the palette. What has
+been learned is kept in the `tips` section of `~/.panea/settings.json`.
 
 ## Find in terminal
 
