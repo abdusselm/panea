@@ -4,6 +4,18 @@ Notable changes per release. Versions follow [semver](https://semver.org);
 installed copies update themselves on their next launch, so anything listed here
 reaches users without them asking for it.
 
+## [0.4.24] - 2026-09-23
+
+### Added
+
+- Go to file. `Cmd-P` (or **Go to file…** in the palette) opens a search box
+  over the focused pane's project. Type any part of a name or path — letters
+  match in order, so `fvm` finds `file-view-model.js` — and `Enter` opens the
+  file in the viewer; add `:line` (`git.js:42`) to jump to that line, or press
+  `Option-Enter` to type the path into the terminal instead. Files you opened
+  recently are listed first. In a repo the list follows `git ls-files`, so
+  ignored files never show up.
+
 ## [0.4.23] - 2026-09-23
 
 ### Fixed

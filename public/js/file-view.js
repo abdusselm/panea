@@ -11,17 +11,20 @@ import { wirePaneIdentity, applyPaneIdentity, refreshPaneLabel } from "./pane-id
 import { wirePaneVisibility, applyPaneHidden, showPane } from "./pane-visibility.js";
 import { openGit } from "./git.js";
 import { baseName } from "./file-tree-model.js";
+import { pushRecent } from "./quick-open-model.js";
 import {
   languageFor, textLines, splitHighlighted, plainHtmlLines, lineMarkMap, findMatches, clampLine,
 } from "./file-view-model.js";
 
 const REQUEST_TIMEOUT_MS = 8000;
+const MAX_RECENT_ROOTS = 20;
 const RELOAD_MIN_MS = 1000;
 const CHUNK = 200;
 const FIND_ALL = "viewer-find";
 const FIND_CUR = "viewer-find-current";
 
 const pending = new Map();
+const recentByRoot = new Map();
 let nextReqId = 1;
 let watchedRoot = "";
 let hljsPromise = null;
@@ -39,6 +42,17 @@ function ensureHighlighter() {
     });
   }
   return hljsPromise;
+}
+
+export function recentFiles(root) {
+  return recentByRoot.get(root) || [];
+}
+
+function noteRecent(root, rel) {
+  const next = pushRecent(recentFiles(root), rel);
+  recentByRoot.delete(root);
+  recentByRoot.set(root, next);
+  while (recentByRoot.size > MAX_RECENT_ROOTS) recentByRoot.delete(recentByRoot.keys().next().value);
 }
 
 function requestView(req) {
@@ -323,6 +337,7 @@ async function show(p, res, { line = 0, keepScroll = false, scroll = 0 } = {}) {
     message(p, note);
     return;
   }
+  if (p.root && p.rel) noteRecent(p.root, p.rel);
 
   if (sameText) {
     p.data = res;

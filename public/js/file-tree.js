@@ -358,12 +358,17 @@ function collapseAll() {
   scheduleRender();
 }
 
-function insertPath(rel, paneId) {
+export function typePath(root, rel, paneId) {
   const p = state.panes.get(paneId || state.focusedPaneId);
-  if (!isTerminalPane(p) || p.exited || !cur.root) return;
-  const text = shellQuote(pathForPane(cur.root, rel, p.meta && p.meta.cwd)) + " ";
+  if (!isTerminalPane(p) || p.exited || !root) return false;
+  const text = shellQuote(pathForPane(root, rel, p.meta && p.meta.cwd)) + " ";
   wsSend({ type: "input", paneId: p.id, data: u8ToB64(enc.encode(text)) });
   focusPane(p.id);
+  return true;
+}
+
+function insertPath(rel, paneId) {
+  typePath(cur.root, rel, paneId);
 }
 
 function openPaneAt(abs) {

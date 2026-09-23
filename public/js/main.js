@@ -22,8 +22,9 @@ import { startPaneRename, setPaneColor, openPaneMenuForPane } from "./pane-ident
 import { hidePane, showPane, togglePaneHidden, revealAllPanes } from "./pane-visibility.js";
 import { openFileTree, closeFileTree, toggleFileTree } from "./file-tree.js";
 import { openInViewer } from "./file-view.js";
+import { openQuickOpen, closeQuickOpen } from "./quick-open.js";
 
-window.panea = { hidePane, showPane, togglePaneHidden, revealAllPanes, state, runtime, newTab, openPalette, togglePalette, openNotifications, toggleNotifications, reopenClosedTab, saveCurrentLayout, openLayout, saveLayoutInteractive, openLayoutInteractive, deleteLayoutPick, openGit, toggleGit, openMdPreview, closeMdPreview, openFind, toggleFind, openSettings, splitPane, closePane, handleActivity, setAgents, mountResumeBar, persist, applySidebarWidth, startPaneRename, setPaneColor, openPaneMenuForPane, openFileTree, closeFileTree, toggleFileTree, openInViewer };
+window.panea = { hidePane, showPane, togglePaneHidden, revealAllPanes, state, runtime, newTab, openPalette, togglePalette, openNotifications, toggleNotifications, reopenClosedTab, saveCurrentLayout, openLayout, saveLayoutInteractive, openLayoutInteractive, deleteLayoutPick, openGit, toggleGit, openMdPreview, closeMdPreview, openFind, toggleFind, openSettings, splitPane, closePane, handleActivity, setAgents, mountResumeBar, persist, applySidebarWidth, startPaneRename, setPaneColor, openPaneMenuForPane, openFileTree, closeFileTree, toggleFileTree, openInViewer, openQuickOpen, closeQuickOpen };
 
 document.getElementById("new-tab").onclick = () => newTab();
 document.getElementById("empty-new").onclick = () => newTab();

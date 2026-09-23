@@ -12,6 +12,7 @@ import { toggleTranscript } from "./transcript.js";
 import { toggleGit } from "./git.js";
 import { toggleFileTree } from "./file-tree.js";
 import { toggleViewerFind } from "./file-view.js";
+import { toggleQuickOpen } from "./quick-open.js";
 import { isViewerPane } from "./pane-kind.js";
 import { togglePalette } from "./palette.js";
 import { focusBrowserAddress } from "./browser-pane.js";
@@ -19,6 +20,7 @@ import { wsSend } from "./ws.js";
 
 export const SHORTCUTS = [
   { id: "command-palette", label: "Command palette", category: "General", def: "Cmd-K", capture: true, run: () => togglePalette() },
+  { id: "quick-open", label: "Go to file", category: "General", def: "Cmd-P", run: () => toggleQuickOpen() },
   { id: "new-tab", label: "New terminal", category: "Tabs", def: "Cmd-T", run: () => newTab() },
   { id: "reopen-tab", label: "Reopen closed tab", category: "Tabs", def: "Cmd-Shift-T", run: () => reopenClosedTab() },
   { id: "split-right", label: "Split right", category: "Panes", def: "Cmd-D", run: (pid) => splitPane(state.focusedPaneId || pid, "h") },

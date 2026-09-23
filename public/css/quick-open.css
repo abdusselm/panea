@@ -1,0 +1,22 @@
+#quick-open {
+  position: fixed; inset: 0; z-index: 2000; display: none;
+  background: rgba(0, 0, 0, 0.38);
+  align-items: flex-start; justify-content: center;
+  padding-top: 12vh; -webkit-app-region: no-drag;
+}
+#quick-open.open { display: flex; }
+
+.qo-status {
+  padding: 6px 16px; border-bottom: 1px solid var(--border);
+  font-size: var(--fs-xs); color: var(--text-dim);
+}
+.qo-status:empty { display: none; }
+
+.qo-item { justify-content: flex-start; gap: 10px; }
+.qo-item .pi-title { flex: 0 0 auto; max-width: 60%; }
+.qo-item .qo-dir {
+  flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.qo-hit { font-weight: 700; color: var(--attention); }
+.palette-item.sel .qo-hit { color: #fff; text-decoration: underline; text-underline-offset: 2px; }

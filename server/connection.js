@@ -15,6 +15,7 @@ import { startGitWatch } from "./git-watch.js";
 import { readCwdFile } from "./file-read.js";
 import { resolveTreeRoot, listDirs, revealPath } from "./fs-tree.js";
 import { loadFileView } from "./file-view.js";
+import { listProjectFiles } from "./file-list.js";
 import { getUpdateStatus } from "./update.js";
 
 const META_POLL_MS = 3500;
@@ -237,6 +238,13 @@ export function handleConnection(ws) {
         loadFileView(msg).then(
           (res) => send({ type: "fileView", reqId: msg.reqId, ...res }),
           () => send({ type: "fileView", reqId: msg.reqId, error: "read failed" })
+        );
+        break;
+      }
+      case "listFiles": {
+        listProjectFiles(msg).then(
+          (res) => send({ type: "fileList", reqId: msg.reqId, ...res }),
+          () => send({ type: "fileList", reqId: msg.reqId, error: "list failed" })
         );
         break;
       }
