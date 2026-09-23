@@ -142,6 +142,7 @@ one: `killall Dock` refreshes it.
 | Key | Action |
 |-----|--------|
 | `Cmd-K` | command palette |
+| `Cmd-P` | go to file |
 | `Cmd-F` | find in the focused pane (terminal or file viewer) |
 | `Cmd-G` | git diff panel |
 | `Cmd-Shift-E` | files panel |
@@ -327,6 +328,22 @@ The tree refreshes itself when files change on disk (it shares the git panel's
 watcher, and only while the panel is open). Outside a git repo there is no
 watcher — use the refresh button. The panel's width and whether it is open are
 restored with your session.
+
+## Go to file
+
+`Cmd-P` opens a search box over the project of the focused pane — its git root,
+or that folder outside a repo. Type any part of a file's name or path; letters
+match in order, so `fvm` finds `file-view-model.js` and `css/fv` finds
+`public/css/file-view.css`. Name matches rank above matches scattered across
+folders, and files you opened recently come first — with an empty query they
+are the whole top of the list. `Enter` opens the file in the
+[file viewer](#file-viewer); add `:line` (`git.js:42`) to jump to that line.
+`Option-Enter` types the path into the focused terminal instead.
+
+In a repo the list is `git ls-files` (tracked and new files, never ignored
+ones); outside a repo panea walks the folder, skipping `.git` and
+`node_modules`. It is capped at 50,000 files, and refreshed every time the box
+opens while the last list is shown straight away.
 
 ## File viewer
 

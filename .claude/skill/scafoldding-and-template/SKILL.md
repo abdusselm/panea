@@ -54,6 +54,8 @@ Frontend (`public/js/`):
 | `file-links.js` | pure path + `:line[:col]` detection in terminal text |
 | `pane-file-links.js` | xterm link provider: `Cmd`-click → viewer, plain click on `.md` → preview |
 | `pane-kind.js` | `isTerminalPane` / `isBrowserPane` / `isViewerPane` |
+| `quick-open.js` | `Cmd-P` go-to-file box: per-root list cache, recent files first, Enter → viewer |
+| `quick-open-model.js` | pure fuzzy ranking, match positions, `path:line` query parsing |
 | `find.js` | in-terminal find box (⌘F) driving xterm's search addon |
 | `agents.js` | AI-agent resume registry + the restored-pane "Resume" bar |
 | `sidebar.js` | draggable sidebar rail width (`--sidebar-w`), persisted |
@@ -78,6 +80,7 @@ Backend (`server/`):
 | `git.js` | on-demand git status + per-file diff for the diff panel |
 | `fs-tree.js` | files-panel host side: tree root, lazy listing, ignore flags, root confinement, reveal |
 | `file-view.js` | viewer reads: path resolution, project confinement, size/binary limits, git line marks |
+| `file-list.js` | `Cmd-P` file list: `git ls-files` (tracked + new, minus deleted) or a capped walk |
 | `pane.js` | the `Pane` class (one PTY) |
 | `pane-registry.js` | pane lifetime across sockets: open/attach/detach, detached-output buffer |
 | `keepalive.js` | per-socket ping/pong liveness so a dead connection is detected, not hung on |
@@ -100,6 +103,7 @@ partials in cascade order; each owns one UI area and mirrors its JS module:
 | `git.css` | git diff panel: file list + color-coded unified diff |
 | `file-tree.css` | files panel column, tree rows, status colors, pane drop highlight |
 | `file-view.css` | viewer pane: header, find bar, gutter marks, syntax colors (via `--syn-*` tokens) |
+| `quick-open.css` | `Cmd-P` overlay, status line, match highlighting (rows reuse `palette.css`) |
 | `settings.css` | settings panel: grouped shortcut rows + chord chips |
 | `modals.css` | name prompt, confirm modal, layout picker (shared `.np-*`) |
 
@@ -147,10 +151,10 @@ Client → server: `open`, `input`, `resize`, `close`, `session`, `getCommands`,
 `getLayouts`, `saveLayout`, `deleteLayout`, `getGitStatus`, `getGitDiff`,
 `getSettings`, `saveSettings`, `getTreeRoot`, `listTree`, `getTreeStatus`,
 `watchTree`, `unwatchTree`, `revealPath`, `getFileView`, `watchView`,
-`unwatchView`.
+`unwatchView`, `listFiles`.
 Server → client: `output`, `exit`, `session`, `commands`, `meta`, `layouts`,
 `gitStatus`, `gitDiff`, `settings`, `agents`, `treeRoot`, `treeEntries`,
-`treeStatus`, `treeChanged`, `fileView`, `viewChanged`. (`meta` now also carries a
+`treeStatus`, `treeChanged`, `fileView`, `viewChanged`, `fileList`. (`meta` now also carries a
 detected `agent` name per pane.)
 
 Add a feature that needs the host by defining a new message type on both ends;

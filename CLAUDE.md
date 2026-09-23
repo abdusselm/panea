@@ -96,7 +96,8 @@ not append it to an existing file.**
   `readdir`, one `git check-ignore` per refresh, `realpath` confinement to the
   root, Reveal in Finder), `file-view` (viewer file reads: path resolution from
   a pane cwd or the tree root, `realpath` confinement to the project, size and
-  binary limits, plus the git line marks), `update` (self-update against GitHub
+  binary limits, plus the git line marks), `file-list` (the `Cmd-P` file list:
+  `git ls-files` in a repo, a capped walk outside one), `update` (self-update against GitHub
   releases), `electron` (where the Electron bundle lives).
 
   **A pane must outlive its WebSocket.** PTYs live in `server/pane-registry.js`,
@@ -161,7 +162,9 @@ not append it to an existing file.**
   `pane-file-links` (the xterm link provider: `Cmd`-click opens the viewer, a
   plain click on `.md` opens the preview), `pane-kind` (`isTerminalPane` /
   `isBrowserPane` / `isViewerPane` — guard terminal-only code with
-  `isTerminalPane`, not `!isBrowserPane`), `main`.
+  `isTerminalPane`, not `!isBrowserPane`), `quick-open` (`Cmd-P` go-to-file
+  box; reuses the palette's classes), `quick-open-model` (pure fuzzy ranking and
+  `path:line` parsing), `main`.
   Loaded via `<script type="module" src="/js/main.js">`. `main.js` exposes a
   `window.panea` debug bridge (ES modules don't leak globals).
 - `public/index.html` — markup (single `<link>` to `style.css`).
@@ -172,7 +175,7 @@ not append it to an existing file.**
   `connection-status`, `tabs`, `panes`, `pane-arrange`, `pane-path`,
   `pane-identity`,
   `pane-visibility`, `palette`, `notifications`, `git`, `git-commit`,
-  `file-tree`, `file-view`, `modals`.
+  `file-tree`, `file-view`, `quick-open`, `modals`.
   **When adding a
   feature's styles, put them in the matching partial (or a new one); never let
   `style.css` grow rules of its own.**
