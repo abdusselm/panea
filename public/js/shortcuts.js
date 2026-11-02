@@ -11,7 +11,7 @@ import { toggleScrollAnchor } from "./scroll-anchor.js";
 import { toggleTranscript } from "./transcript.js";
 import { toggleGit } from "./git.js";
 import { toggleFileTree } from "./file-tree.js";
-import { toggleViewerFind } from "./file-view.js";
+import { toggleViewerFind, toggleViewerMode } from "./file-view.js";
 import { toggleQuickOpen } from "./quick-open.js";
 import { isViewerPane } from "./pane-kind.js";
 import { togglePalette } from "./palette.js";
@@ -38,6 +38,7 @@ export const SHORTCUTS = [
   { id: "browser-address", label: "Focus address bar", category: "Browser", def: "Cmd-L", run: (pid) => focusBrowserAddress(state.panes.get(state.focusedPaneId || pid)) },
   { id: "git-diff", label: "Git diff", category: "View", def: "Cmd-G", run: () => toggleGit() },
   { id: "files", label: "Files", category: "View", def: "Cmd-Shift-E", run: () => toggleFileTree() },
+  { id: "markdown-preview", label: "Markdown preview / source", category: "View", def: "Cmd-Shift-V", run: (pid) => toggleViewerMode(state.panes.get(state.focusedPaneId || pid)) },
   { id: "notifications", label: "Notifications", category: "View", def: "Cmd-Shift-N", run: () => toggleNotifications() },
 ];
 

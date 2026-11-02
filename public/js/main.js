@@ -11,7 +11,6 @@ import { openNotifications, toggleNotifications } from "./notifications.js";
 import { reopenClosedTab, saveCurrentLayout, openLayout, saveLayoutInteractive, openLayoutInteractive, deleteLayoutPick } from "./layouts.js";
 import { splitPane, closePane } from "./panes.js";
 import { openGit, toggleGit } from "./git.js";
-import { openMdPreview, closeMdPreview } from "./md-preview.js";
 import { openFind, toggleFind } from "./find.js";
 import { openSettings } from "./settings.js";
 import { chordFromEvent, chordFor } from "./shortcuts.js";
@@ -26,7 +25,7 @@ import { openQuickOpen, closeQuickOpen } from "./quick-open.js";
 import { retireTipsForFeature, offerTip, resetTips, setTipsEnabled } from "./tips.js";
 import { onFeatureUsed } from "./feature-use.js";
 
-window.panea = { hidePane, showPane, togglePaneHidden, revealAllPanes, state, runtime, newTab, openPalette, togglePalette, openNotifications, toggleNotifications, reopenClosedTab, saveCurrentLayout, openLayout, saveLayoutInteractive, openLayoutInteractive, deleteLayoutPick, openGit, toggleGit, openMdPreview, closeMdPreview, openFind, toggleFind, openSettings, splitPane, closePane, handleActivity, setAgents, mountResumeBar, persist, applySidebarWidth, startPaneRename, setPaneColor, openPaneMenuForPane, openFileTree, closeFileTree, toggleFileTree, openInViewer, openQuickOpen, closeQuickOpen, offerTip, resetTips, setTipsEnabled };
+window.panea = { hidePane, showPane, togglePaneHidden, revealAllPanes, state, runtime, newTab, openPalette, togglePalette, openNotifications, toggleNotifications, reopenClosedTab, saveCurrentLayout, openLayout, saveLayoutInteractive, openLayoutInteractive, deleteLayoutPick, openGit, toggleGit, openFind, toggleFind, openSettings, splitPane, closePane, handleActivity, setAgents, mountResumeBar, persist, applySidebarWidth, startPaneRename, setPaneColor, openPaneMenuForPane, openFileTree, closeFileTree, toggleFileTree, openInViewer, openQuickOpen, closeQuickOpen, offerTip, resetTips, setTipsEnabled };
 
 document.getElementById("new-tab").onclick = () => newTab();
 document.getElementById("empty-new").onclick = () => newTab();

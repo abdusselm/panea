@@ -1,6 +1,6 @@
 {
   "name": "panea",
-  "version": "0.4.25",
+  "version": "0.4.26",
   "description": "Local multi-pane terminal workspace for AI coding agents. Browser build or native desktop window.",
   "license": "MIT",
   "private": true,
@@ -64,6 +64,7 @@
     "@xterm/addon-serialize": "^0.14.0",
     "@xterm/xterm": "^5.5.0",
     "electron": "^43.0.0",
+    "marked": "^18.1.2",
     "ws": "^8.18.0"
   },
   "devDependencies": {

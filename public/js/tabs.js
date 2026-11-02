@@ -88,7 +88,7 @@ export function instantiateTree(tab, node) {
       ? { agent: node.agent || "", scroll: node.scroll || "", name: node.name || "", color: node.color || "", hidden: !!node.hidden }
       : undefined;
     if (node.paneKind === "browser") createBrowserPane(node.id, tab.id, node.url || "", restore);
-    else if (node.paneKind === "viewer") createViewerPane(node.id, tab.id, { root: node.root, rel: node.rel, scroll: node.viewScroll, wrap: node.wrap }, restore);
+    else if (node.paneKind === "viewer") createViewerPane(node.id, tab.id, { root: node.root, rel: node.rel, scroll: node.viewScroll, wrap: node.wrap, mdSource: node.mdSource }, restore);
     else createPane(node.id, tab.id, node.cwd || tab.cwd, restore);
   } else {
     instantiateTree(tab, node.children[0]);

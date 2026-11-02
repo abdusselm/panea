@@ -1,4 +1,3 @@
-import { openMdPreview } from "./md-preview.js";
 import { openInViewer } from "./file-view.js";
 import { findFileLinksAcrossRows, isMarkdownPath } from "./file-links.js";
 import { noteFeatureUsed } from "./feature-use.js";
@@ -53,7 +52,7 @@ export function linksForLine(pane, bufferLineNumber) {
           noteFeatureUsed("file-link");
           openInViewer({ cwd: paneCwd(pane), path: f.path, line: f.line, from: "link" });
         }
-        else if (markdown) openMdPreview(f.path, paneCwd(pane));
+        else if (markdown) openInViewer({ cwd: paneCwd(pane), path: f.path, from: "link" });
       },
     };
   });

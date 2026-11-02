@@ -8,7 +8,7 @@ import { refreshTabMeta } from "./tabs.js";
 import { setCustomCommands, refreshOpenPalette } from "./palette.js";
 import { setLayouts } from "./layouts.js";
 import { setGitStatus, setGitDiff, setGitOp, setLastCommit, gitChanged } from "./git.js";
-import { setMdContent } from "./md-preview.js";
+import { setFileAsset } from "./md-reader.js";
 import { setShortcutOverrides } from "./shortcuts.js";
 import { refreshOpenSettings } from "./settings.js";
 import { setAgents } from "./agents.js";
@@ -183,8 +183,8 @@ export function connect() {
       case "fileList":
         setFileList(msg);
         break;
-      case "fileContent":
-        setMdContent(msg);
+      case "fileAsset":
+        setFileAsset(msg);
         break;
       case "settings":
         setShortcutOverrides(msg.settings && msg.settings.shortcuts);

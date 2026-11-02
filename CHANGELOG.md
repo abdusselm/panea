@@ -4,6 +4,28 @@ Notable changes per release. Versions follow [semver](https://semver.org);
 installed copies update themselves on their next launch, so anything listed here
 reaches users without them asking for it.
 
+## [0.4.26] - 2026-11-02
+
+### Added
+
+- Markdown preview. A `.md` file now opens formatted instead of as raw text,
+  whether it comes from a files-panel double-click, `Cmd-P` or a click on its
+  path in the terminal. The page is laid out for long reading — a centred
+  column of comfortable width, a sans font a little larger than the terminal's,
+  softened contrast — with highlighted code blocks and a copy button, tables,
+  task lists, GitHub alerts (`> [!NOTE]`), front matter as a small card, and
+  images from the project. Links to other files open them in the viewer and
+  `#section` links scroll to the heading. **Preview | Source** in the viewer
+  (or `Cmd-Shift-V`) shows the raw markdown; a file opened at `path:line`
+  starts in Source on that line. `Cmd-F` searches the rendered text, and the
+  header shows the word count and reading time.
+
+### Changed
+
+- The small markdown preview popup is gone; a plain click on a `.md` path in
+  the terminal, which used to open it, now opens the file in the viewer, and
+  the files panel's **Preview** menu entry is folded into **Open**.
+
 ## [0.4.25] - 2026-09-23
 
 ### Added

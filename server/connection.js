@@ -12,9 +12,9 @@ import { computeMetaBatch, cwdOfBridge } from "./meta.js";
 import { gitStatus, gitDiff, gitStatusFiles } from "./git.js";
 import { gitStage, gitUnstage, gitStageAll, gitCommit, gitLastCommitMessage } from "./git-commit.js";
 import { startGitWatch } from "./git-watch.js";
-import { readCwdFile } from "./file-read.js";
 import { resolveTreeRoot, listDirs, revealPath } from "./fs-tree.js";
 import { loadFileView } from "./file-view.js";
+import { readFileAsset } from "./file-asset.js";
 import { listProjectFiles } from "./file-list.js";
 import { getUpdateStatus } from "./update.js";
 
@@ -258,10 +258,10 @@ export function handleConnection(ws) {
         stopViewWatch = () => {};
         break;
       }
-      case "getFileContent": {
-        readCwdFile(msg.cwd, msg.path).then(
-          (res) => send({ type: "fileContent", cwd: msg.cwd, path: msg.path, ...res }),
-          () => send({ type: "fileContent", cwd: msg.cwd, path: msg.path, ok: false, error: "read failed" })
+      case "getFileAsset": {
+        readFileAsset(msg).then(
+          (res) => send({ type: "fileAsset", reqId: msg.reqId, ...res }),
+          () => send({ type: "fileAsset", reqId: msg.reqId, error: "read failed" })
         );
         break;
       }

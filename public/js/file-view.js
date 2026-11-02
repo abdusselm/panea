@@ -15,6 +15,9 @@ import { pushRecent } from "./quick-open-model.js";
 import {
   languageFor, textLines, splitHighlighted, plainHtmlLines, lineMarkMap, findMatches, clampLine,
 } from "./file-view-model.js";
+import { isMarkdownFile, readingStats } from "./markdown.js";
+import { buildDoc, loadDocImages, wireDoc, scrollToAnchor, docRanges, needsHighlighter } from "./md-reader.js";
+import { loadVendor } from "./vendor-load.js";
 
 const REQUEST_TIMEOUT_MS = 8000;
 const MAX_RECENT_ROOTS = 20;
@@ -27,21 +30,10 @@ const pending = new Map();
 const recentByRoot = new Map();
 let nextReqId = 1;
 let watchedRoot = "";
-let hljsPromise = null;
 let findPane = null;
 
 function ensureHighlighter() {
-  if (window.hljs) return Promise.resolve(window.hljs);
-  if (!hljsPromise) {
-    hljsPromise = new Promise((resolve) => {
-      const s = document.createElement("script");
-      s.src = "/vendor/highlight.js";
-      s.onload = () => resolve(window.hljs || null);
-      s.onerror = () => { hljsPromise = null; resolve(null); };
-      document.head.appendChild(s);
-    });
-  }
-  return hljsPromise;
+  return loadVendor("/vendor/highlight.js", "hljs");
 }
 
 export function recentFiles(root) {
@@ -88,7 +80,7 @@ function isVisible(p) {
   return p.tabId === state.activeTabId && !p.hidden;
 }
 
-export async function openInViewer({ root, cwd, path, line = 0, from = "tree" } = {}) {
+export async function openInViewer({ root, cwd, path, line = 0, hash = "", from = "tree" } = {}) {
   if (!path) return false;
   const res = await requestView({ root, cwd, path });
   if (!res) return false;
@@ -100,11 +92,11 @@ export async function openInViewer({ root, cwd, path, line = 0, from = "tree" } 
     const focused = state.focusedPaneId && state.panes.get(state.focusedPaneId);
     const anchor = focused && focused.tabId === tab.id ? focused.id : (firstLeaf(tab.tree) || {}).id;
     if (!anchor) return false;
-    splitPane(anchor, "h", { viewer: { data: res, line } });
+    splitPane(anchor, "h", { viewer: { data: res, line, hash } });
     return true;
   }
   if (p.hidden) showPane(p.id);
-  await show(p, res, { line });
+  await show(p, res, { line, hash });
   focusPane(p.id);
   persist();
   return true;
@@ -130,7 +122,13 @@ export function createViewerPane(paneId, tabId, spec = {}, restore) {
         <button class="close" data-act="close" title="Close (Cmd-W)">${ICON.close}</button>
       </div>
     </div>
-    <div class="viewer-sub"><span class="viewer-path"></span><span class="viewer-info"></span></div>
+    <div class="viewer-sub">
+      <span class="viewer-path"></span><span class="viewer-info"></span>
+      <span class="viewer-mode" role="group" aria-label="Markdown view" hidden>
+        <button data-mode="read" title="Formatted preview (Cmd-Shift-V)">Preview</button>
+        <button data-mode="source" title="Raw markdown (Cmd-Shift-V)">Source</button>
+      </span>
+    </div>
     <div class="viewer-find" hidden>
       <input class="viewer-find-input" spellcheck="false" autocomplete="off" placeholder="Find in file" />
       <span class="viewer-find-count"></span>
@@ -138,7 +136,7 @@ export function createViewerPane(paneId, tabId, spec = {}, restore) {
       <button data-find="next" title="Next (Enter)">${ICON.chevronDown}</button>
       <button data-find="close" title="Close (Esc)">${ICON.close}</button>
     </div>
-    <div class="viewer-body" tabindex="0"><div class="viewer-lines"></div></div>`;
+    <div class="viewer-body" tabindex="0"><div class="viewer-lines"></div><div class="viewer-doc" hidden><article class="md-doc"></article></div></div>`;
 
   const pane = {
     id: paneId,
@@ -153,6 +151,15 @@ export function createViewerPane(paneId, tabId, spec = {}, restore) {
     findCount: el.querySelector(".viewer-find-count"),
     view: el.querySelector(".viewer-body"),
     linesEl: el.querySelector(".viewer-lines"),
+    docWrap: el.querySelector(".viewer-doc"),
+    docEl: el.querySelector(".md-doc"),
+    modeEl: el.querySelector(".viewer-mode"),
+    mode: spec.mdSource ? "source" : "read",
+    built: { source: null, read: null },
+    marks: null,
+    stats: null,
+    summary: "",
+    paintSeq: 0,
     root: spec.root || "",
     rel: spec.rel || "",
     wrap: !!spec.wrap,
@@ -189,6 +196,10 @@ export function createViewerPane(paneId, tabId, spec = {}, restore) {
   };
   act("changes", () => { if (pane.root && pane.rel) openGit({ cwd: pane.root, select: pane.rel }); });
   act("wrap", () => { pane.wrap = !pane.wrap; pane.view.classList.toggle("wrap", pane.wrap); persist(); });
+  for (const btn of pane.modeEl.querySelectorAll("[data-mode]")) {
+    btn.onclick = (e) => { e.stopPropagation(); setMode(pane, btn.dataset.mode); };
+  }
+  wireDoc(pane, (rel, hash) => openInViewer({ root: pane.root, path: rel, hash }));
   act("reload", () => reload(pane));
   act("split-h", () => splitPane(paneId, "h"));
   act("split-v", () => splitPane(paneId, "v"));
@@ -205,7 +216,7 @@ export function createViewerPane(paneId, tabId, spec = {}, restore) {
   applyPaneIdentity(pane, restore);
   applyPaneHidden(pane, restore);
 
-  if (spec.data) show(pane, spec.data, { line: spec.line });
+  if (spec.data) show(pane, spec.data, { line: spec.line, hash: spec.hash });
   else if (pane.root && pane.rel) load(pane, { scroll: Number(spec.scroll) || 0 });
   else message(pane, "No file");
   return pane;
@@ -279,6 +290,10 @@ async function load(p, opts = {}) {
 function message(p, text) {
   p.data = null;
   p.lines = [];
+  p.built = { source: null, read: null };
+  p.paintSeq++;
+  syncModeUi(p);
+  p.docEl.replaceChildren();
   p.linesEl.innerHTML = "";
   const box = document.createElement("div");
   box.className = "viewer-empty";
@@ -301,10 +316,64 @@ function changeSummary(res, kinds, dels) {
   return n ? n + (n === 1 ? " changed line" : " changed lines") : "";
 }
 
-async function show(p, res, { line = 0, keepScroll = false, scroll = 0 } = {}) {
+function isMarkdownView(p) {
+  return !!(p.data && p.data.content !== undefined && isMarkdownFile(p.rel));
+}
+
+function readingMode(p) {
+  return isMarkdownView(p) && p.mode === "read";
+}
+
+function syncModeUi(p) {
+  const md = isMarkdownView(p);
+  const reading = md && p.mode === "read";
+  p.modeEl.hidden = !md;
+  for (const btn of p.modeEl.querySelectorAll("[data-mode]")) {
+    const on = btn.dataset.mode === (reading ? "read" : "source");
+    btn.classList.toggle("on", on);
+    btn.setAttribute("aria-pressed", on ? "true" : "false");
+  }
+  p.view.classList.toggle("reading", reading);
+  p.linesEl.hidden = reading;
+  p.docWrap.hidden = !reading;
+  p.el.querySelector('[data-act="wrap"]').disabled = reading;
+}
+
+function refreshInfo(p) {
+  const res = p.data;
+  const info = [];
+  if (res && res.content !== undefined) {
+    if (readingMode(p) && p.stats) info.push(p.stats.words + (p.stats.words === 1 ? " word" : " words") + " · " + p.stats.minutes + " min read");
+    else info.push(p.lines.length + (p.lines.length === 1 ? " line" : " lines"));
+  }
+  if (p.summary) info.push(p.summary);
+  if (res && res.plain && !readingMode(p)) info.push("plain text (large file)");
+  p.infoEl.textContent = info.join(" · ");
+}
+
+function setMode(p, mode) {
+  if (!isMarkdownView(p) || p.mode === mode) return;
+  const max = p.view.scrollHeight - p.view.clientHeight;
+  const ratio = max > 0 ? p.view.scrollTop / max : 0;
+  p.mode = mode;
+  if (findPane === p) clearFindHighlights();
+  syncModeUi(p);
+  refreshInfo(p);
+  paint(p, { ratio });
+  persist();
+}
+
+export function toggleViewerMode(p) {
+  if (!isViewerPane(p) || !isMarkdownView(p)) return;
+  setMode(p, p.mode === "read" ? "source" : "read");
+}
+
+async function show(p, res, { line = 0, keepScroll = false, scroll = 0, hash = "" } = {}) {
   const prevTop = p.view.scrollTop;
   const prevLeft = p.view.scrollLeft;
   const sameText = p.data && res.content !== undefined && p.data.content === res.content && p.data.rel === res.rel;
+  if (res.rel && res.rel !== p.rel) p.built = { source: null, read: null };
+  if ((res.rel && res.rel !== p.rel) || line) p.mode = line ? "source" : "read";
   if (res.root) {
     p.root = res.root;
     p.cwd = res.root;
@@ -324,50 +393,80 @@ async function show(p, res, { line = 0, keepScroll = false, scroll = 0 } = {}) {
   const lines = res.content !== undefined ? textLines(res.content) : [];
   const note = describe(res, res.content !== undefined ? res.content.length : 0);
   const { kinds, dels } = lineMarkMap(res.marks, res.allAdded, lines.length);
-  const summary = changeSummary(res, kinds, dels);
-  p.el.querySelector('[data-act="changes"]').disabled = !summary;
-  const info = [];
-  if (res.content !== undefined) info.push(lines.length + (lines.length === 1 ? " line" : " lines"));
-  if (summary) info.push(summary);
-  if (res.plain) info.push("plain text (large file)");
-  p.infoEl.textContent = info.join(" · ");
+  p.summary = changeSummary(res, kinds, dels);
+  p.el.querySelector('[data-act="changes"]').disabled = !p.summary;
 
   if (res.content === undefined || note) {
     p.data = res;
+    p.lines = lines;
+    p.stats = null;
+    refreshInfo(p);
     message(p, note);
     return;
   }
   if (p.root && p.rel) noteRecent(p.root, p.rel);
 
-  if (sameText) {
-    p.data = res;
-    applyMarks(p, kinds, dels);
+  p.data = res;
+  p.lines = lines;
+  p.marks = { kinds, dels };
+  if (!sameText) p.stats = isMarkdownFile(p.rel) ? readingStats(res.content) : null;
+  syncModeUi(p);
+  refreshInfo(p);
+
+  if (sameText && p.built[readingMode(p) ? "read" : "source"] === res.content) {
+    if (p.built.source === res.content) applyMarks(p, kinds, dels);
     if (line) requestAnimationFrame(() => revealLine(p, line));
+    if (hash) requestAnimationFrame(() => scrollToAnchor(p, hash));
     return;
   }
+  await paint(p, { line, keepScroll, prevTop, prevLeft, scroll, hash });
+}
 
+async function sourceHtml(p, res) {
   const lang = res.plain ? "" : languageFor(res.rel);
   let htmlLines = null;
   if (lang) {
     const hljs = await ensureHighlighter();
-    if (!state.panes.has(p.id)) return;
     if (hljs && hljs.getLanguage(lang)) {
       try { htmlLines = splitHighlighted(hljs.highlight(res.content, { language: lang, ignoreIllegals: true }).value, res.content); }
       catch (_) { htmlLines = null; }
     }
   }
-  if (!htmlLines || htmlLines.length !== lines.length) htmlLines = plainHtmlLines(res.content);
+  if (!htmlLines || htmlLines.length !== p.lines.length) htmlLines = plainHtmlLines(res.content);
+  return buildHtml(htmlLines, p.marks.kinds, p.marks.dels, clampLine(p.hlLine, p.lines.length));
+}
 
-  p.data = res;
-  p.lines = lines;
-  p.linesEl.innerHTML = buildHtml(htmlLines, kinds, dels, clampLine(p.hlLine, lines.length));
+async function paint(p, { line = 0, keepScroll = false, prevTop = 0, prevLeft = 0, scroll = 0, hash = "", ratio = null } = {}) {
+  const res = p.data;
+  if (!res || res.content === undefined) return;
+  const seq = ++p.paintSeq;
+  const live = () => seq === p.paintSeq && state.panes.has(p.id) && p.data === res;
+  if (readingMode(p)) {
+    if (p.built.read !== res.content) {
+      const hljs = needsHighlighter(res.content) ? await ensureHighlighter() : null;
+      const frag = await buildDoc(res.content, hljs);
+      if (!live()) return;
+      if (!frag) { p.mode = "source"; syncModeUi(p); refreshInfo(p); return paint(p, { line, scroll, ratio }); }
+      p.docEl.replaceChildren(frag);
+      p.built.read = res.content;
+      loadDocImages(p);
+    }
+  } else if (p.built.source !== res.content) {
+    const html = await sourceHtml(p, res);
+    if (!live()) return;
+    p.linesEl.innerHTML = html;
+    p.built.source = res.content;
+  }
   if (findPane === p && !p.findEl.hidden) runFind(p, false);
 
   requestAnimationFrame(() => {
-    if (keepScroll) { p.view.scrollTop = prevTop; p.view.scrollLeft = prevLeft; }
+    if (!live()) return;
+    if (ratio !== null) p.view.scrollTop = ratio * Math.max(0, p.view.scrollHeight - p.view.clientHeight);
+    else if (keepScroll) { p.view.scrollTop = prevTop; p.view.scrollLeft = prevLeft; }
     else if (scroll) p.view.scrollTop = scroll;
     else p.view.scrollTop = 0;
     if (line) revealLine(p, line);
+    if (hash && readingMode(p)) scrollToAnchor(p, hash);
   });
 }
 
@@ -423,6 +522,7 @@ function revealLine(p, line) {
 export function viewerSnapshot(p) {
   const snap = { root: p.root, rel: p.rel };
   if (p.wrap) snap.wrap = true;
+  if (p.mode === "source" && isMarkdownFile(p.rel)) snap.mdSource = true;
   const top = Math.round(p.scrollTop || 0);
   if (top) snap.viewScroll = top;
   return snap;
@@ -432,7 +532,7 @@ function onBodyKey(p, e) {
   if (e.metaKey && !e.shiftKey && !e.altKey && e.code === "KeyA") {
     e.preventDefault();
     const range = document.createRange();
-    range.selectNodeContents(p.linesEl);
+    range.selectNodeContents(readingMode(p) ? p.docEl : p.linesEl);
     const sel = window.getSelection();
     sel.removeAllRanges();
     sel.addRange(range);
@@ -448,6 +548,7 @@ function clearFindHighlights() {
 }
 
 function rangeFor(p, m) {
+  if (m instanceof Range) return m;
   const row = lineEl(p, m.line);
   const code = row && row.querySelector(".vl-c");
   if (!code) return null;
@@ -483,15 +584,28 @@ function firstVisibleLine(p) {
   return h ? Math.floor(p.view.scrollTop / h) + 1 : 1;
 }
 
+function firstMatchInView(p) {
+  if (readingMode(p)) {
+    const top = p.view.getBoundingClientRect().top;
+    return p.matches.findIndex((r) => r.getBoundingClientRect().top >= top);
+  }
+  const from = firstVisibleLine(p);
+  return p.matches.findIndex((m) => m.line >= from);
+}
+
 function runFind(p, jump) {
-  p.matches = findMatches(p.lines, p.findInput.value);
+  p.matches = readingMode(p) ? docRanges(p.docEl, p.findInput.value) : findMatches(p.lines, p.findInput.value);
   if (!p.matches.length) p.matchIdx = -1;
   else if (jump || p.matchIdx < 0 || p.matchIdx >= p.matches.length) {
-    const from = firstVisibleLine(p);
-    const i = p.matches.findIndex((m) => m.line >= from);
+    const i = firstMatchInView(p);
     p.matchIdx = i === -1 ? 0 : i;
   }
   updateFind(p, jump);
+}
+
+function revealMatch(p, m) {
+  const el = m instanceof Range ? m.startContainer.parentElement : lineEl(p, m.line);
+  if (el) el.scrollIntoView({ block: "center" });
 }
 
 function updateFind(p, scroll) {
@@ -500,8 +614,7 @@ function updateFind(p, scroll) {
   paintFind(p);
   const m = p.matches[p.matchIdx];
   if (scroll && m) {
-    const row = lineEl(p, m.line);
-    if (row) row.scrollIntoView({ block: "center" });
+    revealMatch(p, m);
     if (!hasHighlights()) {
       const r = rangeFor(p, m);
       if (r) { const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(r); }

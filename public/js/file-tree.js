@@ -6,7 +6,6 @@ import { persist } from "./session.js";
 import { focusPane, splitPane } from "./panes.js";
 import { newTab } from "./tabs.js";
 import { isTerminalPane } from "./pane-kind.js";
-import { openMdPreview } from "./md-preview.js";
 import { openGit } from "./git.js";
 import { openInViewer } from "./file-view.js";
 import {
@@ -447,7 +446,6 @@ function menuItems(row) {
   if (!row.dir) {
     items.push(["Open", () => openFile(row.rel)]);
     items.push(["Insert path", () => insertPath(row.rel)]);
-    if (/\.md$/i.test(row.name)) items.push(["Preview", () => openMdPreview(row.rel, cur.root)]);
     if (deco.files.has(row.rel)) items.push(["Show diff", () => openGit({ cwd: cur.root, select: row.rel })]);
   }
   items.push(["Copy relative path", () => copy(row.rel)]);
