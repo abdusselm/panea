@@ -97,7 +97,9 @@ not append it to an existing file.**
   root, Reveal in Finder), `file-view` (viewer file reads: path resolution from
   a pane cwd or the tree root, `realpath` confinement to the project, size and
   binary limits, plus the git line marks), `file-list` (the `Cmd-P` file list:
-  `git ls-files` in a repo, a capped walk outside one), `update` (self-update against GitHub
+  `git ls-files` in a repo, a capped walk outside one), `file-asset` (images
+  for the markdown reader: image extensions only, `realpath` confinement to the
+  project, sent over the socket as base64), `update` (self-update against GitHub
   releases), `electron` (where the Electron bundle lives).
 
   **A pane must outlive its WebSocket.** PTYs live in `server/pane-registry.js`,
@@ -158,6 +160,14 @@ not append it to an existing file.**
   `node --test`), `file-view` (the read-only viewer pane: one per tab, reused;
   highlight.js is lazy-loaded from `/vendor/highlight.js` on first open),
   `file-view-model` (pure line splitting with span repair, gutter marks, find),
+  `markdown` (pure markdown → HTML on top of `marked`, which is passed in and
+  lazy-loaded from `/vendor/marked.js`; prefixed heading ids, alerts, front
+  matter, link/path resolution — importable by `node --test`), `md-sanitize`
+  (DOM allow-list for the rendered HTML: raw HTML in a `.md` file is kept only
+  through it), `md-reader` (the viewer's Preview mode for `.md` files: render,
+  relative images, link routing, find over rendered text; Preview is the
+  default, Source is a toggle and `Cmd-Shift-V`), `vendor-load` (one lazy
+  classic-script loader for `/vendor/*`),
   `file-links` (pure path + `:line[:col]` detection in terminal text),
   `pane-file-links` (the xterm link provider: `Cmd`-click opens the viewer, a
   plain click on `.md` opens the preview), `pane-kind` (`isTerminalPane` /
@@ -179,7 +189,7 @@ not append it to an existing file.**
   `connection-status`, `tabs`, `panes`, `pane-arrange`, `pane-path`,
   `pane-identity`,
   `pane-visibility`, `palette`, `notifications`, `git`, `git-commit`,
-  `file-tree`, `file-view`, `quick-open`, `tips`, `modals`.
+  `file-tree`, `file-view`, `md-reader`, `quick-open`, `tips`, `modals`.
   **When adding a
   feature's styles, put them in the matching partial (or a new one); never let
   `style.css` grow rules of its own.**
