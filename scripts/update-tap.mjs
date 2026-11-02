@@ -44,7 +44,7 @@ function formula(url, digest, version) {
   def install
     system "npm", "install", *std_npm_args
     (bin/"panea").write_env_script libexec/"bin/panea",
-      PANEA_PYTHON: Formula["${PYTHON}"].opt_bin/"python3"
+      PANEA_PYTHON: Formula["${PYTHON}"].opt_libexec/"bin/python3"
   end
 
   def caveats
